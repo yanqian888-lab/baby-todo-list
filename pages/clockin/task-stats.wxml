@@ -1,0 +1,36 @@
+<!-- 打卡统计页面 -->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="header">
+    <view class="title">{{taskName}} - 打卡统计</view>
+    <view class="total-stats">总打卡次数: {{totalClockIns}}</view>
+  </view>
+
+  <!-- 月份切换 -->
+  <view class="month-selector">
+    <view class="month-btn" bindtap="prevMonth">上个月</view>
+    <view class="current-month">{{currentYear}}年{{currentMonth}}月</view>
+    <view class="month-btn" bindtap="nextMonth">下个月</view>
+  </view>
+
+  <!-- 日历头部（星期） -->
+  <view class="calendar-header">
+    <view wx:for="{{weekdays}}" wx:key="index" class="weekday">{{item}}</view>
+  </view>
+
+  <!-- 日历内容（日期） -->
+  <view class="calendar-content">
+    <view wx:for="{{calendarDays}}" wx:key="index" 
+          class="calendar-day {{item.isCurrentMonth ? '' : 'other-month'}} {{item.isToday ? 'today' : ''}} {{item.isClockIn ? 'clock-in' : ''}}"
+          bindtap="selectDate" data-date="{{item.date}}">
+      <view class="day-number">{{item.day}}</view>
+      <view class="dot" wx:if="{{item.isClockIn}}"></view>
+    </view>
+  </view>
+
+  <!-- 选中日期详情 -->
+  <view class="date-detail" wx:if="{{selectedDateDetail}}">
+    <view class="detail-title">{{selectedDateDetail.dateText}} 打卡详情</view>
+    <view class="detail-time">{{selectedDateDetail.timeText}}</view>
+  </view>
+</view>

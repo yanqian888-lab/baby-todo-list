@@ -1,0 +1,83 @@
+<!-- pages/sensitivity/records.wxml -->
+<view class="container">
+
+
+  <!-- 主要内容区域 -->
+  <view class="main-content">
+    <!-- 筛选条件 -->
+    <view class="filter-section">
+      <view class="filter-tabs">
+        <view 
+          class="filter-tab {{activeFilter === 'all' ? 'active' : ''}}"
+          bindtap="setFilter" 
+          data-filter="all"
+        >
+          全部
+        </view>
+        <view 
+          class="filter-tab {{activeFilter === 'safe' ? 'active' : ''}}"
+          bindtap="setFilter" 
+          data-filter="safe"
+        >
+          安全
+        </view>
+        <view 
+          class="filter-tab {{activeFilter === 'allergy' ? 'active' : ''}}"
+          bindtap="setFilter" 
+          data-filter="allergy"
+        >
+          过敏
+        </view>
+      </view>
+    </view>
+
+    <!-- 排敏记录列表 -->
+    <view class="records-section">
+      <view wx:if="{{records.length > 0}}" class="records-list">
+        <view 
+          wx:for="{{records}}" 
+          wx:key="_id"
+          class="record-item"
+        >
+          <view class="record-header">
+            <view class="food-info">
+              <text class="food-name">{{item.foodName}}</text>
+              <text class="food-category" wx:if="{{item.category && item.category !== '未知' && item.category !== 'undefined'}}">{{item.category}}</text>
+            </view>
+            <view class="record-status">
+              <text class="status-text {{item.allergyStatus === 0 ? 'status-safe' : 'status-allergy'}}">
+                {{item.allergyStatus === 0 ? '安全' : '过敏'}}
+              </text>
+            </view>
+          </view>
+          
+          <view class="record-details">
+            <view class="detail-item">
+              <text class="detail-label">排敏日期：</text>
+              <text class="detail-value">{{item.displayDate || (item.date ? (item.date.substring(0, 10) || '') : '')}}</text>
+            </view>
+            <view class="detail-item">
+              <text class="detail-label">排敏进度：</text>
+              <text class="detail-value progress-value">{{item.progressText || '未记录'}}</text>
+            </view>
+            <view class="detail-item">
+              <text class="detail-label">反应状态：</text>
+              <text class="detail-value">{{item.statusText || '未记录'}}</text>
+            </view>
+            <view class="detail-item">
+              <text class="detail-label">喜好程度：</text>
+              <text class="detail-value">{{item.likeText || '未记录'}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 空状态 -->
+      <view wx:else class="empty-state">
+        <text class="empty-icon">📝</text>
+        <text class="empty-text">暂无排敏记录</text>
+        <text class="empty-subtext">开始记录宝宝的排敏过程吧！</text>
+      </view>
+    </view>
+  </view>
+</view>

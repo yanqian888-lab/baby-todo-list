@@ -1,0 +1,62 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/suggest/list",
+    "pages/task/create",
+    "pages/profile/index",
+    "pages/profile/baby-info",
+    "pages/settings/index",
+    "pages/login/login",
+    "pages/auth/auth",
+    "pages/clockin/index",
+    "pages/clockin/calendar",
+    "pages/clockin/task-stats",
+    "pages/template/index",
+    "pages/statistics/index",
+    "pages/task/index",
+    "pages/test/test",
+    "pages/sensitivity/index",
+    "pages/sensitivity/records",
+    "pages/sensitivity/recommend",
+    "pages/sensitivity/detail",
+    "pages/sensitivity/add-record",
+    "pages/sensitivity/food-select",
+    "pages/debug/index",
+    "pages/debug/cleanup",
+    "pages/debug/cleanup-today"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FF7A85",
+    "navigationBarTitleText": "母婴打卡",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f8f8f8"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#07c160",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "打卡",
+        "iconPath": "images/icon-stat.png",
+        "selectedIconPath": "images/icon-stat.png"
+      },
+      {
+        "pagePath": "pages/sensitivity/index",
+        "text": "排敏",
+        "iconPath": "images/icon-stat.png",
+        "selectedIconPath": "images/icon-stat.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "images/icon-stat.png",
+        "selectedIconPath": "images/icon-stat.png"
+      }
+    ]
+  },
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

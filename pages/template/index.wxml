@@ -1,0 +1,51 @@
+<!-- pages/template/index.wxml -->
+<view class="container">
+  <view class="header">
+    <text class="title">任务模板推荐</text>
+  </view>
+
+  <!-- 分类选择器 -->
+  <view class="category-tabs">
+    <scroll-view scroll-x class="category-scroll">
+      <view 
+        wx:for="{{categories}}" 
+        wx:key="id"
+        class="category-tab {{currentCategory === item.id ? 'active' : ''}}"
+        bindtap="switchCategory"
+        data-category="{{item.id}}"
+      >
+        <text>{{item.name}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 模板列表 -->
+  <view class="template-list">
+    <view class="template-item" wx:for="{{templates}}" wx:key="_id" wx:for-item="template">
+      <view class="template-header">
+        <text class="template-title">{{template.title}}</text>
+        <view class="priority-badge" wx:if="{{template.priority === 1}}">重要</view>
+      </view>
+      <text class="template-desc">{{template.description}}</text>
+      <view class="template-footer">
+        <text class="category-tag">{{getCategoryName(template.category)}}</text>
+        <button class="use-btn" type="primary" size="mini" bindtap="useTemplate" data-id="{{template._id || template.id}}">
+          使用模板
+        </button>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{templates.length === 0 && !loading}}">
+      <text>暂无任务模板</text>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-mask" wx:if="{{loading}}">
+    <view class="loading-content">
+      <loading size="large" color="#07c160"></loading>
+      <text>加载中...</text>
+    </view>
+  </view>
+</view>

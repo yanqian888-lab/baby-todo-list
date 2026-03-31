@@ -1,0 +1,238 @@
+/* pages/clockin/calendar.wxss */
+
+.container {
+  background-color: #f7f8fa;
+  min-height: 100vh;
+}
+
+/* 页面标题 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88rpx;
+  padding: 0 40rpx;
+  background-color: #fff;
+  border-bottom: 1rpx solid #e8e8e8;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.left-btn, .right-btn {
+  width: 80rpx;
+}
+
+.back-icon {
+  font-size: 36rpx;
+  color: #333;
+}
+
+.today-text {
+  font-size: 28rpx;
+  color: #ff6b6b;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 月份选择器 */
+.month-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #fff;
+  padding: 30rpx 40rpx;
+  margin-bottom: 20rpx;
+}
+
+.prev-btn, .next-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #f8f9fa;
+}
+
+.arrow-icon {
+  font-size: 36rpx;
+  color: #666;
+}
+
+.current-month {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 星期标题 */
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background-color: #fff;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #e8e8e8;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 28rpx;
+  color: #666;
+  padding: 10rpx 0;
+}
+
+/* 日历网格 */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10rpx;
+  padding: 20rpx;
+  background-color: #fff;
+  margin-bottom: 20rpx;
+}
+
+/* 日期项 */
+.day-item {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8rpx;
+  position: relative;
+  font-size: 28rpx;
+}
+
+.day-number {
+  z-index: 1;
+}
+
+/* 其他月份的日期 */
+.other-month .day-number {
+  color: #d0d0d0;
+}
+
+/* 今天 */
+.today {
+  background-color: #fff2e8;
+  font-weight: bold;
+}
+
+.today .day-number {
+  color: #ff6b6b;
+}
+
+/* 已打卡日期 */
+.checked {
+  background-color: #e6f7ff;
+}
+
+.checked .day-number {
+  color: #1890ff;
+}
+
+.check-mark {
+  position: absolute;
+  bottom: 6rpx;
+  right: 6rpx;
+  width: 30rpx;
+  height: 30rpx;
+  background-color: #52c41a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20rpx;
+  z-index: 2;
+}
+
+/* 加载状态 */
+.loading {
+  grid-column: 1 / -1;
+  height: 400rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 图例说明 */
+.legend {
+  display: flex;
+  justify-content: space-around;
+  background-color: #fff;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  border-radius: 16rpx;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+}
+
+.legend-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  margin-right: 10rpx;
+}
+
+.today-dot {
+  background-color: #fff2e8;
+}
+
+.checked-dot {
+  background-color: #e6f7ff;
+}
+
+.normal-dot {
+  background-color: #f0f0f0;
+}
+
+.legend-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 打卡统计 */
+.statistics {
+  display: flex;
+  background-color: #fff;
+  margin: 0 20rpx 20rpx;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #ff6b6b;
+}
+
+.stat-divider {
+  width: 1rpx;
+  background-color: #e8e8e8;
+  margin: 0 30rpx;
+}

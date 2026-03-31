@@ -1,0 +1,52 @@
+<!-- pages/debug/index.wxml -->
+<!-- 调试工具页面 -->
+<view class="container">
+  <view class="header">
+    <text class="title">调试工具</text>
+    <text class="subtitle">管理小程序测试数据</text>
+  </view>
+
+  <view class="section">
+    <text class="section-title">数据管理</text>
+    
+    <button class="btn-danger" bindtap="clearAllData">
+      清空所有测试数据
+    </button>
+    <text class="btn-desc">清除本地存储和数据库中的所有测试数据，包括排敏记录、宝宝信息、打卡记录等</text>
+  </view>
+
+  <view class="section">
+    <text class="section-title">数据清理选项</text>
+    
+    <button class="btn-secondary" bindtap="clearSensitivityData">
+      仅清空排敏记录
+    </button>
+    <text class="btn-desc">清除所有排敏相关的测试数据</text>
+    
+    <button class="btn-secondary" bindtap="clearBabyInfo">
+      仅清空宝宝信息
+    </button>
+    <text class="btn-desc">清除宝宝信息和相关设置</text>
+    
+    <button class="btn-secondary" bindtap="clearClockinData">
+      仅清空打卡记录
+    </button>
+    <text class="btn-desc">清除所有打卡和任务相关数据</text>
+  </view>
+
+  <view class="section">
+    <text class="section-title">当前数据状态</text>
+    <view class="status-item">
+      <text class="status-label">本地存储键数量:</text>
+      <text class="status-value">{{storageCount}}</text>
+    </view>
+    <button class="btn-primary" bindtap="refreshStatus">
+      刷新状态
+    </button>
+  </view>
+
+  <view class="result" wx:if="{{result}}">
+    <text class="result-title">操作结果：</text>
+    <text class="result-text">{{result}}</text>
+  </view>
+</view>

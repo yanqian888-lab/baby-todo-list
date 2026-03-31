@@ -1,0 +1,227 @@
+/* 排敏详情页面样式 */
+.sensitivity-detail {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+}
+
+/* 页面标题 */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e8e8e8;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.header-left, .header-right {
+  width: 40px;
+}
+
+.icon-back {
+  font-size: 24px;
+  color: #333333;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333333;
+}
+
+/* 食物信息 */
+.food-info {
+  padding: 64px 16px 16px;
+  background-color: #ffffff;
+}
+
+/* 食物头部信息 */
+.food-header {
+  display: flex;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.food-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #07c160;
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+}
+
+.food-main-info {
+  flex: 1;
+}
+
+.food-name {
+  font-size: 22px;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 4px;
+}
+
+.food-type {
+  font-size: 14px;
+  color: #666666;
+  margin-bottom: 8px;
+}
+
+.food-category {
+  font-size: 14px;
+  color: #999999;
+}
+
+.category-label {
+  font-weight: bold;
+}
+
+/* 食物属性 */
+.food-properties {
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.property-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.property-label {
+  width: 100px;
+  font-weight: bold;
+  color: #666666;
+  font-size: 14px;
+}
+
+.property-value {
+  flex: 1;
+  color: #333333;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* 风险等级样式 */
+.risk-high {
+  color: #ff4d4f;
+}
+
+.risk-medium {
+  color: #faad14;
+}
+
+.risk-low {
+  color: #52c41a;
+}
+
+/* 食物介绍 */
+.food-description, .sensitivity-suggestion, .food-notes {
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 8px;
+}
+
+.description-content, .notes-content {
+  font-size: 14px;
+  color: #666666;
+  line-height: 1.6;
+}
+
+/* 排敏建议 */
+.suggestion-content {
+  padding-left: 8px;
+}
+
+.suggestion-item {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.item-label {
+  width: 80px;
+  font-weight: bold;
+  color: #666666;
+  font-size: 14px;
+}
+
+.item-value {
+  flex: 1;
+  color: #333333;
+  font-size: 14px;
+}
+
+/* 添加排敏记录按钮 */
+.add-record-btn {
+  padding: 16px;
+  background-color: #ffffff;
+  margin-top: 8px;
+}
+
+.add-record-btn button {
+  width: 100%;
+  height: 48px;
+  background-color: #07c160;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 64px 16px;
+}
+
+.loading-state text {
+  font-size: 14px;
+  color: #999999;
+}
+
+/* 错误状态 */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 16px;
+  text-align: center;
+}
+
+.error-state text {
+  font-size: 14px;
+  color: #999999;
+  margin-bottom: 24px;
+}
+
+.error-state button {
+  padding: 8px 24px;
+  background-color: #07c160;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+}

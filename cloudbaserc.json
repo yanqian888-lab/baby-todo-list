@@ -1,0 +1,32 @@
+{
+  "version": "2.0",
+  "envId": "cloud1-9g2wikx47c9ba4ec",
+  "functionRoot": "cloudfunctions",
+  "functions": {
+    "getTasks": {
+      "timeout": 3,
+      "memory": 128,
+      "runtime": "Nodejs16.13"
+    },
+    "testCollection": {
+      "timeout": 3,
+      "memory": 128,
+      "runtime": "Nodejs16.13"
+    },
+    "ensureCollections": {
+      "timeout": 3,
+      "memory": 128,
+      "runtime": "Nodejs16.13"
+    },
+    "getTaskClockIns": {
+      "timeout": 3,
+      "memory": 128,
+      "runtime": "Nodejs16.13"
+    },
+    "updateTaskStatus": {
+      "timeout": 3,
+      "memory": 128,
+      "runtime": "Nodejs16.13"
+    }
+  }
+}

@@ -1,0 +1,151 @@
+/* pages/auth/auth.wxss */
+.auth-container {
+  padding: 40rpx;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f8f8;
+}
+
+/* 顶部说明 */
+.header {
+  text-align: center;
+  margin-bottom: 60rpx;
+  padding-top: 60rpx;
+}
+
+.title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.subtitle {
+  font-size: 28rpx;
+  color: #666;
+  display: block;
+}
+
+/* 用户信息预览区域 */
+.user-preview {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  padding: 40rpx;
+  border-radius: 20rpx;
+  margin-bottom: 40rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.avatar-container {
+  margin-right: 30rpx;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.nickname {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.desc {
+  font-size: 24rpx;
+  color: #999;
+  display: block;
+}
+
+/* 授权说明 */
+.auth-info {
+  background-color: #fff;
+  padding: 40rpx;
+  border-radius: 20rpx;
+  margin-bottom: 60rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-icon {
+  margin-right: 16rpx;
+}
+
+.info-text {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 按钮区域 */
+.btn-container {
+  margin-bottom: 40rpx;
+}
+
+.auth-btn {
+  margin-bottom: 20rpx;
+  height: 90rpx;
+  line-height: 90rpx;
+  font-size: 32rpx;
+  border-radius: 45rpx;
+}
+
+.auth-btn.primary {
+  background-color: #FF7A85;
+  color: #fff;
+}
+
+.auth-btn.primary::after {
+  border: none;
+}
+
+.auth-btn.cancel {
+  background-color: #fff;
+  color: #666;
+}
+
+.auth-btn.cancel::after {
+  border: none;
+}
+
+/* 隐私说明 */
+.privacy-info {
+  text-align: center;
+  margin-top: auto;
+  padding-bottom: 40rpx;
+}
+
+.privacy-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.link {
+  color: #FF7A85;
+}
+
+/* 响应式调整 */
+@media screen and (min-width: 768px) {
+  .auth-container {
+    max-width: 600rpx;
+    margin: 0 auto;
+  }
+}

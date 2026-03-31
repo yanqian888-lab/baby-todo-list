@@ -1,0 +1,276 @@
+/* pages/profile/index.wxss */
+.container {
+  background-color: #f8f8f8;
+  min-height: 100vh;
+  padding-bottom: 20px;
+}
+
+/* 用户信息卡片 */
+.user-card {
+  background: linear-gradient(135deg, #FF7A85 0%, #FF9D9D 100%);
+  padding: 24px 16px 32px;
+  color: #fff;
+  border-radius: 0 0 24px 24px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  margin-right: 16px;
+}
+
+.info {
+  flex: 1;
+}
+
+.name-container {
+  margin-bottom: 8px;
+}
+
+.nickname {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.baby-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.baby-icon {
+  font-size: 16px;
+}
+
+.login-btn {
+  background-color: #fff;
+  color: #FF7A85;
+  font-size: 14px;
+  padding: 6px 20px;
+  border-radius: 20px;
+  margin-top: 8px;
+}
+
+/* 宝宝信息卡片 */
+.baby-card {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.baby-avatar-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.baby-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  margin-right: 16px;
+}
+
+.baby-basic-info {
+  display: flex;
+  align-items: center;
+}
+
+.gender-icon {
+  font-size: 18px;
+  margin-right: 10px;
+}
+
+.baby-birthday {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* 排敏进度卡片 */
+.progress-card {
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin: 30rpx 30rpx 0;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.progress-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.progress-percentage {
+  font-size: 32rpx;
+  color: #07c160;
+  font-weight: bold;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12rpx;
+  background-color: #e8e8e8;
+  border-radius: 6rpx;
+  overflow: hidden;
+  margin-bottom: 15rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #07c160;
+  border-radius: 6rpx;
+  transition: width 0.3s ease;
+}
+
+.progress-info {
+  text-align: right;
+}
+
+.progress-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.baby-physical-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.info-item {
+  font-size: 12px;
+  opacity: 0.9;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+/* 统计信息卡片 */
+.stats-card {
+  display: flex;
+  background-color: #fff;
+  margin: -20px 16px 16px;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stats-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stats-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.stats-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.divider {
+  width: 1px;
+  background-color: #eee;
+  margin: 0 16px;
+}
+
+/* 功能菜单 */
+.menu-section {
+  background-color: #fff;
+  border-radius: 12px;
+  margin: 0 16px 16px;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-icon {
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+}
+
+.menu-title {
+  font-size: 16px;
+  color: #333;
+}
+
+.arrow {
+  color: #999;
+  font-size: 16px;
+}
+
+/* 退出登录按钮 */
+.logout-section {
+  padding: 16px;
+}
+
+.logout-btn {
+  background-color: #fff;
+  border: 1px solid #FF7A85;
+  color: #FF7A85;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+/* 版本信息 */
+.version-info {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin-top: 16px;
+}
+
+/* 响应式调整 */
+@media screen and (min-width: 768px) {
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .user-card {
+    border-radius: 0 0 0 0;
+  }
+}

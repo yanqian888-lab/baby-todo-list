@@ -1,0 +1,339 @@
+/**
+ * 全局样式定义 - 母婴打卡应用
+ * 遵循设计规范文档，使用统一的颜色、字体和组件样式
+ */
+
+/* CSS变量定义 - 设计规范核心 */
+page {
+  /* 主色调 */
+  --primary-color: #FF7A85;
+  --primary-light: #FFAAB0;
+  --primary-dark: #E56A75;
+  
+  /* 辅助色 */
+  --secondary-color: #FFB84D;
+  --success-color: #4CAF50;
+  --warning-color: #FFC107;
+  --error-color: #F44336;
+  --info-color: #2196F3;
+  
+  /* 中性色 */
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-disabled: #CCCCCC;
+  
+  /* 背景色 */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8F8F8;
+  --bg-tertiary: #F2F2F2;
+  --bg-disabled: #F5F5F5;
+  
+  /* 边框色 */
+  --border-primary: #E8E8E8;
+  --border-secondary: #EEEEEE;
+  --border-light: #F2F2F2;
+  
+  /* 阴影 */
+  --shadow-light: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  --shadow-medium: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+  --shadow-heavy: 0 8rpx 30rpx rgba(0, 0, 0, 0.12);
+  
+  /* 圆角 */
+  --radius-small: 8rpx;
+  --radius-medium: 16rpx;
+  --radius-large: 24rpx;
+  --radius-full: 9999rpx;
+  
+  /* 字体大小 */
+  --font-size-xs: 20rpx;
+  --font-size-sm: 24rpx;
+  --font-size-base: 28rpx;
+  --font-size-lg: 32rpx;
+  --font-size-xl: 36rpx;
+  --font-size-xxl: 48rpx;
+  
+  /* 间距 */
+  --spacing-xs: 10rpx;
+  --spacing-sm: 20rpx;
+  --spacing-md: 30rpx;
+  --spacing-lg: 40rpx;
+  --spacing-xl: 60rpx;
+  --spacing-xxl: 80rpx;
+  
+  /* 行高 */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.8;
+  
+  /* 过渡效果 */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* 基础样式 */
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  box-sizing: border-box;
+}
+
+/* 通用样式重置 */
+view, text, image, button, input, textarea {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 链接样式 */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+/* 按钮基础样式 */
+button {
+  font-size: var(--font-size-base);
+  border-radius: var(--radius-medium);
+  transition: all var(--transition-fast);
+  height: 88rpx;
+  line-height: 88rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background-color: var(--primary-color);
+  color: var(--bg-primary);
+  border: none;
+}
+
+button.primary:active {
+  background-color: var(--primary-dark);
+}
+
+button.secondary {
+  background-color: var(--bg-primary);
+  color: var(--primary-color);
+  border: 2rpx solid var(--primary-color);
+}
+
+button.secondary:active {
+  background-color: #fff8f8;
+}
+
+/* 表单元素样式 */
+input, textarea, select {
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  border: 2rpx solid var(--border-primary);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--bg-primary);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* 布局工具类 */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+/* 容器样式 */
+.container {
+  padding: var(--spacing-md);
+}
+
+/* 卡片样式 */
+.card {
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  box-shadow: var(--shadow-light);
+}
+
+/* 分割线 */
+.divider {
+  height: 1px;
+  background-color: var(--border-primary);
+  margin: var(--spacing-sm) 0;
+}
+
+/* 字体样式 */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.font-bold {
+  font-weight: 600;
+}
+
+/* 工具类 */
+.text-center {
+  text-align: center;
+}
+
+/* 间距工具类 */
+.mt-10 { margin-top: var(--spacing-xs); }
+.mt-20 { margin-top: var(--spacing-sm); }
+.mt-30 { margin-top: var(--spacing-md); }
+.mt-40 { margin-top: var(--spacing-lg); }
+
+.mb-10 { margin-bottom: var(--spacing-xs); }
+.mb-20 { margin-bottom: var(--spacing-sm); }
+.mb-30 { margin-bottom: var(--spacing-md); }
+.mb-40 { margin-bottom: var(--spacing-lg); }
+
+.ml-10 { margin-left: var(--spacing-xs); }
+.ml-20 { margin-left: var(--spacing-sm); }
+.ml-30 { margin-left: var(--spacing-md); }
+.ml-40 { margin-left: var(--spacing-lg); }
+
+.mr-10 { margin-right: var(--spacing-xs); }
+.mr-20 { margin-right: var(--spacing-sm); }
+.mr-30 { margin-right: var(--spacing-md); }
+.mr-40 { margin-right: var(--spacing-lg); }
+
+.p-10 { padding: var(--spacing-xs); }
+.p-20 { padding: var(--spacing-sm); }
+.p-30 { padding: var(--spacing-md); }
+.p-40 { padding: var(--spacing-lg); }
+
+/* 组件样式 - 标签 */
+.tag {
+  padding: 8rpx 20rpx;
+  border-radius: var(--radius-small);
+  font-size: var(--font-size-sm);
+  display: inline-block;
+}
+
+.tag-primary {
+  background-color: var(--primary-color);
+  color: var(--bg-primary);
+}
+
+.tag-secondary {
+  background-color: #fff0f0;
+  color: var(--primary-color);
+}
+
+/* 组件样式 - 徽章 */
+.badge {
+  position: absolute;
+  top: -10rpx;
+  right: -10rpx;
+  background-color: var(--error-color);
+  color: var(--bg-primary);
+  font-size: var(--font-size-xs);
+  padding: 2rpx 12rpx;
+  border-radius: 10rpx;
+  min-width: 24rpx;
+  height: 24rpx;
+  line-height: 24rpx;
+  text-align: center;
+}
+
+/* 设置项样式 */
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--bg-primary);
+  border-bottom: 2rpx solid var(--border-primary);
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+/* 开关样式增强 */
+switch {
+  transform: scale(0.8);
+}
+
+/* 加载动画 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-lg);
+}
+
+/* 空状态 */
+.empty-state {
+  padding: var(--spacing-xxl) 0;
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.empty-state image {
+  width: 200rpx;
+  height: 200rpx;
+  opacity: 0.5;
+  margin-bottom: var(--spacing-md);
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 适配深色模式的样式变量（预留） */

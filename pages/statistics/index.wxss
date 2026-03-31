@@ -1,0 +1,282 @@
+/* 数据统计页面样式 */
+.container {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+  padding-bottom: 40rpx;
+}
+
+/* 页面标题 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 40rpx;
+  background-color: #fff;
+  border-bottom: 1rpx solid #eee;
+}
+
+.title {
+  font-size: 44rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 时间范围选择器 */
+.time-range-selector {
+  display: flex;
+  padding: 30rpx 40rpx;
+  background-color: #fff;
+  margin-bottom: 20rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.time-option {
+  flex: 1;
+  text-align: center;
+  padding: 15rpx 0;
+  font-size: 28rpx;
+  color: #666;
+  border-bottom: 3rpx solid transparent;
+}
+
+.time-option.active {
+  color: #07c160;
+  border-bottom-color: #07c160;
+  font-weight: bold;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 6rpx solid #f3f3f3;
+  border-top: 6rpx solid #07c160;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 统计数据容器 */
+.statistics-container {
+  padding: 20rpx;
+}
+
+/* 任务完成率卡片 */
+.stat-card {
+  background: linear-gradient(135deg, #07c160 0%, #06954b 100%);
+  border-radius: 20rpx;
+  padding: 40rpx;
+  color: white;
+  text-align: center;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 20rpx rgba(7, 193, 96, 0.2);
+}
+
+.stat-title {
+  font-size: 28rpx;
+  opacity: 0.9;
+  margin-bottom: 10rpx;
+}
+
+.stat-value {
+  font-size: 64rpx;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+
+.stat-detail {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+/* 核心数据概览 */
+.stats-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.stat-item {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.stat-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background-color: #f0f9ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.stat-icon text {
+  font-size: 40rpx;
+  color: #1989fa;
+}
+
+.stat-icon.completed {
+  background-color: #f0fff4;
+}
+
+.stat-icon.completed text {
+  color: #07c160;
+}
+
+.stat-icon.clock {
+  background-color: #fff7e6;
+}
+
+.stat-icon.clock text {
+  color: #ff9500;
+}
+
+.stat-icon.streak {
+  background-color: #fff0f6;
+}
+
+.stat-icon.streak text {
+  color: #ff4d4f;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 任务分类统计 */
+.category-stats {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15rpx 0;
+}
+
+.category-name {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.category-count {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.empty-categories {
+  text-align: center;
+  color: #999;
+  font-size: 26rpx;
+  padding: 40rpx 0;
+}
+
+/* 快速入口 */
+.quick-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-btn {
+  flex: 1;
+  font-size: 28rpx;
+  border-radius: 12rpx;
+  margin: 0;
+}
+
+.action-btn.primary {
+  background-color: #07c160;
+  color: white;
+}
+
+.action-btn.default {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.empty-image {
+  width: 200rpx;
+  height: 200rpx;
+  opacity: 0.5;
+  margin-bottom: 30rpx;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #666;
+  margin-bottom: 15rpx;
+}
+
+.empty-hint {
+  font-size: 26rpx;
+  color: #999;
+  text-align: center;
+  padding: 0 40rpx;
+  line-height: 1.5;
+}

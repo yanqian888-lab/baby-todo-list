@@ -1,0 +1,102 @@
+<!-- pages/sensitivity/index.wxml -->
+<view class="container">
+
+
+  <!-- 主要内容区域 -->
+  <view class="main-content">
+    <!-- 没有宝宝信息时的提示 -->
+    <view wx:if="{{!babyInfo}}" class="no-baby-info">
+      <text class="info-text">请先填写宝宝信息</text>
+      <button type="primary" bindtap="openBabyInfoPage">填写宝宝信息</button>
+    </view>
+
+    <!-- 有宝宝信息时的排敏内容 -->
+    <view wx:else>
+      <!-- 排敏进度条 -->
+      <view class="progress-section">
+        <view class="progress-header">
+          <text class="progress-title">排敏进度</text>
+          <text class="progress-value">{{sensitivityProgress}}%</text>
+        </view>
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{sensitivityProgress}}%"></view>
+        </view>
+      </view>
+
+      <!-- 推荐食物区域 -->
+      <view class="recommended-section">
+        <view class="section-header">
+          <text class="section-title">{{recommendationTitle}}</text>
+          <!-- 添加“➕”按钮 -->
+          <view class="add-food-btn" bindtap="navigateToFoodSelect">
+            <text class="add-icon">➕</text>
+          </view>
+        </view>
+        <view class="food-list">
+          <view wx:for="{{recommendedFoods}}" wx:key="_id" 
+                class="food-item {{selectedFood && selectedFood._id === item._id ? 'selected' : ''}}"
+                bindtap="selectFood" data-food-id="{{item._id}}">
+            <view class="food-info">
+              <text class="food-name">{{item.name}}</text>
+              <text class="food-category">{{item.category}}</text>
+            </view>
+            <view class="food-details">
+              <text class="food-level">
+                <text wx:if="{{item.allergyLevel === 1}}" class="level-low">低敏</text>
+                <text wx:elif="{{item.allergyLevel === 2}}" class="level-medium">中敏</text>
+                <text wx:else class="level-high">高敏</text>
+              </text>
+              <text class="food-days">
+                <!-- 直接显示排敏进度，不依赖item.ongoing -->
+                <text wx:if="{{item.ongoing && item.sensitivityDays && item.totalSensitivityDays}}">
+                  已排{{item.sensitivityDays}}/{{item.totalSensitivityDays}}天
+                </text>
+                <text wx:elif="{{item.sensitivityDays}}">
+                  已排{{item.sensitivityDays}}/{{item.allergyLevel === 3 ? 5 : 3}}天
+                </text>
+                <text wx:else>
+                  需排敏{{item.allergyLevel === 3 ? 5 : 3}}天
+                </text>
+              </text>
+            </view>
+            <!-- 直接根据是否有sensitivityDays来显示排敏中标签 -->
+            <view wx:if="{{item.sensitivityDays}}" class="ongoing-tag">排敏中</view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 今日排敏记录模块 -->
+      <view class="record-section">
+        <text class="section-title">今日排敏记录</text>
+        
+        <!-- 今日已排敏食物 -->
+        <view wx:if="{{todaySensitivityRecord}}" class="today-record">
+          <view class="record-header">
+            <!-- 左侧记录项容器 -->
+            <view class="record-content">
+              <view class="record-item">
+                <text class="record-label">排敏食物:</text>
+                <text class="record-value">{{todaySensitivityRecord.foodName}}</text>
+              </view>
+              <view class="record-item">
+                <text class="record-label">喜欢程度:</text>
+                <text class="record-value">{{likeStatusText}}</text>
+              </view>
+              <view class="record-item">
+                <text class="record-label">过敏情况:</text>
+                <text class="record-value">{{allergyStatusText}}</text>
+              </view>
+            </view>
+            <!-- 右侧修改按钮 -->
+            <button class="modify-btn" bindtap="modifyTodayRecord">修改</button>
+          </view>
+        </view>
+        
+        <!-- 今日未排敏提示 -->
+        <view wx:else class="no-record">
+          <text class="no-record-text">今日尚未添加排敏记录</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

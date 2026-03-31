@@ -1,0 +1,108 @@
+<!-- 数据统计页面 -->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="header">
+    <text class="title">数据统计</text>
+  </view>
+
+  <!-- 时间范围选择器 -->
+  <view class="time-range-selector">
+    <view 
+      wx:for="{{timeRangeOptions}}" 
+      wx:key="value"
+      class="time-option {{timeRange === item.value ? 'active' : ''}}"
+      data-value="{{item.value}}"
+      bindtap="changeTimeRange"
+    >
+      {{item.label}}
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 统计数据展示 -->
+  <view wx:elif="{{statistics}}" class="statistics-container">
+    <!-- 任务完成率卡片 -->
+    <view class="stat-card completion-rate">
+      <view class="stat-title">任务完成率</view>
+      <view class="stat-value">{{statistics.taskCompletionRate}}%</view>
+      <view class="stat-detail">
+        已完成 {{statistics.completedTasks}} / {{statistics.totalTasks}} 个任务
+      </view>
+    </view>
+
+    <!-- 核心数据概览 -->
+    <view class="stats-overview">
+      <!-- 总任务数 -->
+      <view class="stat-item">
+        <view class="stat-icon">
+          <text class="iconfont icon-task"></text>
+        </view>
+        <view class="stat-info">
+          <view class="stat-number">{{statistics.totalTasks}}</view>
+          <view class="stat-label">总任务</view>
+        </view>
+      </view>
+      
+      <!-- 已完成任务 -->
+      <view class="stat-item">
+        <view class="stat-icon completed">
+          <text class="iconfont icon-check"></text>
+        </view>
+        <view class="stat-info">
+          <view class="stat-number">{{statistics.completedTasks}}</view>
+          <view class="stat-label">已完成</view>
+        </view>
+      </view>
+      
+      <!-- 打卡总数 -->
+      <view class="stat-item">
+        <view class="stat-icon clock">
+          <text class="iconfont icon-clock"></text>
+        </view>
+        <view class="stat-info">
+          <view class="stat-number">{{statistics.totalClockIns}}</view>
+          <view class="stat-label">总打卡</view>
+        </view>
+      </view>
+      
+      <!-- 连续打卡 -->
+      <view class="stat-item">
+        <view class="stat-icon streak">
+          <text class="iconfont icon-streak"></text>
+        </view>
+        <view class="stat-info">
+          <view class="stat-number">{{statistics.consecutiveDays}}</view>
+          <view class="stat-label">连续天数</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 任务分类统计 -->
+    <view class="category-stats">
+      <view class="section-title">任务分类统计</view>
+      <view class="category-list">
+        <view wx:for="{{statistics.taskCategories}}" wx:key="_id" class="category-item">
+          <view class="category-name">{{item._id || '未分类'}}</view>
+          <view class="category-count">{{item.count}} 个任务</view>
+        </view>
+        <view wx:if="{{statistics.taskCategories.length === 0}}" class="empty-categories">
+          <text>暂无分类数据</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 快速入口已移除 -->
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state">
+    <image src="/images/empty-stats.svg" class="empty-image"></image>
+    <text class="empty-text">暂无统计数据</text>
+    <text class="empty-hint">开始记录任务和打卡，查看你的数据报告</text>
+  </view>
+</view>

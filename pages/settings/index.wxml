@@ -1,0 +1,102 @@
+<!-- pages/settings/index.wxml -->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="header">
+    <view class="nav-bar">
+      <view class="back-btn" bindtap="navigateBack">
+        <text class="icon">←</text>
+      </view>
+      <view class="title">设置</view>
+      <view class="placeholder"></view>
+    </view>
+  </view>
+
+  <!-- 通知设置 -->
+  <view class="section">
+    <view class="section-title">通知设置</view>
+    <view class="setting-item">
+      <view class="setting-label">任务提醒</view>
+      <switch 
+        checked="{{settings.notifications}}" 
+        bindchange="toggleSetting"
+        data-key="notifications"
+      />
+    </view>
+    <view class="setting-item">
+      <view class="setting-label">提醒音效</view>
+      <switch 
+        checked="{{settings.reminderSound}}" 
+        bindchange="toggleSetting"
+        data-key="reminderSound"
+      />
+    </view>
+  </view>
+
+  <!-- 显示设置 -->
+  <view class="section">
+    <view class="section-title">显示设置</view>
+    <view class="setting-item">
+      <view class="setting-label">深色模式</view>
+      <switch 
+        checked="{{settings.darkMode}}" 
+        bindchange="toggleSetting"
+        data-key="darkMode"
+      />
+    </view>
+  </view>
+
+  <!-- 语言设置 -->
+  <view class="section">
+    <view class="section-title">语言设置</view>
+    <view class="language-container">
+      <block wx:for="{{languages}}" wx:key="id">
+        <view class="language-item" bindtap="selectLanguage" data-id="{{item.id}}">
+          <view class="language-text">{{item.name}}</view>
+          <view class="radio {{settings.language === item.id ? 'active' : ''}}">
+            <view wx:if="{{settings.language === item.id}}" class="radio-inner"></view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 存储设置 -->
+  <view class="section">
+    <view class="section-title">存储设置</view>
+    <view class="setting-item" bindtap="clearCache">
+      <view class="setting-label">清除缓存</view>
+      <view class="setting-value">{{cacheSize}}</view>
+    </view>
+    <view class="setting-item">
+      <view class="setting-label">自动同步数据</view>
+      <switch 
+        checked="{{settings.autoSync}}" 
+        bindchange="toggleSetting"
+        data-key="autoSync"
+      />
+    </view>
+  </view>
+
+  <!-- 其他 -->
+  <view class="section">
+    <view class="section-title">其他</view>
+    <view class="setting-item" bindtap="checkUpdate">
+      <view class="setting-label">检查更新</view>
+      <view class="setting-value">V{{version}}</view>
+    </view>
+    <view class="setting-item" bindtap="aboutUs">
+      <view class="setting-label">关于我们</view>
+      <view class="arrow">›</view>
+    </view>
+    <view class="setting-item" bindtap="userAgreement">
+      <view class="setting-label">用户协议</view>
+      <view class="arrow">›</view>
+    </view>
+    <view class="setting-item" bindtap="privacyPolicy">
+      <view class="setting-label">隐私政策</view>
+      <view class="arrow">›</view>
+    </view>
+  </view>
+
+  <view class="version-info">版本: {{version}}</view>
+</view>

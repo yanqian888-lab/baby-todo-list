@@ -1,0 +1,75 @@
+<!-- 添加排敏记录页面 -->
+<view class="add-record">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <view class="header-left" bindtap="navigateBack">
+      <text class="icon-back">←</text>
+    </view>
+    <view class="header-title">添加排敏记录</view>
+    <view class="header-right"></view>
+  </view>
+
+  <!-- 表单容器 -->
+  <view class="form-container">
+    <!-- 食物信息 -->
+    <view class="form-section">
+      <view class="section-title">食物信息</view>
+      <view class="food-info-item">
+        <text class="label">食物名称：</text>
+        <text class="value">{{foodName}}</text>
+      </view>
+      <view class="food-info-item">
+        <text class="label">食物类型：</text>
+        <text class="value">{{foodType}}</text>
+      </view>
+    </view>
+
+    <!-- 排敏日期 -->
+    <view class="form-section">
+      <view class="section-title">排敏日期</view>
+      <view class="date-picker" bindtap="showDatePicker">
+        <text class="label">排敏日期：</text>
+        <text class="value">{{recordDate}}</text>
+        <text class="icon-right">></text>
+      </view>
+    </view>
+
+    <!-- 排敏状态 -->
+    <view class="form-section">
+      <view class="section-title">排敏状态</view>
+      <view class="status-options">
+        <view class="status-option {{recordStatus === 'safe' ? 'active' : ''}}" bindtap="setStatus" data-status="safe">
+          <text class="status-icon safe-icon">✓</text>
+          <text class="status-text">安全</text>
+        </view>
+        <view class="status-option {{recordStatus === 'allergic' ? 'active' : ''}}" bindtap="setStatus" data-status="allergic">
+          <text class="status-icon allergic-icon">✗</text>
+          <text class="status-text">过敏</text>
+        </view>
+        <view class="status-option {{recordStatus === 'unknown' ? 'active' : ''}}" bindtap="setStatus" data-status="unknown">
+          <text class="status-icon unknown-icon">?</text>
+          <text class="status-text">观察中</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 过敏症状（仅当状态为过敏时显示） -->
+    <view class="form-section" wx:if="{{recordStatus === 'allergic'}}">
+      <view class="section-title">过敏症状</view>
+      <textarea class="symptoms-input" placeholder="请描述宝宝的过敏症状，如皮疹、呕吐、腹泻等" value="{{allergySymptoms}}" bindinput="onSymptomsInput"></textarea>
+    </view>
+
+    <!-- 备注信息 -->
+    <view class="form-section">
+      <view class="section-title">备注信息</view>
+      <textarea class="remark-input" placeholder="请输入备注信息（可选）" value="{{remark}}" bindinput="onRemarkInput"></textarea>
+    </view>
+
+    <!-- 提交按钮 -->
+    <view class="submit-section">
+      <button class="submit-btn" type="primary" bindtap="submitRecord" disabled="{{loading}}">
+        {{loading ? '提交中...' : '保存记录'}}
+      </button>
+    </view>
+  </view>
+</view>

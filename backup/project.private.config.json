@@ -1,0 +1,14 @@
+{
+  "libVersion": "3.11.2",
+  "projectname": "03%20%E6%AF%8D%E5%A9%B4%E5%BA%94%E7%94%A8ToDOLIst",
+  "setting": {
+    "urlCheck": true,
+    "coverView": true,
+    "lazyloadPlaceholderEnable": false,
+    "skylineRenderEnable": false,
+    "preloadBackgroundData": false,
+    "autoAudits": false,
+    "showShadowRootInWxmlPanel": true,
+    "compileHotReLoad": true
+  }
+}

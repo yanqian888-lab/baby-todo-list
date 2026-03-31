@@ -1,0 +1,248 @@
+/* pages/profile/baby-info.wxss */
+
+.baby-info-container {
+  padding: 30rpx;
+  background-color: #fff;
+  min-height: 100vh;
+}
+
+/* 页面标题 */
+.page-header {
+  margin-bottom: 40rpx;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 44rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 表单样式 */
+.baby-form {
+  margin-bottom: 40rpx;
+}
+
+.form-item {
+  margin-bottom: 40rpx;
+}
+
+.label {
+  display: block;
+  font-size: 32rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+}
+
+.input {
+  width: 100%;
+  height: 90rpx;
+  background-color: #f8f8f8;
+  border-radius: 10rpx;
+  padding: 0 30rpx;
+  font-size: 32rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+/* 日期选择器样式 */
+.date-picker {
+  width: 100%;
+  height: 90rpx;
+  background-color: #f8f8f8;
+  border-radius: 10rpx;
+  padding: 0 30rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.date-value {
+  font-size: 32rpx;
+  color: #333;
+}
+
+/* 性别选择器样式 */
+.gender-select {
+  display: flex;
+  gap: 30rpx;
+}
+
+.gender-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 180rpx;
+  height: 180rpx;
+  background-color: #f8f8f8;
+  border-radius: 10rpx;
+  transition: all 0.3s ease;
+}
+
+.gender-option.selected {
+  background-color: #FFE0E3;
+  border: 2rpx solid #FF7A85;
+}
+
+.gender-icon {
+  font-size: 80rpx;
+  margin-bottom: 10rpx;
+}
+
+.gender-text {
+  font-size: 32rpx;
+  color: #333;
+}
+
+/* 保存按钮样式 */
+.save-btn-container {
+  margin-top: 60rpx;
+  padding: 0 20rpx;
+}
+
+.save-btn {
+  width: 100%;
+  height: 96rpx;
+  background-color: #FF7A85;
+  border-radius: 48rpx;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-btn:active {
+  background-color: #E85C6A;
+}
+
+/* 已排敏食物按钮样式 */
+.safe-foods-section {
+  margin-top: 10px;
+}
+
+.safe-foods-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  background-color: #fff;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 0 10px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+.button-text {
+  font-size: 14px;
+  color: #333;
+}
+
+.button-arrow {
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  font-size: 18px;
+  color: #fff;
+  background-color: #ff6b6b;
+  border-radius: 50%;
+}
+
+.safe-foods-tip {
+  margin-top: 5px;
+}
+
+.tip-text {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+}
+
+/* 已选择的食物列表样式 */
+.selected-foods-list {
+  margin-top: 24rpx;
+  background-color: #fff;
+  border-radius: 12rpx;
+  border: 1px solid #e8e8e8;
+  overflow: hidden;
+}
+
+.food-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.food-item:last-child {
+  border-bottom: none;
+}
+
+.food-info {
+  flex: 1;
+}
+
+.food-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.food-category {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.food-prefs {
+  font-size: 28rpx;
+  color: #999;
+  display: block;
+  font-weight: 400;
+}
+
+.delete-btn {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: #999;
+  border: 1px solid #e8e8e8;
+  border-radius: 50%;
+  margin-left: 16rpx;
+  transition: all 0.3s ease;
+}
+
+.delete-btn:active {
+  background-color: #f5f5f5;
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+}
+
+.delete-icon {
+  font-size: 36rpx;
+  line-height: 56rpx;
+  font-weight: bold;
+}
+
+/* 适配不同设备尺寸 */
+@media screen and (min-width: 375px) {
+  .baby-info-container {
+    padding: 40rpx;
+  }
+  
+  .form-item {
+    margin-bottom: 48rpx;
+  }
+}

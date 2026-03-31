@@ -1,0 +1,84 @@
+<!-- pages/profile/baby-info.wxml -->
+<view class="baby-info-container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">宝宝信息</text>
+  </view>
+  
+  <!-- 宝宝信息表单 -->
+  <view class="baby-form">
+    <view class="form-item">
+      <text class="label">宝宝昵称</text>
+      <input class="input" type="text" placeholder="请输入宝宝昵称" value="{{babyInfo.nickname}}" bindinput="onInputChange" data-field="nickname" />
+    </view>
+    
+    <view class="form-item">
+      <text class="label">出生日期</text>
+      <picker class="date-picker" mode="date" fields="day" bindchange="onDateChange" value="{{babyInfo.birthday}}" start="{{startDate}}" end="{{currentDate}}">
+        <view class="picker-content">
+          <text class="date-value">{{babyInfo.birthday || '请选择宝宝出生日期'}}</text>
+          <icon class="arrow-icon" type="right" size="14" color="#999" />
+        </view>
+      </picker>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">性别</text>
+      <view class="gender-select">
+        <view class="gender-option {{babyInfo.gender === 'male' ? 'selected' : ''}}" bindtap="onGenderSelect" data-gender="male">
+          <text class="gender-icon">👦</text>
+          <text class="gender-text">男</text>
+        </view>
+        <view class="gender-option {{babyInfo.gender === 'female' ? 'selected' : ''}}" bindtap="onGenderSelect" data-gender="female">
+          <text class="gender-icon">👧</text>
+          <text class="gender-text">女</text>
+        </view>
+      </view>
+    </view>
+    
+
+    <view class="form-item">
+      <text class="label">已排敏的食物</text>
+      <view class="safe-foods-section">
+        <!-- 跳转按钮 -->
+        <view class="safe-foods-button" bindtap="navigateToFoodSelect">
+          <text class="button-text">添加已排敏食物</text>
+          <view class="button-arrow">+</view>
+        </view>
+        
+        <!-- 已选择的食物列表 -->
+        <view class="selected-foods-list" wx:if="{{babyInfo.selectedFoodsList && babyInfo.selectedFoodsList.length > 0}}">
+          <view class="food-item" wx:for="{{babyInfo.selectedFoodsList}}" wx:key="foodId">
+            <view class="food-info">
+              <text class="food-name">{{item.foodName}}</text>
+              <text class="food-category">{{item.category}}</text>
+              <!-- 只有当有实际选择时才显示偏好信息 -->
+            <text class="food-prefs" wx:if="{{item.likeText && item.likeText !== '请选择' && item.allergyText && item.allergyText !== '请选择'}}">
+                {{item.likeText}}, {{item.allergyText}}
+              </text>
+            <text class="food-prefs" wx:elif="{{item.likeText && item.likeText !== '请选择'}}">
+                {{item.likeText}}
+              </text>
+            <text class="food-prefs" wx:elif="{{item.allergyText && item.allergyText !== '请选择'}}">
+                {{item.allergyText}}
+              </text>
+            </view>
+            <view class="delete-btn" bindtap="deleteSelectedFood" data-index="{{index}}">
+              <text class="delete-icon">×</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 提示信息 -->
+        <view class="safe-foods-tip">
+          <text class="tip-text">*不添加默认为未开始排敏</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 保存按钮 -->
+  <view class="save-btn-container">
+    <button class="save-btn" type="primary" bindtap="saveBabyInfo">保存</button>
+  </view>
+</view>

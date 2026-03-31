@@ -1,0 +1,103 @@
+<!-- 任务管理页面 -->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="header">
+    <text class="title">任务管理</text>
+    <view class="actions">
+      <button class="btn-template" type="default" size="mini" bindtap="goToTaskTemplates">任务模板</button>
+      <button class="btn-create" type="primary" bindtap="goToCreateTask">创建任务</button>
+    </view>
+  </view>
+
+  <!-- 状态标签栏 -->
+  <view class="tab-bar">
+    <view 
+      class="tab {{currentTab === 'pending' ? 'active' : ''}}" 
+      data-tab="pending" 
+      bindtap="switchTab"
+    >
+      待办
+    </view>
+    <view 
+      class="tab {{currentTab === 'completed' ? 'active' : ''}}" 
+      data-tab="completed" 
+      bindtap="switchTab"
+    >
+      已完成
+    </view>
+    <view 
+      class="tab {{currentTab === 'all' ? 'active' : ''}}" 
+      data-tab="all" 
+      bindtap="switchTab"
+    >
+      全部
+    </view>
+  </view>
+
+  <!-- 分类选择器 -->
+  <scroll-view class="category-scroll" scroll-x enable-flex>
+    <view class="category-container">
+      <view 
+        wx:for="{{categories}}" 
+        wx:key="id"
+        class="category {{currentCategory === item.id ? 'active' : ''}}"
+        data-category="{{item.id}}"
+        bindtap="switchCategory"
+      >
+        {{item.name}}
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 任务列表 -->
+  <scroll-view 
+    class="task-list" 
+    scroll-y 
+    enable-back-to-top 
+    bindscrolltolower="onReachBottom"
+    refresher-enabled
+    bindrefresherrefresh="onPullDownRefresh"
+    refresher-triggered="{{refreshing}}"
+  >
+    <block wx:if="{{tasks.length > 0}}">
+      <view 
+        wx:for="{{tasks}}" 
+        wx:key="_id"
+        class="task-item {{item.status === 'completed' ? 'completed' : ''}}"
+      >
+        <view class="task-content">
+          <view class="task-header">
+            <view class="task-title-wrapper">
+              <checkbox 
+                checked="{{item.status === 'completed'}}" 
+                class="task-checkbox"
+                data-id="{{item._id}}"
+                bindtap="toggleTaskStatus"
+              />
+              <text class="task-title">{{item.title}}</text>
+              <view class="task-category">{{getCategoryName(item.category)}}</view>
+            </view>
+          </view>
+          <view wx:if="{{item.description}}" class="task-description">{{item.description}}</view>
+          <view class="task-footer">
+            <view class="task-date" wx:if="{{item.dueDate}}">
+              <text class="iconfont icon-date"></text>
+              {{item.dueDate}}
+            </view>
+
+          </view>
+        </view>
+      </view>
+    </block>
+    
+    <view wx:elif="{{!loading}}" class="empty-state">
+      <image src="/images/empty-tasks.png" class="empty-image"></image>
+      <text class="empty-text">暂无任务</text>
+      <text class="empty-hint">点击右上角创建你的第一个任务</text>
+    </view>
+    
+    <view wx:if="{{loading && tasks.length > 0}}" class="loading-more">
+      <text class="loading-text">加载中...</text>
+    </view>
+  </scroll-view>
+</view>

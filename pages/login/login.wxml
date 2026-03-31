@@ -1,0 +1,58 @@
+<!-- pages/login/login.wxml -->
+<view class="login-container">
+  <!-- 顶部logo和标题 -->
+  <view class="header">
+    <view class="logo">
+      <image src="/images/default-avatar.svg" mode="aspectFit"></image>
+    </view>
+    <view class="app-name">
+      <text class="main-title">母婴打卡</text>
+      <text class="sub-title">记录宝宝成长的每一天</text>
+    </view>
+  </view>
+
+  <!-- 功能介绍 -->
+  <view class="features">
+    <view class="feature-item">
+      <icon class="feature-icon" type="success" size="20" color="#FF7A85"></icon>
+      <text class="feature-text">智能记录宝宝日常</text>
+    </view>
+    <view class="feature-item">
+      <icon class="feature-icon" type="success" size="20" color="#FF7A85"></icon>
+      <text class="feature-text">科学育儿计划推荐</text>
+    </view>
+    <view class="feature-item">
+      <icon class="feature-icon" type="success" size="20" color="#FF7A85"></icon>
+      <text class="feature-text">成长数据可视化</text>
+    </view>
+  </view>
+
+  <!-- 登录按钮 -->
+  <view class="login-btn-container">
+    <button 
+      class="login-btn" 
+      type="primary" 
+      bindtap="onLoginButtonTap"
+      loading="{{isLoading}}"
+      disabled="{{isLoading || !isAgreed}}"
+    >
+      微信一键登录
+    </button>
+  </view>
+
+  <!-- 用户协议 -->
+  <view class="agreement">
+    <checkbox class="checkbox" checked="{{isAgreed}}" bindtap="toggleAgreement"></checkbox>
+    <text class="agreement-text">
+      我已阅读并同意
+      <text class="link" bindtap="navigateToAgreement">《用户协议》</text>
+      和
+      <text class="link" bindtap="navigateToPrivacy">《隐私政策》</text>
+    </text>
+  </view>
+
+  <!-- 底部版权信息 -->
+  <view class="footer">
+    <text class="copyright">© 2024 母婴打卡 版权所有</text>
+  </view>
+</view>

@@ -1,0 +1,314 @@
+<!-- 任务创建与编辑页面 -->
+<view class="container">
+
+
+  <!-- 任务模板区域 -->
+  <view class="template-section" wx:if="{{mode === 'create'}}">
+    <view class="template-header">
+      <text class="template-title">使用任务模板</text>
+    </view>
+    <view class="template-list">
+      <!-- 模板分组选择器 -->
+      <scroll-view scroll-x class="group-selector">
+        <view 
+          class="group-item {{selectedGroup === 'pregnant' ? 'active' : ''}}"
+          data-group="pregnant"
+          bindtap="switchTemplateGroup"
+        >
+          <text class="group-icon">🤰</text>
+          <text class="group-name">孕妈妈</text>
+        </view>
+        <view 
+          class="group-item {{selectedGroup === 'new_mom' ? 'active' : ''}}"
+          data-group="new_mom"
+          bindtap="switchTemplateGroup"
+        >
+          <text class="group-icon">👶</text>
+          <text class="group-name">新手妈妈</text>
+        </view>
+        <view 
+          class="group-item {{selectedGroup === 'baby' ? 'active' : ''}}"
+          data-group="baby"
+          bindtap="switchTemplateGroup"
+        >
+          <text class="group-icon">👶</text>
+          <text class="group-name">宝宝</text>
+        </view>
+      </scroll-view>
+      
+      <!-- 年龄段选择器（仅宝宝组显示） -->
+      <scroll-view scroll-x wx:if="{{selectedGroup === 'baby'}}" class="age-range-selector">
+        <view 
+          class="age-range-item {{selectedAgeRange === '0-1' ? 'active' : ''}}"
+          data-age="0-1"
+          bindtap="switchAgeRange"
+        >
+          <text class="age-range-name">0-1个月</text>
+        </view>
+        <view 
+          class="age-range-item {{selectedAgeRange === '2-6' ? 'active' : ''}}"
+          data-age="2-6"
+          bindtap="switchAgeRange"
+        >
+          <text class="age-range-name">2-6个月</text>
+        </view>
+        <view 
+          class="age-range-item {{selectedAgeRange === '7-24' ? 'active' : ''}}"
+          data-age="7-24"
+          bindtap="switchAgeRange"
+        >
+          <text class="age-range-name">7-24个月</text>
+        </view>
+      </scroll-view>
+      
+      <!-- 确保没有调试信息显示 -->
+      <!-- 模板列表 - 使用预分组的模拟数据 -->
+      <view class="templates-by-group" style="position: relative; z-index: 1;">
+        
+        <!-- 孕妈妈模板 -->
+        <block wx:if="{{selectedGroup === 'pregnant'}}">
+          <view wx:if="{{pregnantTemplates && pregnantTemplates.length > 0}}">
+            <view 
+              wx:for="{{pregnantTemplates}}" 
+              wx:key="id"
+              class="template-item"
+              bindtap="selectTemplate" 
+              data-id="{{item.id}}"
+            >
+              <view class="template-icon">{{item.icon || '👶'}}</view>
+              <view class="template-info">
+                <text class="template-item-title">{{item.title || '未命名任务'}}</text>
+                <text class="template-item-desc">{{item.description || '暂无描述'}}</text>
+              </view>
+            </view>
+          </view>
+          <view wx:else class="no-templates">
+            <text>暂无可用于此分类的模板</text>
+          </view>
+        </block>
+        
+        <!-- 新手妈妈模板 -->
+        <block wx:elif="{{selectedGroup === 'new_mom'}}">
+          <view wx:if="{{newMomTemplates && newMomTemplates.length > 0}}">
+            <view 
+              wx:for="{{newMomTemplates}}" 
+              wx:key="id"
+              class="template-item"
+              bindtap="selectTemplate" 
+              data-id="{{item.id}}"
+            >
+              <view class="template-icon">{{item.icon || '👶'}}</view>
+              <view class="template-info">
+                <text class="template-item-title">{{item.title || '未命名任务'}}</text>
+                <text class="template-item-desc">{{item.description || '暂无描述'}}</text>
+              </view>
+            </view>
+          </view>
+          <view wx:else class="no-templates">
+            <text>暂无可用于此分类的模板</text>
+          </view>
+        </block>
+        
+        <!-- 宝宝模板 - 根据年龄段显示 -->
+        <block wx:elif="{{selectedGroup === 'baby'}}">
+          <block wx:if="{{selectedAgeRange === '0-1'}}">
+            <block wx:if="{{babyTemplates_0_1 && babyTemplates_0_1.length > 0}}">
+              <view 
+                wx:for="{{babyTemplates_0_1}}" 
+                wx:key="id"
+                class="template-item"
+                bindtap="selectTemplate" 
+                data-id="{{item.id}}"
+              >
+                <view class="template-icon">{{item.icon || '👶'}}</view>
+                <view class="template-info">
+                  <text class="template-item-title">{{item.title || '未命名任务'}}</text>
+                  <text class="template-item-desc">{{item.description || '暂无描述'}}</text>
+                </view>
+              </view>
+            </block>
+            <view wx:else class="no-templates">
+              <text>暂无可用于此年龄段的模板</text>
+            </view>
+          </block>
+          <block wx:elif="{{selectedAgeRange === '2-6'}}">
+            <block wx:if="{{babyTemplates_2_6 && babyTemplates_2_6.length > 0}}">
+              <view 
+                wx:for="{{babyTemplates_2_6}}" 
+                wx:key="id"
+                class="template-item"
+                bindtap="selectTemplate" 
+                data-id="{{item.id}}"
+              >
+                <view class="template-icon">{{item.icon || '👶'}}</view>
+                <view class="template-info">
+                  <text class="template-item-title">{{item.title || '未命名任务'}}</text>
+                  <text class="template-item-desc">{{item.description || '暂无描述'}}</text>
+                </view>
+              </view>
+            </block>
+            <view wx:else class="no-templates">
+              <text>暂无可用于此年龄段的模板</text>
+            </view>
+          </block>
+          <block wx:elif="{{selectedAgeRange === '7-24'}}">
+            <block wx:if="{{babyTemplates_7_24 && babyTemplates_7_24.length > 0}}">
+              <view 
+                wx:for="{{babyTemplates_7_24}}" 
+                wx:key="id"
+                class="template-item"
+                bindtap="selectTemplate" 
+                data-id="{{item.id}}"
+              >
+                <view class="template-icon">{{item.icon || '👶'}}</view>
+                <view class="template-info">
+                  <text class="template-item-title">{{item.title || '未命名任务'}}</text>
+                  <text class="template-item-desc">{{item.description || '暂无描述'}}</text>
+                </view>
+              </view>
+            </block>
+            <view wx:else class="no-templates">
+              <text>暂无可用于此年龄段的模板</text>
+            </view>
+          </block>
+          <block wx:else>
+            <view class="no-templates">
+              <text>请选择宝宝年龄段</text>
+            </view>
+          </block>
+        </block>
+        
+        <!-- 空状态 -->
+        <block wx:else>
+          <view class="no-templates">
+            <text>暂无该分类的模板</text>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <!-- 任务信息输入 -->
+  <view class="input-section">
+    <!-- 任务标题 -->
+    <view class="input-group">
+      <text class="label required">任务标题</text>
+      <input 
+        class="input" 
+        value="{{title}}" 
+        placeholder="请输入任务标题" 
+        bindinput="onTitleInput"
+        maxlength="20"
+        auto-focus
+      />
+    </view>
+
+    <!-- 任务描述 -->
+    <view class="input-group">
+      <text class="label">任务描述（选填）</text>
+      <textarea 
+        class="textarea" 
+        value="{{description}}" 
+        placeholder="详细描述任务内容、注意事项等" 
+        bindinput="onDescriptionInput"
+        maxlength="100"
+        auto-height
+        show-confirm-bar="false"
+      />
+    </view>
+
+
+
+
+    
+    <!-- 循环选项 -->
+    <view class="input-group">
+      <text class="label required">循环</text>
+      <view class="frequency-options">
+        <view 
+          wx:for="{{frequencies}}" 
+          wx:key="id"
+          class="frequency-option {{frequency === item.id ? 'active' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="onFrequencyChange"
+        >
+          <text class="frequency-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 每周循环时选择星期 -->
+    <view class="input-group" wx:if="{{frequency === 'weekly'}}">
+      <text class="label required">选择周几</text>
+      <view class="weekday-options">
+        <view 
+      wx:for="{{weekDays}}" 
+      wx:key="index"
+      class="weekday-option {{computedSelectedDays[index] ? 'active' : ''}}"
+      data-index="{{index}}"
+      bindtap="onWeekdaySelect"
+    >
+      <text class="weekday-name">{{item}}</text>
+    </view>
+      </view>
+    </view>
+    
+    <!-- 每月循环时选择日期 -->
+    <view class="input-group" wx:if="{{frequency === 'monthly'}}">
+      <text class="label required">选择哪天</text>
+      <view class="monthday-options">
+        <view 
+          wx:for="{{monthDays}}" 
+          wx:key="index"
+          class="monthday-option {{computedSelectedMonthDays[index] ? 'active' : ''}}"
+          data-day="{{item}}"
+          bindtap="onMonthdaySelect"
+        >
+          <text class="monthday-name">{{item}}</text>
+        </view>
+      </view>
+    </view>
+    
+
+
+    <!-- 任务分类 -->
+    <view class="input-group">
+      <text class="label required">任务分类</text>
+      <view class="category-options">
+        <view 
+          wx:for="{{categories}}" 
+          wx:key="id"
+          class="category-option {{category === item.id ? 'active' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="onCategoryChange"
+        >
+          <text class="category-icon">{{item.icon}}</text>
+          <text class="category-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+
+
+  </view>
+
+  <!-- 保存按钮 -->
+  <view class="footer">
+    <button 
+      class="save-btn" 
+      bindtap="saveTask" 
+      disabled="{{loading}}"
+    >
+      {{loading ? '保存中...' : (mode === 'create' ? '创建任务' : '更新任务')}}
+    </button>
+    
+    <!-- 删除按钮（仅在编辑模式下显示） -->
+    <button 
+      wx:if="{{mode === 'edit'}}" 
+      class="delete-btn" 
+      bindtap="handleDeleteTask"
+      disabled="{{loading}}"
+    >
+      删除任务
+    </button>
+  </view>
+</view>

@@ -1,0 +1,28 @@
+<!-- pages/profile/about.wxml -->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">关于我们</text>
+  </view>
+
+  <!-- 应用信息卡片 -->
+  <view class="about-card">
+    <view class="app-info">
+      <text class="app-name">{{appName}}</text>
+      <text class="app-version">版本 {{version}}</text>
+      <text class="app-description">{{description}}</text>
+    </view>
+  </view>
+
+  <!-- 联系信息 -->
+  <view class="contact-section">
+    <view class="contact-item">
+      <text class="contact-label">开发者</text>
+      <text class="contact-value">{{developer}}</text>
+    </view>
+    <view class="contact-item">
+      <text class="contact-label">联系邮箱</text>
+      <text class="contact-value">{{contact}}</text>
+    </view>
+  </view>
+</view>

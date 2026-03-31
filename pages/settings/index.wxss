@@ -1,0 +1,142 @@
+/* pages/settings/index.wxss */
+.container {
+  background-color: #f8f8f8;
+  min-height: 100vh;
+}
+
+/* 顶部导航栏 */
+.header {
+  background-color: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+}
+
+.back-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  font-size: 20px;
+  color: #333;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.placeholder {
+  width: 44px;
+}
+
+/* 通用样式 */
+.section {
+  background-color: #fff;
+  margin-bottom: 12px;
+  padding: 12px 0;
+}
+
+.section-title {
+  font-size: 14px;
+  color: #999;
+  padding: 0 16px 8px;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  min-height: 50px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-label {
+  font-size: 16px;
+  color: #333;
+}
+
+.setting-value {
+  font-size: 14px;
+  color: #999;
+}
+
+.arrow {
+  font-size: 16px;
+  color: #ccc;
+}
+
+/* 语言选择样式 */
+.language-container {
+  padding: 0 16px;
+}
+
+.language-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.language-item:last-child {
+  border-bottom: none;
+}
+
+.language-text {
+  font-size: 16px;
+  color: #333;
+}
+
+.radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radio.active {
+  border-color: #FF7A85;
+}
+
+.radio-inner {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #FF7A85;
+}
+
+/* 版本信息 */
+.version-info {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin: 20px 0;
+}
+
+/* 响应式调整 */
+@media screen and (min-width: 768px) {
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}

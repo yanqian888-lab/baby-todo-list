@@ -1,0 +1,214 @@
+/* 添加排敏记录页面样式 */
+.add-record {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+}
+
+/* 页面标题 */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e8e8e8;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.header-left, .header-right {
+  width: 40px;
+}
+
+.icon-back {
+  font-size: 24px;
+  color: #333333;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333333;
+}
+
+/* 表单容器 */
+.form-container {
+  padding: 64px 16px 16px;
+}
+
+/* 表单章节 */
+.form-section {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* 食物信息项 */
+.food-info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.food-info-item:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  width: 80px;
+  font-weight: bold;
+  color: #666666;
+  font-size: 14px;
+}
+
+.value {
+  flex: 1;
+  color: #333333;
+  font-size: 14px;
+}
+
+/* 日期选择器 */
+.date-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background-color: #fafafa;
+  cursor: pointer;
+}
+
+.date-picker .label {
+  width: auto;
+  margin-right: 8px;
+}
+
+.date-picker .value {
+  flex: 1;
+}
+
+.icon-right {
+  color: #999999;
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+/* 状态选项 */
+.status-options {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.status-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0 4px;
+}
+
+.status-option:first-child {
+  margin-left: 0;
+}
+
+.status-option:last-child {
+  margin-right: 0;
+}
+
+.status-option.active {
+  border-color: #07c160;
+  background-color: #f6ffed;
+}
+
+.status-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.safe-icon {
+  background-color: #52c41a;
+  color: #ffffff;
+}
+
+.allergic-icon {
+  background-color: #ff4d4f;
+  color: #ffffff;
+}
+
+.unknown-icon {
+  background-color: #faad14;
+  color: #ffffff;
+}
+
+.status-text {
+  font-size: 14px;
+  color: #333333;
+}
+
+/* 文本输入框 */
+.symptoms-input, .remark-input {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333333;
+  background-color: #fafafa;
+  resize: none;
+}
+
+.symptoms-input::placeholder, .remark-input::placeholder {
+  color: #999999;
+}
+
+/* 提交按钮 */
+.submit-section {
+  padding: 16px 0;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 48px;
+  background-color: #07c160;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.submit-btn[disabled] {
+  background-color: #b7eb8f;
+  color: #ffffff;
+}

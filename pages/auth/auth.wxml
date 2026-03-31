@@ -1,0 +1,71 @@
+<!-- pages/auth/auth.wxml -->
+<view class="auth-container">
+  <!-- 顶部说明 -->
+  <view class="header">
+    <text class="title">完善个人信息</text>
+    <text class="subtitle">授权后可享受完整的育儿打卡服务</text>
+  </view>
+
+  <!-- 用户信息预览区域 -->
+  <view class="user-preview">
+    <view class="avatar-container">
+      <image 
+        class="avatar" 
+        src="{{userInfo ? userInfo.avatarUrl : '/assets/images/default-avatar.png'}}"
+        mode="aspectFill"
+      ></image>
+    </view>
+    <view class="user-info">
+      <text class="nickname">{{userInfo ? userInfo.nickName : '点击授权获取昵称'}}</text>
+      <text class="desc">使用微信昵称和头像，方便记录宝宝成长</text>
+    </view>
+  </view>
+
+  <!-- 授权说明 -->
+  <view class="auth-info">
+    <view class="info-item">
+      <icon class="info-icon" type="info_circle" size="18" color="#FF7A85"></icon>
+      <text class="info-text">我们将为您提供个性化的育儿建议</text>
+    </view>
+    <view class="info-item">
+      <icon class="info-icon" type="info_circle" size="18" color="#FF7A85"></icon>
+      <text class="info-text">记录并统计宝宝的成长数据</text>
+    </view>
+    <view class="info-item">
+      <icon class="info-icon" type="info_circle" size="18" color="#FF7A85"></icon>
+      <text class="info-text">安全保护您的个人信息</text>
+    </view>
+  </view>
+
+  <!-- 按钮区域 -->
+  <view class="btn-container">
+    <button 
+      class="auth-btn primary" 
+      type="primary" 
+      bindtap="getUserProfile"
+      loading="{{isLoading}}"
+      disabled="{{isLoading}}"
+    >
+      授权并继续
+    </button>
+    
+    <button 
+      class="auth-btn cancel" 
+      type="default" 
+      bindtap="onRefuse"
+      disabled="{{isLoading}}"
+    >
+      暂不授权
+    </button>
+  </view>
+
+  <!-- 隐私说明 -->
+  <view class="privacy-info">
+    <text class="privacy-text">
+      点击授权即表示您同意
+      <text class="link" bindtap="navigateToAgreement">《用户协议》</text>
+      和
+      <text class="link" bindtap="navigateToPrivacy">《隐私政策》</text>
+    </text>
+  </view>
+</view>

@@ -1,0 +1,274 @@
+/* pages/clockin/index.wxss */
+
+.container {
+  min-height: 100vh;
+  background-color: #f7f8fa;
+  padding-bottom: 80rpx;
+}
+
+/* 页面标题 */
+.header {
+  background-color: #fff;
+  padding: 30rpx 40rpx;
+  border-bottom: 1rpx solid #e8e8e8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 用户信息区域 */
+.user-info-section {
+  background-color: #fff;
+  padding: 40rpx;
+  margin: 20rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 30rpx;
+  background-color: #f0f0f0;
+}
+
+.avatar image {
+  width: 100%;
+  height: 100%;
+}
+
+.user-details .nickname {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+  display: block;
+}
+
+.user-details .greeting {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 打卡卡片 */
+.clockin-card {
+  background-color: #fff;
+  margin: 20rpx;
+  padding: 40rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.date {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.today-checked {
+  display: flex;
+  align-items: center;
+  background-color: #e6f7ff;
+  padding: 8rpx 16rpx;
+  border-radius: 16rpx;
+}
+
+.check-icon {
+  color: #1890ff;
+  margin-right: 8rpx;
+  font-weight: bold;
+}
+
+.check-text {
+  color: #1890ff;
+  font-size: 24rpx;
+}
+
+/* 打卡按钮 */
+.clockin-btn-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.clockin-btn {
+  background-color: #ff6b6b;
+  color: #fff;
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+  border: none;
+}
+
+.clockin-btn.disabled {
+  background-color: #e0e0e0;
+  color: #999;
+}
+
+.checkin-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 统计信息 */
+.statistics {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30rpx;
+  padding: 20rpx 0;
+  background-color: #f8f9fa;
+  border-radius: 16rpx;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #ff6b6b;
+  margin-bottom: 10rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.stat-divider {
+  width: 1rpx;
+  background-color: #e8e8e8;
+}
+
+/* 日历按钮 */
+.calendar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 12rpx;
+  background-color: #f8f9fa;
+}
+
+.calendar-icon {
+  margin-right: 10rpx;
+  font-size: 28rpx;
+}
+
+.calendar-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 记录区域 */
+.records-section {
+  margin: 20rpx;
+  background-color: #fff;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  margin-bottom: 30rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 记录列表 */
+.records-list {
+  margin-bottom: 20rpx;
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.record-date {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.record-time {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.record-icon {
+  width: 40rpx;
+  height: 40rpx;
+  background-color: #52c41a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 24rpx;
+}
+
+/* 空记录状态 */
+.empty-records {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 0;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+}
+
+/* 加载更多 */
+.load-more {
+  text-align: center;
+  padding: 20rpx;
+  color: #999;
+  font-size: 26rpx;
+}
