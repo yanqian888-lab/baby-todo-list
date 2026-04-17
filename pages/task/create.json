@@ -1,1 +1,6 @@
-{}
+{
+  "navigationBarTitleText": "添加任务",
+  "navigationBarBackgroundColor": "#FAFAF8",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#FAFAF8"
+}

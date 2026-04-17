@@ -4,6 +4,17 @@
 
   <!-- 主要内容区域 -->
   <view class="main-content">
+    <!-- 家庭切换 tabs -->
+    <view class="family-tabs" wx:if="{{families.length > 0}}">
+      <view
+        wx:for="{{families}}"
+        wx:key="_id"
+        class="tab-item {{currentFamilyId === item._id ? 'active' : ''}}"
+        bindtap="switchFamilyTab"
+        data-tab-id="{{item._id}}"
+      >{{item.name || item.displayName}}</view>
+    </view>
+
     <!-- 筛选条件 -->
     <view class="filter-section">
       <view class="filter-tabs">
@@ -45,8 +56,8 @@
               <text class="food-category" wx:if="{{item.category && item.category !== '未知' && item.category !== 'undefined'}}">{{item.category}}</text>
             </view>
             <view class="record-status">
-              <text class="status-text {{item.allergyStatus === 0 ? 'status-safe' : 'status-allergy'}}">
-                {{item.allergyStatus === 0 ? '安全' : '过敏'}}
+              <text class="status-text {{item.statusClass}}">
+                {{item.statusTag}}
               </text>
             </view>
           </view>

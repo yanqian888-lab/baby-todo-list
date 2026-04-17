@@ -1,84 +1,135 @@
-<!-- pages/profile/baby-info.wxml -->
-<view class="baby-info-container">
-  <!-- 页面标题 -->
-  <view class="page-header">
-    <text class="page-title">宝宝信息</text>
+<!-- pages/profile/baby-info.wxml - MUJI风格 -->
+<view class="container">
+  <!-- 家庭切换 tabs -->
+  <view class="family-tabs" wx:if="{{families.length > 0 || !hasOwnFamily}}">
+    <view
+      wx:for="{{families}}"
+      wx:key="_id"
+      class="tab-item {{currentTabId === item._id ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab-id="{{item._id}}"
+    >{{item.name}}</view>
+    <view
+      wx:if="{{!hasOwnFamily}}"
+      class="tab-item {{currentTabId === 'my_family' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab-id="my_family"
+    >我的家庭</view>
   </view>
-  
-  <!-- 宝宝信息表单 -->
-  <view class="baby-form">
-    <view class="form-item">
-      <text class="label">宝宝昵称</text>
-      <input class="input" type="text" placeholder="请输入宝宝昵称" value="{{babyInfo.nickname}}" bindinput="onInputChange" data-field="nickname" />
+
+  <!-- 只读视图：其他家庭 -->
+  <block wx:if="{{isCurrentTabReadonly}}">
+    <view class="readonly-section">
+      <view class="readonly-header">
+        <text class="readonly-title">👶 宝宝信息</text>
+        <text class="readonly-subtitle">当前家庭宝宝的基本信息</text>
+      </view>
+      <view class="readonly-item">
+        <text class="readonly-label">宝宝昵称</text>
+        <text class="readonly-value">{{babyInfo.nickname || '未设置'}}</text>
+      </view>
+      <view class="readonly-item">
+        <text class="readonly-label">出生日期</text>
+        <text class="readonly-value">{{babyInfo.birthday || '未设置'}}</text>
+      </view>
+      <view class="readonly-item">
+        <text class="readonly-label">性别</text>
+        <text class="readonly-value">{{babyInfo.gender === 'boy' ? '男' : babyInfo.gender === 'girl' ? '女' : '未设置'}}</text>
+      </view>
+      <view class="readonly-tip">加入的家庭，宝宝信息由家庭创建者管理</view>
+    </view>
+  </block>
+
+  <!-- 编辑视图：我的家庭 -->
+  <view class="form-section" wx:if="{{!isCurrentTabReadonly}}">
+    <view class="form-header">
+      <text class="form-title">👶 宝宝信息</text>
+      <text class="form-subtitle">完善宝宝的基本信息</text>
     </view>
     
-    <view class="form-item">
-      <text class="label">出生日期</text>
-      <picker class="date-picker" mode="date" fields="day" bindchange="onDateChange" value="{{babyInfo.birthday}}" start="{{startDate}}" end="{{currentDate}}">
-        <view class="picker-content">
-          <text class="date-value">{{babyInfo.birthday || '请选择宝宝出生日期'}}</text>
-          <icon class="arrow-icon" type="right" size="14" color="#999" />
-        </view>
-      </picker>
-    </view>
-    
-    <view class="form-item">
-      <text class="label">性别</text>
-      <view class="gender-select">
-        <view class="gender-option {{babyInfo.gender === 'male' ? 'selected' : ''}}" bindtap="onGenderSelect" data-gender="male">
-          <text class="gender-icon">👦</text>
-          <text class="gender-text">男</text>
-        </view>
-        <view class="gender-option {{babyInfo.gender === 'female' ? 'selected' : ''}}" bindtap="onGenderSelect" data-gender="female">
-          <text class="gender-icon">👧</text>
-          <text class="gender-text">女</text>
+    <view class="form-content">
+      <!-- 宝宝昵称 -->
+      <view class="form-item">
+        <text class="form-label">宝宝昵称</text>
+        <input 
+          class="form-input" 
+          type="text" 
+          placeholder="请输入宝宝昵称" 
+          value="{{babyInfo.nickname}}"
+          bindinput="onNicknameInput"
+        />
+      </view>
+      
+      <!-- 宝宝生日 -->
+      <view class="form-item">
+        <text class="form-label">出生日期</text>
+        <picker 
+          mode="date" 
+          start="{{startDate}}" 
+          end="{{currentDate}}"
+          value="{{babyInfo.birthday}}"
+          bindchange="onBirthdayChange"
+        >
+          <view class="form-picker {{babyInfo.birthday ? 'has-value' : ''}}">
+            {{babyInfo.birthday || '请选择出生日期'}}
+          </view>
+        </picker>
+      </view>
+      
+      <!-- 宝宝性别 -->
+      <view class="form-item">
+        <text class="form-label">性别</text>
+        <view class="gender-selector">
+          <view 
+            class="gender-option {{babyInfo.gender === 'boy' ? 'active' : ''}}"
+            bindtap="onGenderChange"
+            data-gender="boy"
+          >
+            <text class="gender-icon">👦</text>
+            <text class="gender-text">男</text>
+          </view>
+          <view 
+            class="gender-option {{babyInfo.gender === 'girl' ? 'active' : ''}}"
+            bindtap="onGenderChange"
+            data-gender="girl"
+          >
+            <text class="gender-icon">👧</text>
+            <text class="gender-text">女</text>
+          </view>
         </view>
       </view>
-    </view>
-    
 
-    <view class="form-item">
-      <text class="label">已排敏的食物</text>
-      <view class="safe-foods-section">
-        <!-- 跳转按钮 -->
-        <view class="safe-foods-button" bindtap="navigateToFoodSelect">
-          <text class="button-text">添加已排敏食物</text>
-          <view class="button-arrow">+</view>
+      <!-- 已排敏的食物 -->
+      <view class="form-item safe-foods-section">
+        <view class="safe-foods-header">
+          <text class="form-label">添加已排敏食物</text>
+          <text class="safe-foods-hint">*不添加默认未开始排敏*</text>
         </view>
         
-        <!-- 已选择的食物列表 -->
+        <!-- 添加按钮 -->
+        <view class="add-food-btn" bindtap="navigateToFoodSelect">
+          <text class="add-icon">+</text>
+        </view>
+        
+        <!-- 已选食物列表 -->
         <view class="selected-foods-list" wx:if="{{babyInfo.selectedFoodsList && babyInfo.selectedFoodsList.length > 0}}">
-          <view class="food-item" wx:for="{{babyInfo.selectedFoodsList}}" wx:key="foodId">
-            <view class="food-info">
-              <text class="food-name">{{item.foodName}}</text>
-              <text class="food-category">{{item.category}}</text>
-              <!-- 只有当有实际选择时才显示偏好信息 -->
-            <text class="food-prefs" wx:if="{{item.likeText && item.likeText !== '请选择' && item.allergyText && item.allergyText !== '请选择'}}">
-                {{item.likeText}}, {{item.allergyText}}
+          <view wx:for="{{babyInfo.selectedFoodsList}}" wx:key="foodId" class="food-item">
+            <text class="food-name">• {{item.foodName}}</text>
+            <view class="food-tags">
+              <!-- likeStatus: -2=未选择(不显示), -1=不喜欢, 0=一般, 1=喜欢 -->
+              <text wx:if="{{item.likeStatus !== -2}}" class="food-tag {{item.likeStatus === 1 ? 'liked' : item.likeStatus === -1 ? 'disliked' : 'neutral'}}">
+                {{item.likeStatus === 1 ? '喜欢' : item.likeStatus === -1 ? '不喜欢' : '一般喜欢'}}
               </text>
-            <text class="food-prefs" wx:elif="{{item.likeText && item.likeText !== '请选择'}}">
-                {{item.likeText}}
+              <!-- allergyStatus: -1=未选择(不显示), 0=不过敏, 1=轻微过敏, 2=严重过敏 -->
+              <text wx:if="{{item.allergyStatus !== -1}}" class="food-tag {{item.allergyStatus === 0 ? 'safe' : item.allergyStatus === 1 ? 'allergic' : 'severe'}}">
+                {{item.allergyStatus === 0 ? '不过敏' : item.allergyStatus === 1 ? '轻微过敏' : '严重过敏'}}
               </text>
-            <text class="food-prefs" wx:elif="{{item.allergyText && item.allergyText !== '请选择'}}">
-                {{item.allergyText}}
-              </text>
-            </view>
-            <view class="delete-btn" bindtap="deleteSelectedFood" data-index="{{index}}">
-              <text class="delete-icon">×</text>
             </view>
           </view>
         </view>
-        
-        <!-- 提示信息 -->
-        <view class="safe-foods-tip">
-          <text class="tip-text">*不添加默认为未开始排敏</text>
-        </view>
       </view>
     </view>
-  </view>
-  
-  <!-- 保存按钮 -->
-  <view class="save-btn-container">
-    <button class="save-btn" type="primary" bindtap="saveBabyInfo">保存</button>
+    
+    <button class="save-btn" bindtap="saveBabyInfo">保存</button>
   </view>
 </view>

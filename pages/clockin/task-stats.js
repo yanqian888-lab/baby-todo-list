@@ -26,6 +26,12 @@ Page({
   },
 
   onLoad(options) {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+
     const { taskId, taskName } = options;
     this.setData({
       taskId,
@@ -45,6 +51,11 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
     // 每次页面显示时重新加载打卡记录，确保数据最新
     console.log('页面显示，重新加载打卡记录...');
     this.loadClockInRecords();

@@ -22,7 +22,7 @@ Page({
     allFoods: [], // 所有食物数据
     selectedFoodIds: [], // 已选择的食物ID
     selectedFoodMap: {}, // 已选择的食物映射，用于WXML绑定
-    likeOptions: ['请选择', '喜欢', '一般', '不喜欢'], // 是否喜欢选项
+    likeOptions: ['请选择', '不喜欢', '一般', '喜欢'], // 是否喜欢选项，索引对应 likeStatus+1 (0=不喜欢, 1=一般, 2=喜欢)
     allergyOptions: ['请选择', '不过敏', '轻微过敏', '重度过敏'], // 是否过敏选项
     foodPreferences: {}, // 存储每个食物的偏好设置
     loading: false,
@@ -30,6 +30,7 @@ Page({
     selectedDate: new Date().toISOString().split('T')[0], // 默认选择当前日期
     startDate: '2023-01-01', // 开始日期
     endDate: new Date().toISOString().split('T')[0], // 结束日期（默认为当前日期）
+    showDatePicker: true, // 是否显示日期选择器（从宝宝信息页进入时隐藏）
     // 自定义食物相关数据
     showCustomFoodModal: false, // 是否显示自定义食物弹窗
     foodCategoryOptions: ['高铁基础谷物类', '淀粉类根茎蔬菜', '绿叶蔬菜类', '瓜茄类蔬菜', '低糖低酸水果类', '菌菇类', '中敏食材', '高敏食材'], // 食物种类选项
@@ -40,13 +41,21 @@ Page({
       likeIndex: 0, // 喜欢程度索引
       allergyIndex: 0 // 过敏情况索引
     },
-    customFoodIdCounter: Date.now() // 用于生成自定义食物的ID
+    customFoodIdCounter: Date.now(), // 用于生成自定义食物的ID
+    scrollTop: 0, // scroll-view 滚动位置
+    scrollIntoView: '' // scroll-view 自动滚动定位的目标元素 id
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad: async function (options) {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+
     // 页面加载时，初始化数据
     // 保存已选择的食物信息，确保只有当options.selectedFoods存在且非空时才尝试解析
     this.data.selectedFoodsFromPrevPage = [];
@@ -99,12 +108,17 @@ Page({
     console.log('选择的日期:', selectedDate);
     
     // 新增：判断是否从宝宝信息页进入，支持多选
-    this.data.isFromBabyInfo = options && options.from === 'babyInfo';
-    console.log('是否从宝宝信息页进入:', this.data.isFromBabyInfo);
+    const isFromBabyInfo = options && options.from === 'babyInfo';
+    // 从宝宝信息页进入时，隐藏日期选择器
+    this.setData({
+      isFromBabyInfo: isFromBabyInfo,
+      showDatePicker: !isFromBabyInfo
+    });
+    console.log('是否从宝宝信息页进入:', isFromBabyInfo, '显示日期选择器:', !isFromBabyInfo);
     
     // 设置页面标题
     wx.setNavigationBarTitle({
-      title: this.data.isFromBabyInfo ? '选择已排敏食物' : '选择排敏食物'
+      title: isFromBabyInfo ? '选择已排敏食物' : '选择排敏食物'
     });
     
     await this.initData();
@@ -121,6 +135,12 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow: async function () {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+
     // 页面显示时，刷新数据
     // 保存已选择的食物信息，确保只有当options.selectedFoods存在且非空时才尝试解析
     this.data.selectedFoodsFromPrevPage = [];
@@ -162,8 +182,9 @@ Page({
       const app = getApp();
       const userId = app.globalData.userInfo?.openId || app.globalData.userInfo?._id;
       const babyId = app.globalData.userInfo?.babyInfo?._id || 'local-baby-id';
+      const familyId = wx.getStorageSync('currentFamilyId') || null;
       
-      console.log('当前用户ID:', userId);
+      console.log('当前用户ID:', userId, '当前家庭ID:', familyId);
       console.log('当前宝宝ID:', babyId);
       
       if (!selectedDate) {
@@ -179,12 +200,17 @@ Page({
       const sensitivityRecords = wx.getStorageSync('sensitivity_records') || [];
       console.log('本地存储中的记录数量:', sensitivityRecords.length);
       
-      // 查找所选日期的记录
+      // 查找所选日期的记录（按家庭隔离）
       const existingRecord = sensitivityRecords.find(record => {
         const recordUserId = record.userId;
-        const recordBabyId = record.babyId || babyId;
         
-        if (recordUserId !== userId) {
+        // 按家庭隔离数据
+        if (familyId) {
+          // 家庭模式下：严格只匹配同家庭的记录，不再兼容无 familyId 的旧记录
+          if (record.familyId !== familyId) {
+            return false;
+          }
+        } else if (recordUserId !== userId) {
           return false;
         }
         
@@ -247,6 +273,194 @@ Page({
     const day = String(dateObj.getDate()).padStart(2, '0');
     
     return `${year}-${month}-${day}`;
+  },
+
+  /**
+   * 计算每个食物的排敏进度
+   * @param {Array} records - 用户的排敏记录
+   * @param {Array} categories - 食物分类列表
+   * @returns {Object} 食物名称到排敏进度的映射
+   */
+  _calculateFoodProgress(records, categories) {
+    const progressMap = {};
+    
+    // 从宝宝信息中获取已排敏食物（在宝宝信息页添加的视为已完成）
+    const babyInfo = wx.getStorageSync('babyInfo') || {};
+    const userInfo = wx.getStorageSync('userInfo') || {};
+    const userBabyInfo = userInfo.babyInfo || {};
+    const babySafeFoods = new Set();
+    
+    // 收集宝宝信息中的已排敏食物（从多个可能的位置获取）
+    let safeFoodsList = [];
+    if (Array.isArray(babyInfo.safeFoodsList) && babyInfo.safeFoodsList.length > 0) {
+      safeFoodsList = babyInfo.safeFoodsList;
+    } else if (Array.isArray(userBabyInfo.safeFoodsList) && userBabyInfo.safeFoodsList.length > 0) {
+      safeFoodsList = userBabyInfo.safeFoodsList;
+    } else if (Array.isArray(babyInfo.selectedFoodsList) && babyInfo.selectedFoodsList.length > 0) {
+      safeFoodsList = babyInfo.selectedFoodsList;
+    }
+    
+    console.log('📊 _calculateFoodProgress - safeFoodsList:', safeFoodsList);
+    
+    if (Array.isArray(safeFoodsList)) {
+      safeFoodsList.forEach(food => {
+        let foodName = null;
+        if (typeof food === 'string') {
+          foodName = food;
+        } else if (food.foodName) {
+          foodName = food.foodName;
+        } else if (food.name) {
+          foodName = food.name;
+        }
+        if (foodName) {
+          babySafeFoods.add(String(foodName).trim());
+        }
+      });
+    }
+    
+    console.log('👶 _calculateFoodProgress - babySafeFoods:', Array.from(babySafeFoods));
+    
+    // 按食物名称分组记录
+    const recordsByFood = {};
+    records.forEach(record => {
+      if (!record.foodName) return;
+      if (!recordsByFood[record.foodName]) {
+        recordsByFood[record.foodName] = [];
+      }
+      recordsByFood[record.foodName].push(record);
+    });
+    
+    // 遍历所有分类中的食物
+    categories.forEach(category => {
+      category.foods.forEach(food => {
+        // 获取该食物需要的总排敏天数
+        const totalDays = food.allergyLevel === 3 ? 5 : 3;
+        
+        // 首先检查食物是否在宝宝信息中已排敏（优先级最高）
+        if (babySafeFoods.has(food.name)) {
+          console.log(`✅ ${food.name} 在宝宝信息中，标记为已完成`);
+          progressMap[food.name] = {
+            currentDays: totalDays,
+            totalDays: totalDays,
+            isComplete: true,
+            fromBabyInfo: true
+          };
+          return; // 跳过后续处理
+        }
+        
+        // 然后检查是否有排敏记录
+        const foodRecords = recordsByFood[food.name];
+        if (foodRecords && foodRecords.length > 0) {
+          // 计算唯一日期数（实际排敏天数）
+          const uniqueDates = new Set(foodRecords.map(r => this.normalizeDateString(r.date))).size;
+          
+          progressMap[food.name] = {
+            currentDays: uniqueDates,
+            totalDays: totalDays,
+            isComplete: uniqueDates >= totalDays
+          };
+        }
+      });
+    });
+    
+    console.log('食物排敏进度:', progressMap);
+    return progressMap;
+  },
+
+  /**
+   * 查找食物最近一次的历史记录（昨天或更早）
+   * @param {string} foodName - 食物名称
+   * @param {string} beforeDate - 在此日期之前查找（默认今天）
+   * @returns {Object|null} 最近的历史记录或null
+   */
+  findLastRecordForFood(foodName, beforeDate = null) {
+    try {
+      if (!foodName) return null;
+      
+      const app = getApp();
+      // 获取所有可能的用户ID
+      const possibleUserIds = [
+        app.globalData.userInfo?.openId,
+        app.globalData.userInfo?._id,
+        app.globalData.userInfo?._openid,
+        wx.getStorageSync('userInfo')?.openId,
+        wx.getStorageSync('userInfo')?._id,
+        wx.getStorageSync('userInfo')?._openid
+      ].filter(id => id);
+      
+      const babyId = app.globalData.userInfo?.babyInfo?._id || 'local-baby-id';
+      
+      // 如果未指定日期，使用今天
+      const referenceDate = beforeDate || this.data.selectedDate || this.normalizeDateString(new Date());
+      
+      // 从本地存储获取所有排敏记录
+      const sensitivityRecords = wx.getStorageSync('sensitivity_records') || [];
+      
+      console.log(`=== 查找食物历史记录 ===`);
+      console.log(`食物名称: ${foodName}`);
+      console.log(`参考日期: ${referenceDate}`);
+      console.log(`当前用户ID候选:`, possibleUserIds);
+      console.log(`本地存储记录总数:`, sensitivityRecords.length);
+      console.log('所有本地记录详情:', sensitivityRecords.map(r => ({ 
+        food: r.foodName, 
+        userId: r.userId, 
+        _openid: r._openid,
+        openId: r.openId,
+        date: r.date,
+        likeStatus: r.likeStatus,
+        allergyStatus: r.allergyStatus
+      })));
+      
+      // 查找该食物在此日期之前的记录，按日期倒序排列
+      const previousRecords = sensitivityRecords
+        .filter(record => {
+          // 1. 检查食物名称匹配
+          if (record.foodName !== foodName) {
+            return false;
+          }
+          
+          // 2. 检查用户ID是否匹配（支持多种字段名）
+          const recordUserId = record.userId || record._openid || record.openId;
+          const userMatch = possibleUserIds.length === 0 || possibleUserIds.includes(recordUserId);
+          
+          console.log(`检查记录匹配:`, {
+            foodName: record.foodName,
+            recordUserId: recordUserId,
+            userMatch: userMatch,
+            possibleUserIds: possibleUserIds
+          });
+          
+          if (!userMatch) {
+            console.log(`  -> 用户ID不匹配，跳过`);
+            return false;
+          }
+          
+          // 3. 检查日期（只找参考日期之前的记录，不包括当天）
+          const recordDate = this.normalizeDateString(record.date);
+          const dateMatch = recordDate < referenceDate;
+          
+          console.log(`  -> 日期比较: ${recordDate} < ${referenceDate} = ${dateMatch}`);
+          
+          return dateMatch;
+        })
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      console.log(`=== 查找结果 ===`);
+      console.log(`找到历史记录数量:`, previousRecords.length);
+      if (previousRecords.length > 0) {
+        console.log(`最近的历史记录:`, {
+          foodName: previousRecords[0].foodName,
+          date: previousRecords[0].date,
+          likeStatus: previousRecords[0].likeStatus,
+          allergyStatus: previousRecords[0].allergyStatus
+        });
+      }
+      
+      return previousRecords.length > 0 ? previousRecords[0] : null;
+    } catch (error) {
+      console.error('查找食物历史记录失败:', error);
+      return null;
+    }
   },
 
   /**
@@ -369,6 +583,14 @@ Page({
    * 初始化数据
    */
   async initData() {
+    console.log('=== initData 开始 ===');
+    console.log('isFromBabyInfo:', this.data.isFromBabyInfo);
+    
+    const babyInfo = wx.getStorageSync('babyInfo') || {};
+    const userInfo = wx.getStorageSync('userInfo') || {};
+    console.log('babyInfo.safeFoodsList:', babyInfo.safeFoodsList);
+    console.log('userInfo.babyInfo?.safeFoodsList:', userInfo.babyInfo?.safeFoodsList);
+    
     this.setData({
       loading: true
     });
@@ -376,605 +598,20 @@ Page({
     // 模拟获取食物分类和食物数据
     setTimeout(async () => {
       // 根据"宝宝辅食食材排敏与添加指南"表格完全构建食物分类和食物数据
-      const mockCategories = [
-  {
-    "id": "1",
-    "name": "高铁基础谷物类",
-    "recommendation": "建议5.5-7月龄",
-    "foods": [
-      {
-        "_id": "1",
-        "name": "高铁婴儿米粉",
-        "category": "高铁基础谷物类",
-        "month": "5.5月龄",
-        "order": 0,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "2",
-        "name": "小米泥",
-        "category": "高铁基础谷物类",
-        "month": "5.5月龄",
-        "order": 1,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "3",
-        "name": "燕麦泥",
-        "category": "高铁基础谷物类",
-        "month": "6月龄",
-        "order": 2,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "4",
-        "name": "藜麦泥",
-        "category": "高铁基础谷物类",
-        "month": "6月龄",
-        "order": 3,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "5",
-        "name": "大米粥泥",
-        "category": "高铁基础谷物类",
-        "month": "6月龄",
-        "order": 4,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "6",
-        "name": "糙米泥",
-        "category": "高铁基础谷物类",
-        "month": "7月龄",
-        "order": 5,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "7",
-        "name": "玉米泥",
-        "category": "高铁基础谷物类",
-        "month": "7月龄",
-        "order": 6,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "8",
-        "name": "高粱泥",
-        "category": "高铁基础谷物类",
-        "month": "7月龄",
-        "order": 7,
-        "allergyLevel": 1
-      }
-    ]
-  },
-  {
-    "id": "2",
-    "name": "淀粉类根茎蔬菜",
-    "recommendation": "建议5.5-7月龄",
-    "foods": [
-      {
-        "_id": "9",
-        "name": "土豆泥",
-        "category": "淀粉类根茎蔬菜",
-        "month": "5.5月龄",
-        "order": 1,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "10",
-        "name": "南瓜泥",
-        "category": "淀粉类根茎蔬菜",
-        "month": "5.5月龄",
-        "order": 1,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "11",
-        "name": "山药泥",
-        "category": "淀粉类根茎蔬菜",
-        "month": "6月龄",
-        "order": 2,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "12",
-        "name": "莲藕泥",
-        "category": "淀粉类根茎蔬菜",
-        "month": "6月龄",
-        "order": 3,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "13",
-        "name": "红薯泥",
-        "category": "淀粉类根茎蔬菜",
-        "month": "6月龄",
-        "order": 4,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "14",
-        "name": "紫薯泥",
-        "category": "淀粉类根茎蔬菜",
-        "month": "7月龄",
-        "order": 5,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "15",
-        "name": "芋头泥",
-        "category": "淀粉类根茎蔬菜",
-        "month": "7月龄",
-        "order": 6,
-        "allergyLevel": 1
-      },
-      {
-        "_id": "16",
-        "name": "菱角泥",
-        "category": "淀粉类根茎蔬菜",
-        "month": "7月龄",
-        "order": 7,
-        "allergyLevel": 1
-      }
-    ]
-  },
-  {
-    "id": "3",
-    "name": "绿叶蔬菜类",
-    "recommendation": "建议6-8月龄",
-    "foods": [
-      {
-        "_id": "17",
-        "name": "菠菜泥",
-        "category": "绿叶蔬菜类",
-        "month": "6月龄",
-        "order": 1
-      },
-      {
-        "_id": "18",
-        "name": "西兰花泥",
-        "category": "绿叶蔬菜类",
-        "month": "6月龄",
-        "order": 2
-      },
-      {
-        "_id": "19",
-        "name": "油麦菜泥",
-        "category": "绿叶蔬菜类",
-        "month": "6月龄",
-        "order": 3
-      },
-      {
-        "_id": "20",
-        "name": "生菜泥",
-        "category": "绿叶蔬菜类",
-        "month": "6月龄",
-        "order": 4
-      },
-      {
-        "_id": "21",
-        "name": "油菜泥",
-        "category": "绿叶蔬菜类",
-        "month": "7月龄",
-        "order": 5
-      },
-      {
-        "_id": "22",
-        "name": "娃娃菜泥",
-        "category": "绿叶蔬菜类",
-        "month": "7月龄",
-        "order": 6
-      },
-      {
-        "_id": "23",
-        "name": "芥蓝泥",
-        "category": "绿叶蔬菜类",
-        "month": "7月龄",
-        "order": 7
-      },
-      {
-        "_id": "24",
-        "name": "茼蒿泥",
-        "category": "绿叶蔬菜类",
-        "month": "8月龄",
-        "order": 8
-      },
-      {
-        "_id": "25",
-        "name": "菠菜苗泥",
-        "category": "绿叶蔬菜类",
-        "month": "8月龄",
-        "order": 8
-      }
-    ]
-  },
-  {
-    "id": "4",
-    "name": "瓜茄类蔬菜",
-    "recommendation": "建议6-8月龄",
-    "foods": [
-      {
-        "_id": "26",
-        "name": "黄瓜泥",
-        "category": "瓜茄类蔬菜",
-        "month": "6月龄",
-        "order": 1
-      },
-      {
-        "_id": "27",
-        "name": "番茄泥",
-        "category": "瓜茄类蔬菜",
-        "month": "6月龄",
-        "order": 2
-      },
-      {
-        "_id": "28",
-        "name": "西葫芦泥",
-        "category": "瓜茄类蔬菜",
-        "month": "6月龄",
-        "order": 3
-      },
-      {
-        "_id": "29",
-        "name": "冬瓜泥",
-        "category": "瓜茄类蔬菜",
-        "month": "6月龄",
-        "order": 4
-      },
-      {
-        "_id": "30",
-        "name": "丝瓜泥",
-        "category": "瓜茄类蔬菜",
-        "month": "7月龄",
-        "order": 5
-      },
-      {
-        "_id": "31",
-        "name": "苦瓜泥",
-        "category": "瓜茄类蔬菜",
-        "month": "7月龄",
-        "order": 6
-      },
-      {
-        "_id": "32",
-        "name": "彩椒泥（甜椒）",
-        "category": "瓜茄类蔬菜",
-        "month": "8月龄",
-        "order": 8
-      }
-    ]
-  },
-  {
-    "id": "5",
-    "name": "低糖低酸水果类",
-    "recommendation": "建议6-8月龄",
-    "foods": [
-      {
-        "_id": "33",
-        "name": "苹果泥",
-        "category": "低糖低酸水果类",
-        "month": "6月龄",
-        "order": 1
-      },
-      {
-        "_id": "34",
-        "name": "梨泥",
-        "category": "低糖低酸水果类",
-        "month": "6月龄",
-        "order": 2
-      },
-      {
-        "_id": "35",
-        "name": "香蕉泥",
-        "category": "低糖低酸水果类",
-        "month": "6月龄",
-        "order": 3
-      },
-      {
-        "_id": "36",
-        "name": "木瓜泥",
-        "category": "低糖低酸水果类",
-        "month": "6月龄",
-        "order": 4
-      },
-      {
-        "_id": "37",
-        "name": "白心火龙果泥",
-        "category": "低糖低酸水果类",
-        "month": "7月龄",
-        "order": 5
-      },
-      {
-        "_id": "38",
-        "name": "猕猴桃泥",
-        "category": "低糖低酸水果类",
-        "month": "7月龄",
-        "order": 6
-      },
-      {
-        "_id": "39",
-        "name": "草莓泥",
-        "category": "低糖低酸水果类",
-        "month": "7月龄",
-        "order": 7
-      },
-      {
-        "_id": "40",
-        "name": "蓝莓泥",
-        "category": "低糖低酸水果类",
-        "month": "8月龄",
-        "order": 8
-      },
-      {
-        "_id": "41",
-        "name": "桃子泥（软桃）",
-        "category": "低糖低酸水果类",
-        "month": "8月龄",
-        "order": 8
-      }
-    ]
-  },
-  {
-    "id": "6",
-    "name": "菌菇类",
-    "recommendation": "建议7-8月龄",
-    "foods": [
-      {
-        "_id": "42",
-        "name": "香菇泥",
-        "category": "菌菇类",
-        "month": "7月龄",
-        "order": 7
-      },
-      {
-        "_id": "43",
-        "name": "平菇泥",
-        "category": "菌菇类",
-        "month": "7月龄",
-        "order": 7
-      },
-      {
-        "_id": "44",
-        "name": "金针菇泥",
-        "category": "菌菇类",
-        "month": "7月龄",
-        "order": 8
-      },
-      {
-        "_id": "45",
-        "name": "杏鲍菇泥",
-        "category": "菌菇类",
-        "month": "8月龄",
-        "order": 8
-      },
-      {
-        "_id": "46",
-        "name": "蟹味菇泥",
-        "category": "菌菇类",
-        "month": "8月龄",
-        "order": 8
-      },
-      {
-        "_id": "47",
-        "name": "白玉菇泥",
-        "category": "菌菇类",
-        "month": "8月龄",
-        "order": 8
-      },
-      {
-        "_id": "48",
-        "name": "口蘑泥",
-        "category": "菌菇类",
-        "month": "8月龄",
-        "order": 8
-      }
-    ]
-  },
-  {
-    "id": "7",
-    "name": "中敏食材",
-    "recommendation": "建议7-10月龄",
-    "foods": [
-      {
-        "_id": "49",
-        "name": "蛋黄",
-        "category": "中敏食材",
-        "month": "7月龄",
-        "order": 9
-      },
-      {
-        "_id": "50",
-        "name": "猪肉泥",
-        "category": "中敏食材",
-        "month": "8月龄",
-        "order": 9
-      },
-      {
-        "_id": "51",
-        "name": "鸡肉泥",
-        "category": "中敏食材",
-        "month": "8月龄",
-        "order": 9
-      },
-      {
-        "_id": "52",
-        "name": "牛肉泥",
-        "category": "中敏食材",
-        "month": "8月龄",
-        "order": 9
-      },
-      {
-        "_id": "53",
-        "name": "羊肉泥",
-        "category": "中敏食材",
-        "month": "8月龄",
-        "order": 9
-      },
-      {
-        "_id": "54",
-        "name": "鸭肉泥",
-        "category": "中敏食材",
-        "month": "8月龄",
-        "order": 10
-      },
-      {
-        "_id": "55",
-        "name": "三文鱼泥",
-        "category": "中敏食材",
-        "month": "9月龄",
-        "order": 10
-      },
-      {
-        "_id": "56",
-        "name": "鳕鱼泥",
-        "category": "中敏食材",
-        "month": "9月龄",
-        "order": 10
-      },
-      {
-        "_id": "57",
-        "name": "鲈鱼泥",
-        "category": "中敏食材",
-        "month": "9月龄",
-        "order": 10
-      },
-      {
-        "_id": "58",
-        "name": "猪肝泥",
-        "category": "中敏食材",
-        "month": "10月龄",
-        "order": 11
-      },
-      {
-        "_id": "59",
-        "name": "鸡肝泥",
-        "category": "中敏食材",
-        "month": "10月龄",
-        "order": 11
-      },
-      {
-        "_id": "60",
-        "name": "鸭肝泥",
-        "category": "中敏食材",
-        "month": "10月龄",
-        "order": 11
-      },
-      {
-        "_id": "61",
-        "name": "三文鱼松（细腻款）",
-        "category": "中敏食材",
-        "month": "10月龄",
-        "order": 11
-      },
-      {
-        "_id": "62",
-        "name": "鳕鱼松",
-        "category": "中敏食材",
-        "month": "10月龄",
-        "order": 11
-      }
-    ]
-  },
-  {
-    "id": "8",
-    "name": "高敏食材",
-    "recommendation": "建议1岁+",
-    "foods": [
-      {
-        "_id": "63",
-        "name": "蛋清",
-        "category": "高敏食材",
-        "month": "1岁",
-        "order": 12
-      },
-      {
-        "_id": "64",
-        "name": "核桃粉",
-        "category": "高敏食材",
-        "month": "1岁",
-        "order": 12
-      },
-      {
-        "_id": "65",
-        "name": "杏仁粉（甜杏仁）",
-        "category": "高敏食材",
-        "month": "1岁",
-        "order": 12
-      },
-      {
-        "_id": "66",
-        "name": "花生粉",
-        "category": "高敏食材",
-        "month": "1岁",
-        "order": 12
-      },
-      {
-        "_id": "67",
-        "name": "黄豆泥",
-        "category": "高敏食材",
-        "month": "1岁",
-        "order": 12
-      },
-      {
-        "_id": "68",
-        "name": "黑豆泥",
-        "category": "高敏食材",
-        "month": "1岁",
-        "order": 13
-      },
-      {
-        "_id": "69",
-        "name": "扁豆泥",
-        "category": "高敏食材",
-        "month": "1岁",
-        "order": 13
-      },
-      {
-        "_id": "70",
-        "name": "芒果泥",
-        "category": "高敏食材",
-        "month": "1岁+",
-        "order": 13
-      },
-      {
-        "_id": "71",
-        "name": "菠萝泥",
-        "category": "高敏食材",
-        "month": "1岁+",
-        "order": 13
-      },
-      {
-        "_id": "72",
-        "name": "绿心猕猴桃泥",
-        "category": "高敏食材",
-        "month": "1岁+",
-        "order": 13
-      },
-      {
-        "_id": "73",
-        "name": "荔枝泥",
-        "category": "高敏食材",
-        "month": "1岁+",
-        "order": 14
-      },
-      {
-        "_id": "74",
-        "name": "龙眼泥",
-        "category": "高敏食材",
-        "month": "1岁+",
-        "order": 14
-      },
-      {
-        "_id": "75",
-        "name": "虾仁泥",
-        "category": "高敏食材",
-        "month": "1岁+",
-        "order": 14
-      }
-    ]
-  }
-];
+      const foodData = require('../../data/sensitivityFoods.js');
+      const mockCategories = foodData.categories.map(c => ({
+        id: c.id,
+        name: c.name,
+        recommendation: '',
+        foods: c.foods.map(f => ({
+          _id: f._id,
+          name: f.name,
+          category: c.name,
+          month: '',
+          order: f.sensitivityOrder,
+          allergyLevel: f.allergyLevel
+        }))
+      }));
 
       // 初始化selectedFoodMap和selectedFoodIds
       const selectedFoodMap = {};
@@ -1091,6 +728,26 @@ Page({
           if (foodId) {
             selectedFoodIds.push(String(foodId));
             selectedFoodMap[String(foodId)] = true;
+            
+            // 处理偏好设置（如果有的话）
+            // likeStatus: -1=不喜欢, 0=一般, 1=喜欢 转换为 likeIndex: 1, 2, 3
+            // allergyStatus: 0=不过敏, 1=过敏, 2=严重过敏 转换为 allergyIndex: 1, 2, 3
+            if (food.likeStatus !== undefined || food.allergyStatus !== undefined) {
+              let likeIndex = 0;
+              if (food.likeStatus === -1) likeIndex = 1;
+              else if (food.likeStatus === 0) likeIndex = 2;
+              else if (food.likeStatus === 1) likeIndex = 3;
+              
+              let allergyIndex = 0;
+              if (food.allergyStatus === 0) allergyIndex = 1;
+              else if (food.allergyStatus === 1) allergyIndex = 2;
+              else if (food.allergyStatus === 2) allergyIndex = 3;
+              
+              foodPreferences[String(foodId)] = {
+                likeIndex: likeIndex,
+                allergyIndex: allergyIndex
+              };
+            }
           }
         });
       }
@@ -1102,14 +759,18 @@ Page({
       const babyId = app.globalData.userInfo?.babyInfo?._id || 'local-baby-id';
       
       // 在过滤食物之前，先检查所选日期是否已有记录
-      const selectedDate = this.data.selectedDate;
-      console.log('初始化时检查已有记录，当前日期:', selectedDate);
-      const existingRecord = this.checkExistingRecord(selectedDate);
-      if (existingRecord) {
-        console.log('初始化时找到已有记录，提前设置modifyMode');
-        // 提前设置modifyMode和todayRecord，这样在过滤时会保留该食物
-        this.data.modifyMode = true;
-        this.data.todayRecord = existingRecord;
+      // 如果已经通过URL传入了todayRecord，不再查询覆盖，避免家庭成员修改时取到旧记录
+      // 如果当前是修改模式（modify=true）但todayRecord缺失，也不查询覆盖，防止选中错误食物
+      if (!this.data.todayRecord && !this.data.modifyMode) {
+        const selectedDate = this.data.selectedDate;
+        console.log('初始化时检查已有记录，当前日期:', selectedDate);
+        const existingRecord = this.checkExistingRecord(selectedDate);
+        if (existingRecord) {
+          console.log('初始化时找到已有记录，提前设置modifyMode');
+          // 提前设置modifyMode和todayRecord，这样在过滤时会保留该食物
+          this.data.modifyMode = true;
+          this.data.todayRecord = existingRecord;
+        }
       }
       
       // 存储已排敏的食物名称
@@ -1162,8 +823,10 @@ Page({
       }
       
       // 从数据库获取已排敏记录（通过服务层方法）
+      let userRecords = [];
+      const familyId = wx.getStorageSync('currentFamilyId') || null;
       try {
-        const userRecords = await sensitivityService.getUserSensitivityRecords(userId, babyId);
+        userRecords = await sensitivityService.getUserSensitivityRecords(userId, babyId, familyId);
         userRecords.forEach(record => {
           if (record.foodName) {
             // 只有当宝宝信息中也包含该食物时，才将其标记为已排敏
@@ -1178,6 +841,9 @@ Page({
       }
       
       console.log('已排敏的食物:', Array.from(excludedFoodNames));
+      
+      // 计算每个食物的排敏进度
+      const foodProgressMap = this._calculateFoodProgress(userRecords, categoriesWithCustom);
       
       // 对每个分类下的食材按照排敏顺序进行排序，并过滤掉已排敏的食物
       const sortedCategories = categoriesWithCustom.map(category => {
@@ -1199,12 +865,12 @@ Page({
             foods: [...category.foods]
               // 排序
               .sort((a, b) => a.order - b.order)
-              // 过滤掉已排敏的食物，但在修改模式下保留今日排敏记录中的食物
+              // 过滤掉已排敏的食物，但在修改模式或从宝宝信息页进入时保留已选择的食物
               .filter(food => {
                 // 检查食物是否在已排敏列表中
                 const isExcluded = excludedFoodNames.has(food.name);
                 
-                console.log('检查食物:', food.name, '是否已排敏:', isExcluded);
+                console.log('检查食物:', food.name, '是否已排敏:', isExcluded, '是否从宝宝信息页进入:', this.data.isFromBabyInfo);
                 
                 // 在修改模式下，保留今日排敏记录中的食物
                 if (isExcluded && this.data.modifyMode && this.data.todayRecord) {
@@ -1213,10 +879,28 @@ Page({
                   return result;
                 }
                 
+                // 从宝宝信息页进入时，不过滤已排敏食物（让用户可以选择已排敏食物）
+                if (this.data.isFromBabyInfo) {
+                  console.log('从宝宝信息页进入，显示所有食物');
+                  return true;
+                }
+                
                 // 其他情况，过滤掉已排敏的食物
                 const result = !isExcluded;
                 console.log('最终是否保留:', result);
                 return result;
+              })
+              // 添加排敏进度信息
+              .map(food => {
+                const progress = foodProgressMap[food.name];
+                if (progress) {
+                  console.log(`📊 ${food.name} 进度:`, progress);
+                  return {
+                    ...food,
+                    sensitivityProgress: progress
+                  };
+                }
+                return food;
               })
           };
         }
@@ -1243,10 +927,24 @@ Page({
       }, () => {
         // 页面加载后，检查所选日期是否已有排敏记录
         // 使用回调函数确保数据已更新
-        const existingRecord = this.checkExistingRecord(this.data.selectedDate);
-        if (existingRecord && !this.data.modifyMode && !this.data.todayRecord) {
-          // 如果已有记录且当前不是修改模式，设置为修改模式
-          this.setPageStateFromExistingRecord(existingRecord);
+        if (!this.data.todayRecord && !this.data.modifyMode) {
+          const existingRecord = this.checkExistingRecord(this.data.selectedDate);
+          if (existingRecord) {
+            // 如果已有记录且当前不是修改模式，设置为修改模式
+            this.setPageStateFromExistingRecord(existingRecord);
+          }
+        }
+        
+        // 自动滚动到已选中的食物位置（使用页面整体滚动，更可靠）
+        if (selectedFoodIds.length > 0) {
+          const foodId = selectedFoodIds[0];
+          setTimeout(() => {
+            wx.pageScrollTo({
+              selector: '#food-' + foodId,
+              offsetTop: -80,
+              duration: 300
+            });
+          }, 300);
         }
       });
     }, 500);
@@ -1326,10 +1024,21 @@ Page({
     // 复制当前的selectedFoodMap对象
     let selectedFoodMap = { ...this.data.selectedFoodMap };
     let selectedFoodIds = [...this.data.selectedFoodIds];
+    let foodPreferences = { ...this.data.foodPreferences };
     
     // 查找食物ID在数组中的索引
     const index = selectedFoodIds.indexOf(foodId);
     const isSelected = index > -1;
+    
+    // 查找食物名称
+    let foodName = null;
+    for (const category of this.data.foodCategories) {
+      const food = category.foods.find(f => String(f._id) === foodId);
+      if (food) {
+        foodName = food.name;
+        break;
+      }
+    }
     
     // 根据不同场景使用不同的选择逻辑
     if (this.data.isFromBabyInfo) {
@@ -1338,10 +1047,23 @@ Page({
         // 取消选择
         selectedFoodIds.splice(index, 1);
         delete selectedFoodMap[foodId];
+        delete foodPreferences[foodId];
       } else {
         // 添加选择
         selectedFoodIds.push(foodId);
         selectedFoodMap[foodId] = true;
+        
+        // 自动带入上次设置（如果存在历史记录）
+        if (foodName) {
+          const lastRecord = this.findLastRecordForFood(foodName);
+          if (lastRecord) {
+            console.log(`自动带入食物[${foodName}]的上次设置:`, lastRecord);
+            foodPreferences[foodId] = {
+              likeIndex: (lastRecord.likeStatus || 0) + 1, // 转换为前端索引（1-4）
+              allergyIndex: (lastRecord.allergyStatus || 0) + 1 // 转换为前端索引（1-4）
+            };
+          }
+        }
       }
     } else {
       // 场景2：从排敏tab首页进入，支持一次勾选1个食物
@@ -1349,17 +1071,32 @@ Page({
         // 只保留当前食物
         selectedFoodIds = [foodId];
         selectedFoodMap = { [foodId]: true };
+        foodPreferences = {}; // 清空之前的偏好设置
+        
+        // 自动带入上次设置（如果存在历史记录）
+        if (foodName) {
+          const lastRecord = this.findLastRecordForFood(foodName);
+          if (lastRecord) {
+            console.log(`自动带入食物[${foodName}]的上次设置:`, lastRecord);
+            foodPreferences[foodId] = {
+              likeIndex: (lastRecord.likeStatus || 0) + 1, // 转换为前端索引（1-4）
+              allergyIndex: (lastRecord.allergyStatus || 0) + 1 // 转换为前端索引（1-4）
+            };
+          }
+        }
       } else {
         // 取消选择，清空所有选择
         selectedFoodIds = [];
         selectedFoodMap = {};
+        foodPreferences = {};
       }
     }
     
     // 更新selectedFoodIds数组和selectedFoodMap对象
     this.setData({
       selectedFoodIds: selectedFoodIds,
-      selectedFoodMap: selectedFoodMap
+      selectedFoodMap: selectedFoodMap,
+      foodPreferences: foodPreferences
     });
   },
 
@@ -1721,9 +1458,13 @@ Page({
     // 遍历所有食物分类和食物，找到已选择的食物
     this.data.foodCategories.forEach(category => {
       category.foods.forEach(food => {
-        if (this.data.selectedFoodIds.includes(food._id)) {
-          // 获取食物的偏好设置
-          const preferences = this.data.foodPreferences[food._id] || {};
+        // 确保 food._id 是字符串，与 selectedFoodIds 和 foodPreferences 的键保持一致
+        const foodIdStr = String(food._id);
+        if (this.data.selectedFoodIds.includes(foodIdStr) || this.data.selectedFoodIds.includes(food._id)) {
+          // 获取食物的偏好设置（使用字符串键）
+          const preferences = this.data.foodPreferences[foodIdStr] || {};
+          
+          console.log('确认选择 - 食物:', food.name, 'foodId:', foodIdStr, 'preferences:', preferences);
           
           // 添加到已选择的食物列表
           selectedFoods.push({
@@ -1731,10 +1472,10 @@ Page({
             foodName: food.name,
             category: category.name,
             recommendation: category.recommendation,
-            likeIndex: preferences.likeIndex || 0,
-            likeText: this.data.likeOptions[preferences.likeIndex || 0],
-            allergyIndex: preferences.allergyIndex || 0,
-            allergyText: this.data.allergyOptions[preferences.allergyIndex || 0]
+            likeIndex: Number(preferences.likeIndex || 0),
+            likeText: this.data.likeOptions[Number(preferences.likeIndex || 0)],
+            allergyIndex: Number(preferences.allergyIndex || 0),
+            allergyText: this.data.allergyOptions[Number(preferences.allergyIndex || 0)]
           });
         }
       });
@@ -1744,7 +1485,14 @@ Page({
     const saveSelectedFoods = async () => {
       try {
         const app = getApp();
-        const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo');
+        const globalUserInfo = app.globalData.userInfo;
+        const storageUserInfo = wx.getStorageSync('userInfo');
+        const userInfo = globalUserInfo || storageUserInfo;
+        
+        console.log('=== 保存排敏记录 ===');
+        console.log('globalUserInfo:', globalUserInfo ? { openId: globalUserInfo.openId, _id: globalUserInfo._id } : null);
+        console.log('storageUserInfo:', storageUserInfo ? { openId: storageUserInfo.openId, _id: storageUserInfo._id } : null);
+        console.log('使用的userInfo.openId:', userInfo?.openId);
         
         if (userInfo && userInfo.openId && selectedFoods.length > 0) {
           // 获取当前宝宝信息
@@ -1759,6 +1507,14 @@ Page({
           for (const food of selectedFoods) {
             // 创建排敏记录对象，使用用户选择的日期
             const selectedDate = this.data.selectedDate;
+            
+            // 使用 YYYY-MM-DD 格式存储日期，避免时区问题
+            // 这样 normalizeDateString 可以直接返回相同格式
+            const dateStr = this.normalizeDateString(selectedDate);
+            
+            // 获取当前家庭ID
+            const familyId = wx.getStorageSync('currentFamilyId') || null;
+
             const sensitivityRecord = {
               userId: userInfo.openId,
               babyId: babyInfo._id || 'local-baby-id',
@@ -1769,25 +1525,39 @@ Page({
               likeStatus: food.likeIndex - 1, // 转换为后端需要的状态值（-1, 0, 1, 2）
               allergyStatus: food.allergyIndex - 1, // 转换为后端需要的状态值（-1, 0, 1, 2）
               allergyLevel: 1, // 默认低敏，后续可以从食物对象中获取
-              date: new Date(selectedDate).toISOString(),
-              createTime: new Date()
+              date: dateStr, // 使用 YYYY-MM-DD 格式，避免时区问题
+              createTime: new Date(),
+              updatedAt: new Date().toISOString(),
+              familyId: familyId
             };
+            
+            console.log('准备保存的排敏记录:', {
+              userId: sensitivityRecord.userId,
+              foodName: sensitivityRecord.foodName,
+              date: sensitivityRecord.date,
+              likeStatus: sensitivityRecord.likeStatus,
+              allergyStatus: sensitivityRecord.allergyStatus
+            });
             
             // 根据是否为修改模式调用不同的服务方法
             if (this.data.modifyMode) {
               // 修改模式下，更新现有记录
               await sensitivityService.updateSensitivityRecord(sensitivityRecord);
-              console.log('已更新排敏记录:', sensitivityRecord);
+              console.log('已更新排敏记录:', sensitivityRecord.foodName);
             } else {
               // 非修改模式下，保存新记录
               await sensitivityService.saveSensitivityRecord(sensitivityRecord);
-              console.log('已保存排敏记录:', sensitivityRecord);
+              console.log('已保存排敏记录:', sensitivityRecord.foodName);
             }
           }
           
-          console.log('已选择的食物已保存:', selectedFoods);
+          console.log('已选择的食物已保存:', selectedFoods.map(f => f.foodName));
         } else {
-          console.warn('缺少必要信息，无法保存排敏记录');
+          console.warn('缺少必要信息，无法保存排敏记录:', {
+            hasUserInfo: !!userInfo,
+            hasOpenId: !!(userInfo && userInfo.openId),
+            selectedFoodsCount: selectedFoods.length
+          });
         }
       } catch (error) {
         console.error('保存排敏记录失败:', error);
@@ -1816,20 +1586,22 @@ Page({
             
             // 检查是否是从其他页面进入的
             const pages = getCurrentPages();
+            console.log('📱 当前页面栈:', pages.map(p => p.route));
             if (pages.length > 1) {
               const prevPage = pages[pages.length - 2];
+              console.log('📱 上一页:', prevPage.route, 'onFoodsSelected存在:', typeof prevPage.onFoodsSelected === 'function');
               
               // 安全检查：只有当onFoodsSelected方法存在时才调用
               if (typeof prevPage.onFoodsSelected === 'function') {
                 // 调用上一页的方法更新选中的食物信息
+                console.log('📤 调用 prevPage.onFoodsSelected，数据:', selectedFoods);
                 prevPage.onFoodsSelected(selectedFoods);
+              } else {
+                console.warn('⚠️ 上一页没有 onFoodsSelected 方法');
               }
               
-              // 如果上一页是排敏首页，主动刷新数据
-              if (prevPage.route === 'pages/sensitivity/index') {
-                // 调用上一页的checkBabyInfo方法刷新数据
-                prevPage.checkBabyInfo();
-              }
+              // 如果上一页是排敏首页，不再主动调用 checkBabyInfo
+              // 因为返回首页后 onShow 会自动刷新，避免并发查询导致数据闪烁
               
               // 返回上一页
               wx.navigateBack();
@@ -1848,5 +1620,12 @@ Page({
         }
       });
     });
+  },
+  
+  /**
+   * 阻止事件冒泡
+   */
+  preventBubble: function() {
+    // 仅用于阻止事件冒泡，无需其他操作
   }
 });

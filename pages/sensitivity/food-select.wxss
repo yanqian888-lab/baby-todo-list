@@ -1,169 +1,208 @@
-/* pages/sensitivity/food-select.wxss */
+/* pages/sensitivity/food-select.wxss - MUJI风格优化版 */
 
 /* 页面容器 */
 .container {
-  width: 100%;
-  height: 100vh;
-  background-color: #f5f5f5;
-  display: flex;
-  flex-direction: column;
+  min-height: 100vh;
+  background-color: #FAFAF8;
+  padding: 16px;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 
 /* 搜索栏 */
 .search-bar {
-  width: 100%;
-  padding: 12px;
-  background-color: #fff;
   display: flex;
   align-items: center;
-  box-sizing: border-box;
+  padding: 12px 16px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
 }
 
 .search-bar input {
   flex: 1;
-  height: 36px;
+  height: 40px;
   padding: 0 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 18px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   font-size: 14px;
+  color: #2D2A26;
+  background-color: #F5F3F0;
+}
+
+.search-bar input:focus {
+  border-color: #8B7355;
+  background-color: #FFFFFF;
 }
 
 .search-icon {
   margin-left: 8px;
   font-size: 18px;
-  color: #666;
+  color: #8A847A;
+}
+
+/* 日期选择器 */
+.date-picker-section {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
+}
+
+.date-label {
+  font-size: 14px;
+  color: #5A554D;
+  margin-right: 8px;
+}
+
+.date-picker-value {
+  font-size: 15px;
+  color: #2D2A26;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
 }
 
 /* 排敏小TIPS */
 .tips-section {
-  padding: 12px;
-  background-color: #fff;
-  margin-top: 8px;
-  box-sizing: border-box;
+  padding: 16px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
 }
 
 .tips-title {
-  font-size: 14px;
-  font-weight: bold;
-  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2D2A26;
   margin-bottom: 8px;
   display: block;
 }
 
 .tips-content {
-  font-size: 12px;
-  color: #666;
-  line-height: 1.5;
+  font-size: 13px;
+  color: #8A847A;
+  line-height: 1.6;
   display: block;
   margin-bottom: 4px;
 }
 
 /* 食物列表滚动区域 */
 .food-scroll {
-  flex: 1;
   width: 100%;
-  overflow-y: scroll;
-  box-sizing: border-box;
-  padding: 12px;
 }
 
 /* 分类区域 */
 .category-section {
-  width: 100%;
   margin-bottom: 16px;
 }
 
-/* 分类标题 */
+/* 分类标题 - 与首页一致 */
 .category-title {
   font-size: 16px;
-  font-weight: bold;
-  color: #333;
-  padding: 12px;
-  background-color: #fafafa;
-  border-left: 4px solid #FFD700;
-  margin-bottom: 8px;
+  font-weight: 600;
+  color: #2D2A26;
+  padding: 12px 16px;
+  background-color: #FFFFFF;
+  border-left: 4px solid #8B7355;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
 }
 
 /* 食物列表 */
 .food-list {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* 食物项 */
+/* 食物项 - 与首页一致 */
 .food-item {
-  width: 100%;
   padding: 16px;
-  background-color: #fff;
-  margin-bottom: 8px;
-  border-radius: 8px;
-  box-sizing: border-box;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  position: relative;
+  background-color: #FFFFFF;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
+  transition: all 0.2s;
+}
+
+.food-item:active {
+  background-color: #F5F3F0;
 }
 
 /* 选中的食物项 */
 .food-item.selected {
-  border: 2px solid #FFD700;
-  background-color: rgba(255, 215, 0, 0.05);
+  border-color: #8B7355;
+  background-color: rgba(139, 115, 85, 0.03);
 }
 
 /* 食物头部信息 */
 .food-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+  align-items: flex-start;
 }
 
 /* 食物基本信息 */
 .food-basic-info {
   flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 /* 食物名称和分类标签容器 */
 .food-name-container {
   display: flex;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
-/* 食物名称 */
+/* 食物名称 - 与首页一致 */
 .food-name {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+  color: #2D2A26;
   margin-right: 8px;
 }
 
-/* 食物分类标签 */
+/* 食物分类标签 - 与首页一致 */
 .food-category-tag {
   font-size: 12px;
-  color: #666;
-  background-color: #f0f0f0;
+  color: #8A847A;
+  background-color: #F0EDE8;
   padding: 2px 8px;
-  border-radius: 10px;
-  margin-right: 8px;
+  border-radius: 4px;
 }
 
 /* 食物建议月龄 */
 .food-recommendation {
   font-size: 12px;
-  color: #999;
-  margin-right: 8px;
-  display: inline-block;
+  color: #8A847A;
+  margin-bottom: 8px;
+  display: block;
 }
 
 /* 食物排敏天数信息 */
 .food-allergy-info {
   font-size: 12px;
-  color: #666;
+  color: #8A847A;
   display: inline-block;
-  background-color: #f5f5f5;
-  padding: 2px 8px;
-  border-radius: 10px;
+}
+
+/* 排敏中状态的高亮样式 */
+.food-allergy-info.in-progress {
+  color: #8B7355;
+  font-weight: 500;
+}
+
+/* 已完成排敏状态的样式 */
+.food-allergy-info.completed {
+  color: #4CAF50;
+  font-weight: 500;
 }
 
 /* 选择按钮 */
@@ -173,22 +212,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left: 12px;
 }
 
 /* 选择圆圈 */
 .select-circle {
   width: 20px;
   height: 20px;
-  border: 2px solid #ccc;
+  border: 2px solid #DDDDDD;
   border-radius: 50%;
-  background-color: #fff;
-  transition: all 0.3s ease;
+  background-color: #FFFFFF;
+  transition: all 0.2s;
 }
 
 /* 选中的选择圆圈 */
 .select-circle.selected {
-  background-color: #FFD700;
-  border-color: #FFD700;
+  background-color: #8B7355;
+  border-color: #8B7355;
 }
 
 /* 食物偏好设置 */
@@ -196,6 +236,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #F0EDE8;
 }
 
 /* 偏好设置项 */
@@ -206,42 +249,34 @@
 /* 选择器容器 */
 .picker {
   width: 100%;
-  height: 40px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
-  background-color: #f5f5f5;
+  padding: 0 16px;
+  background-color: #F5F3F0;
   border-radius: 8px;
   box-sizing: border-box;
-  position: relative;
-}
-
-/* 选择器标签 */
-.picker::before {
-  content: attr(data-label);
   font-size: 14px;
-  color: #666;
+  color: #5A554D;
 }
 
 /* 选择器值 */
 .picker-value {
   font-size: 14px;
-  color: #333;
-  margin-left: 8px;
+  color: #2D2A26;
+  font-weight: 500;
 }
 
 /* 选择器箭头 */
 .picker-arrow {
   font-size: 12px;
-  color: #999;
-  margin-left: 4px;
+  color: #8A847A;
 }
 
 /* 空状态 */
 .empty-state {
-  width: 100%;
-  padding: 40px 0;
+  padding: 60px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -250,78 +285,45 @@
 
 .empty-text {
   font-size: 14px;
-  color: #999;
+  color: #8A847A;
 }
 
-/* 底部操作栏 */
+/* 底部操作栏 - 固定底部 */
 .bottom-bar {
-  width: 100%;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
   padding: 16px;
-  background-color: #fff;
-  box-sizing: border-box;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  background-color: #FFFFFF;
+  box-shadow: 0 -2px 8px rgba(45, 42, 38, 0.06);
+  z-index: 100;
 }
 
-/* 完成按钮 */
-.confirm-btn {
+/* 完成按钮 - 与首页保存按钮一致 */
+.bottom-bar .confirm-btn {
   width: 100%;
-  height: 44px;
-  background-color: #FFD700;
-  color: #333;
+  height: 48px;
+  background-color: #8B7355;
+  color: #FFFFFF;
   border: none;
-  border-radius: 22px;
+  border-radius: 999px;
   font-size: 16px;
-  font-weight: bold;
-  line-height: 44px;
-  text-align: center;
-  box-sizing: border-box;
-  transition: all 0.3s ease;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
 }
 
-/* 完成按钮hover状态 */
-.confirm-btn:hover {
-  background-color: #FFC107;
+.bottom-bar .confirm-btn::after {
+  border: none;
 }
 
-/* 适配不同屏幕尺寸 */
-@media (max-width: 375px) {
-  .food-item {
-    padding: 12px;
-  }
-  
-  .food-name {
-    font-size: 14px;
-  }
-  
-  .food-category,
-  .food-recommendation {
-    font-size: 11px;
-  }
-  
-  .picker {
-    height: 36px;
-  }
-  
-  .confirm-btn {
-    height: 40px;
-    line-height: 40px;
-    font-size: 14px;
-  }
-}
-
-@media (min-width: 414px) {
-  .food-item {
-    padding: 20px;
-  }
-  
-  .food-name {
-    font-size: 18px;
-  }
-  
-  .food-category,
-  .food-recommendation {
-    font-size: 13px;
-  }
+.bottom-bar .confirm-btn:active {
+  background-color: #6D5A42;
 }
 
 /* 自定义食物样式 */
@@ -330,36 +332,83 @@
 }
 
 .custom-food-item {
-  background-color: #f5f5f5;
-  border: 2px dashed #ddd;
-  border-radius: 8px;
-  padding: 24px 12px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.custom-food-item:active {
-  background-color: #e8e8e8;
-  transform: scale(0.98);
+  background-color: #FAFAF8;
+  border: 2px dashed #E0DCD5;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .custom-food-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
 }
 
 .custom-food-icon {
-  font-size: 36px;
-  margin-bottom: 8px;
-  color: #FF7A85;
+  font-size: 24px;
+  color: #8A847A;
 }
 
 .custom-food-text {
   font-size: 14px;
-  color: #666;
+  color: #8A847A;
+}
+
+/* 适配不同屏幕尺寸 */
+@media (max-width: 375px) {
+  .container {
+    padding: 12px;
+  }
+  
+  .food-item {
+    padding: 14px;
+  }
+  
+  .food-name {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 414px) {
+  .food-item {
+    padding: 18px;
+  }
+}
+
+/* 自定义食物样式 */
+.custom-food-item {
+  border: 2px dashed #E0DCD5;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FAFAF8;
+}
+
+.custom-food-item:active {
+  background-color: #F5F3F0;
+}
+
+.custom-food-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-food-icon {
+  font-size: 24px;
+  color: #8A847A;
+}
+
+.custom-food-text {
+  font-size: 14px;
+  color: #8A847A;
 }
 
 /* 弹窗样式 */
@@ -377,8 +426,8 @@
 }
 
 .modal-content {
-  background-color: white;
-  border-radius: 16px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
   width: 90%;
   max-width: 400px;
   max-height: 80vh;
@@ -390,24 +439,24 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #EEEEEE;
 }
 
 .modal-title {
   font-size: 18px;
   font-weight: bold;
-  color: #333;
+  color: #2D2A26;
 }
 
 .modal-close {
   font-size: 24px;
-  color: #999;
+  color: #8A847A;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .modal-close:active {
-  color: #666;
+  color: #2D2A26;
 }
 
 .modal-body {
@@ -422,26 +471,28 @@
 .form-label {
   display: block;
   font-size: 14px;
-  color: #333;
+  color: #2D2A26;
   margin-bottom: 8px;
 }
 
 .required {
-  color: #ff4d4f;
+  color: #D32F2F;
 }
 
 .form-input {
   width: 100%;
   height: 40px;
   padding: 0 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #EEEEEE;
   border-radius: 8px;
   font-size: 14px;
+  color: #2D2A26;
+  background-color: #FAFAF8;
   box-sizing: border-box;
 }
 
 .form-input:focus {
-  border-color: #FF7A85;
+  border-color: #8B7355;
   outline: none;
 }
 
@@ -455,7 +506,7 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #EEEEEE;
 }
 
 .cancel-btn, .confirm-btn {
@@ -471,22 +522,22 @@
 }
 
 .cancel-btn {
-  background-color: #ffffff;
-  color: #333;
-  border: 1px solid #ddd;
+  background-color: #FFFFFF;
+  color: #8A847A;
+  border: 1px solid #EEEEEE;
 }
 
 .cancel-btn:active {
-  background-color: #f5f5f5;
-  color: #333;
+  background-color: #F5F5F5;
+  color: #2D2A26;
 }
 
 .confirm-btn {
-  background-color: #FF7A85;
-  color: white;
+  background-color: #8B7355;
+  color: #FFFFFF;
   border: none;
 }
 
 .confirm-btn:active {
-  background-color: #ff5c69;
+  background-color: #6D5A42;
 }

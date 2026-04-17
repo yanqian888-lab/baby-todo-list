@@ -1,16 +1,16 @@
-/* pages/profile/index.wxss */
+/* pages/profile/index.wxss - MUJI风格优化版 */
+
 .container {
-  background-color: #f8f8f8;
   min-height: 100vh;
-  padding-bottom: 20px;
+  background-color: #FAFAF8;
+  padding-bottom: 40px;
 }
 
 /* 用户信息卡片 */
 .user-card {
-  background: linear-gradient(135deg, #FF7A85 0%, #FF9D9D 100%);
-  padding: 24px 16px 32px;
-  color: #fff;
-  border-radius: 0 0 24px 24px;
+  background-color: #FFFFFF;
+  padding: 32px 20px 24px;
+  margin-bottom: 12px;
 }
 
 .user-info {
@@ -18,26 +18,38 @@
   align-items: center;
 }
 
-.avatar {
-  width: 72px;
-  height: 72px;
+.avatar-wrap {
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  background-color: #F5F3F0;
   margin-right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+
+.avatar-placeholder {
+  font-size: 28px;
+  color: #B8B2A8;
 }
 
 .info {
   flex: 1;
 }
 
-.name-container {
-  margin-bottom: 8px;
-}
-
 .nickname {
   font-size: 20px;
   font-weight: 600;
-  margin-bottom: 4px;
+  color: #8B7355;
+  margin-bottom: 6px;
   display: block;
 }
 
@@ -46,231 +58,246 @@
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  opacity: 0.9;
+  color: #8A847A;
 }
 
 .baby-icon {
-  font-size: 16px;
+  font-size: 14px;
+}
+
+.baby-name {
+  color: #5A554D;
+  font-weight: 500;
 }
 
 .login-btn {
-  background-color: #fff;
-  color: #FF7A85;
+  background-color: #8B7355;
+  color: #FFFFFF;
   font-size: 14px;
-  padding: 6px 20px;
-  border-radius: 20px;
-  margin-top: 8px;
+  font-weight: 500;
+  padding: 10px 24px;
+  border-radius: 999px;
+  border: none;
+  margin-left: auto;
 }
 
-/* 宝宝信息卡片 */
-.baby-card {
-  background: rgba(255, 255, 255, 0.2);
+.login-btn::after {
+  border: none;
+}
+
+.login-btn:active {
+  background-color: #6B5635;
+}
+
+/* 统计卡片 */
+.stats-card {
+  display: flex;
+  background-color: #FFFFFF;
+  margin: 0 16px 12px;
+  padding: 24px 16px;
   border-radius: 12px;
-  padding: 12px;
-  margin-top: 10px;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
 }
 
-.baby-avatar-section {
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
+.stats-item {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  padding: 8px 0;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
 }
 
-.baby-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  margin-right: 16px;
+.stats-item:active {
+  background-color: #F5F3F0;
 }
 
-.baby-basic-info {
-  display: flex;
-  align-items: center;
+.stats-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 32px;
+  background-color: #F0EDE8;
 }
 
-.gender-icon {
-  font-size: 18px;
-  margin-right: 10px;
+.stats-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: #2D2A26;
+  display: block;
+  margin-bottom: 4px;
+  line-height: 1;
 }
 
-.baby-birthday {
+.stats-label {
   font-size: 12px;
-  opacity: 0.9;
+  color: #8A847A;
+  font-weight: 400;
 }
 
 /* 排敏进度卡片 */
 .progress-card {
-  background-color: white;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin: 30rpx 30rpx 0;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 0 16px 12px;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
 }
 
 .progress-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20rpx;
+  margin-bottom: 12px;
 }
 
 .progress-title {
-  font-size: 28rpx;
-  color: #333;
-  font-weight: bold;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2D2A26;
 }
 
 .progress-percentage {
-  font-size: 32rpx;
-  color: #07c160;
-  font-weight: bold;
+  font-size: 20px;
+  font-weight: 600;
+  color: #8B7355;
 }
 
 .progress-bar {
   width: 100%;
-  height: 12rpx;
-  background-color: #e8e8e8;
-  border-radius: 6rpx;
+  height: 6px;
+  background-color: #F0EDE8;
+  border-radius: 3px;
   overflow: hidden;
-  margin-bottom: 15rpx;
+  margin-bottom: 10px;
 }
 
 .progress-fill {
   height: 100%;
-  background-color: #07c160;
-  border-radius: 6rpx;
+  background-color: #8B7355;
+  border-radius: 3px;
   transition: width 0.3s ease;
 }
 
 .progress-info {
-  text-align: right;
+  display: flex;
+  justify-content: space-between;
 }
 
 .progress-text {
-  font-size: 24rpx;
-  color: #999;
-}
-
-.baby-physical-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.info-item {
-  font-size: 12px;
-  opacity: 0.9;
-  background: rgba(255, 255, 255, 0.3);
-  padding: 4px 10px;
-  border-radius: 8px;
-}
-
-/* 统计信息卡片 */
-.stats-card {
-  display: flex;
-  background-color: #fff;
-  margin: -20px 16px 16px;
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.stats-item {
-  flex: 1;
-  text-align: center;
-}
-
-.stats-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.stats-label {
-  font-size: 12px;
-  color: #666;
-}
-
-.divider {
-  width: 1px;
-  background-color: #eee;
-  margin: 0 16px;
+  font-size: 13px;
+  color: #8A847A;
 }
 
 /* 功能菜单 */
 .menu-section {
-  background-color: #fff;
+  background-color: #FFFFFF;
   border-radius: 12px;
-  margin: 0 16px 16px;
-  overflow: hidden;
+  margin: 0 16px 12px;
+  padding: 8px 0;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
 }
 
 .menu-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s;
 }
 
-.menu-item:last-child {
-  border-bottom: none;
+.menu-item:active {
+  background-color: #FAFAF8;
 }
 
-.menu-left {
+.menu-icon-wrap {
+  width: 32px;
+  height: 32px;
+  background-color: #F5F3F0;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  margin-right: 14px;
 }
 
 .menu-icon {
-  font-size: 20px;
-  width: 24px;
-  text-align: center;
+  font-size: 18px;
+}
+
+.menu-content {
+  flex: 1;
 }
 
 .menu-title {
-  font-size: 16px;
-  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+  color: #2D2A26;
 }
 
-.arrow {
-  color: #999;
-  font-size: 16px;
+.menu-desc {
+  font-size: 12px;
+  color: #8A847A;
+  margin-top: 2px;
+}
+
+.menu-arrow {
+  width: 20px;
+  height: 20px;
+  color: #B8B2A8;
+  font-size: 18px;
 }
 
 /* 退出登录按钮 */
 .logout-section {
-  padding: 16px;
+  padding: 0 16px;
+  margin-top: 24px;
 }
 
 .logout-btn {
-  background-color: #fff;
-  border: 1px solid #FF7A85;
-  color: #FF7A85;
-  font-size: 16px;
-  border-radius: 8px;
+  width: 100%;
+  height: 48px;
+  line-height: 46px;
+  background-color: transparent;
+  color: #8B7355;
+  font-size: 15px;
+  font-weight: 500;
+  border: 1px solid #E8E4DE;
+  border-radius: 24px;
+}
+
+.logout-btn::after {
+  border: none;
+}
+
+.logout-btn:active {
+  background-color: #FAFAF8;
+  border-color: #8B7355;
+}
+
+/* 注销账号 */
+.delete-account-section {
+  text-align: center;
+  padding: 24px 0 32px;
+}
+
+.delete-account-link {
+  font-size: 13px;
+  color: #B8B2A8;
+  text-decoration: underline;
+  text-decoration-color: #E8E4DE;
+}
+
+.delete-account-link:active {
+  color: #8B7355;
 }
 
 /* 版本信息 */
 .version-info {
   text-align: center;
   font-size: 12px;
-  color: #999;
+  color: #B8B2A8;
   margin-top: 16px;
-}
-
-/* 响应式调整 */
-@media screen and (min-width: 768px) {
-  .container {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-  
-  .user-card {
-    border-radius: 0 0 0 0;
-  }
 }

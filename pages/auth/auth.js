@@ -129,6 +129,18 @@ Page({
     });
   },
 
+  navigateToAgreement: function() {
+    wx.navigateTo({
+      url: '/pages/user-agreement/index'
+    });
+  },
+
+  navigateToPrivacy: function() {
+    wx.navigateTo({
+      url: '/pages/privacy-policy/index'
+    });
+  },
+
   /**
    * 页面分享
    */

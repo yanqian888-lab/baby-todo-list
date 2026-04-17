@@ -79,9 +79,8 @@ Page({
    * 跳转到用户协议页面
    */
   navigateToAgreement: function () {
-    wx.showToast({
-      title: '用户协议功能开发中',
-      icon: 'none'
+    wx.navigateTo({
+      url: '/pages/user-agreement/index'
     });
   },
 
@@ -89,9 +88,8 @@ Page({
    * 跳转到隐私政策页面
    */
   navigateToPrivacy: function () {
-    wx.showToast({
-      title: '隐私政策功能开发中',
-      icon: 'none'
+    wx.navigateTo({
+      url: '/pages/privacy-policy/index'
     });
   },
 
@@ -144,22 +142,48 @@ Page({
         // 登录成功，重置尝试次数
         this.setData({ loginAttempts: 0 });
         
+        console.log('准备保存用户信息:', loginResult.data);
+        
         // 保存用户信息到本地存储
-        userService.saveUserInfo(loginResult.data.userInfo, loginResult.data.token);
+        if (loginResult.data && loginResult.data.userInfo && loginResult.data.token) {
+          userService.saveUserInfo(loginResult.data.userInfo, loginResult.data.token);
+        } else {
+          console.warn('登录结果数据不完整:', loginResult);
+        }
         
         // 更新全局用户信息
-        app.updateUserInfo(loginResult.data.userInfo);
+        if (loginResult.data && loginResult.data.userInfo) {
+          app.updateUserInfo(loginResult.data.userInfo);
+        }
         
-        wx.showToast({
-          title: '登录成功',
-          icon: 'success'
+        // 立即跳转到首页，不显示 toast 避免延迟
+        console.log('登录成功，立即跳转到首页...');
+        
+        // 使用 reLaunch 跳转到首页（可以关闭所有页面，包括非 tabBar 页面）
+        // 注意：路径必须以 / 开头表示绝对路径
+        wx.reLaunch({
+          url: '/pages/index/index',
+          success: () => {
+            console.log('reLaunch 到首页成功');
+          },
+          fail: (err) => {
+            console.error('reLaunch 失败:', err);
+            // 备用方案：尝试 switchTab
+            wx.switchTab({
+              url: '/pages/index/index',
+              success: () => {
+                console.log('switchTab 成功');
+              },
+              fail: (err2) => {
+                console.error('switchTab 也失败:', err2);
+                wx.showToast({
+                  title: '跳转失败，请手动返回',
+                  icon: 'none'
+                });
+              }
+            });
+          }
         });
-
-        setTimeout(() => {
-          wx.switchTab({
-            url: '/pages/index/index'
-          });
-        }, 1500);
       } else {
         throw new Error(loginResult.error || '登录失败');
       }
@@ -209,29 +233,67 @@ Page({
     }
   },
   
-  // 微信授权并登录的组合方法（由按钮直接调用）
-  onLoginButtonTap: async function () {
+  // 使用微信原生能力获取用户信息（getUserProfile）
+  getUserProfile: async function () {
+    // 防止重复点击导致 wx.getUserProfile 调用过于频繁
+    if (this._isGettingProfile) {
+      console.log('getUserProfile 正在处理中，忽略重复点击');
+      return;
+    }
+    this._isGettingProfile = true;
+    
     // 检查是否同意协议
     if (!this.data.isAgreed) {
       wx.showToast({
         title: '请先阅读并同意用户协议和隐私政策',
         icon: 'none'
       });
+      this._isGettingProfile = false;
       return;
     }
     
     try {
-      // 1. 先获取用户信息授权（由用户点击直接触发）
-      const userInfo = await this.getUserProfile();
-      console.log('用户信息获取成功:', userInfo);
+      // 使用 wx.getUserProfile 获取用户信息
+      const res = await wx.getUserProfile({
+        desc: '用于完善会员资料' // 必填，说明获取用户信息的用途
+      });
       
-      // 2. 保存用户信息到data
+      console.log('getUserProfile 成功:', res);
+      
+      // 用户同意授权
+      // 过滤微信默认信息，避免覆盖系统生成的随机昵称和自定义头像
+      const isWechatDefaultNickName = (name) => name === '微信用户';
+      const isWechatDefaultAvatar = (url) => typeof url === 'string' && (url.includes('thirdwx.qlogo.cn') || url.includes('mmopen'));
+      const userInfo = {
+        nickName: isWechatDefaultNickName(res.userInfo.nickName) ? undefined : res.userInfo.nickName,
+        avatarUrl: isWechatDefaultAvatar(res.userInfo.avatarUrl) ? undefined : res.userInfo.avatarUrl,
+        gender: res.userInfo.gender
+      };
+      
+      console.log('获取到用户信息:', userInfo);
+      
+      // 保存用户信息到data
       this.setData({ userInfo: userInfo });
       
-      // 3. 执行登录流程（使用刚刚获取的userInfo直接传递，避免异步setData的问题）
+      // 执行登录流程
       await this.wxLogin(userInfo);
-    } catch (error) {
-      console.error('登录授权失败:', error);
+      
+    } catch (err) {
+      console.log('用户拒绝授权或获取失败:', err);
+      
+      // 用户拒绝授权，由云函数生成随机昵称
+      const userInfo = {
+        avatarUrl: '/images/logo.png',
+        gender: 0
+      };
+      
+      // 保存用户信息到data
+      this.setData({ userInfo: userInfo });
+      
+      // 执行登录流程（云函数会生成唯一随机昵称）
+      await this.wxLogin(userInfo);
+    } finally {
+      this._isGettingProfile = false;
     }
   },
 
@@ -271,43 +333,6 @@ Page({
   /**
    * 获取用户信息 - 兼容处理各种错误情况
    */
-  getUserProfile: function () {
-    return new Promise((resolve, reject) => {
-      try {
-        // 使用微信最新的getUserProfile API获取用户信息
-        wx.getUserProfile({
-          desc: '用于完善会员资料',
-          success: (res) => {
-            // 确保返回的用户信息包含所有必要字段
-            const safeUserInfo = {
-              nickName: res.userInfo.nickName || '用户' + Math.floor(Math.random() * 10000),
-              avatarUrl: res.userInfo.avatarUrl || '/images/default-avatar.svg',
-              gender: res.userInfo.gender || 0
-            };
-            resolve(safeUserInfo);
-          },
-          fail: (error) => {
-            console.error('获取用户信息失败:', error);
-            // 无论什么错误，都返回默认信息，确保登录流程能继续
-            resolve({
-              nickName: '用户' + Math.floor(Math.random() * 10000),
-              avatarUrl: '/images/default-avatar.svg',
-              gender: 0
-            });
-          }
-        });
-      } catch (e) {
-        // 捕获任何可能的异常
-        console.error('获取用户信息异常:', e);
-        resolve({
-          nickName: '用户' + Math.floor(Math.random() * 10000),
-          avatarUrl: '/images/default-avatar.svg',
-          gender: 0
-        });
-      }
-    });
-  },
-
   /**
    * 处理用户拒绝授权
    */

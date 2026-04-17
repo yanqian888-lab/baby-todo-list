@@ -1,0 +1,91 @@
+<!-- pages/ai-master/index.wxml -->
+<view class="container">
+  <!-- 聊天消息列表 -->
+  <scroll-view 
+    class="message-list" 
+    scroll-y="{{true}}" 
+    scroll-into-view="{{scrollToMessage}}"
+    scroll-with-animation="{{true}}"
+    enhanced="{{true}}"
+    show-scrollbar="{{false}}"
+  >
+    <!-- 欢迎消息 -->
+    <view class="welcome-message" wx:if="{{messages.length === 0 && agentInfo.welcomeMessage}}">
+      <view class="welcome-bubble">
+        <text class="welcome-text">{{agentInfo.welcomeMessage}}</text>
+      </view>
+    </view>
+
+    <!-- 消息气泡 -->
+    <view 
+      class="message-item {{item.role === 'user' ? 'user' : 'bot'}}" 
+      wx:for="{{messages}}" 
+      wx:key="id"
+      id="msg-{{item.id}}"
+    >
+      <image 
+        class="message-avatar" 
+        src="{{item.role === 'user' ? (userInfo.avatarUrl || '/images/touxiang_moren.png') : (agentInfo.avatar || '/images/logo.png')}}" 
+        mode="aspectFill"
+      ></image>
+      <view class="message-content">
+        <!-- 文本消息 -->
+        <view class="message-bubble" wx:if="{{item.type === 'text' || !item.type}}">
+          <text class="message-text">{{item.content}}</text>
+        </view>
+        <!-- 图片消息 -->
+        <view class="message-bubble image-bubble" wx:if="{{item.type === 'image'}}" bindtap="previewImage" data-url="{{item.content}}">
+          <image class="message-image" src="{{item.content}}" mode="widthFix" lazy-load="{{true}}"></image>
+        </view>
+        <!-- 加载中状态 -->
+        <view class="typing-indicator" wx:if="{{item.role === 'bot' && item.typing}}">
+          <view class="dot"></view>
+          <view class="dot"></view>
+          <view class="dot"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部占位，确保输入框不遮挡消息 -->
+    <view class="message-list-footer" id="msg-footer"></view>
+  </scroll-view>
+
+  <!-- 快捷问题 -->
+  <view class="quick-questions" wx:if="{{messages.length === 0 && quickQuestions.length > 0}}">
+    <view 
+      class="quick-question-item" 
+      wx:for="{{quickQuestions}}" 
+      wx:key="*this"
+      bindtap="sendQuickQuestion"
+      data-question="{{item}}"
+    >
+      <text class="quick-question-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 输入区域 -->
+  <view class="input-area">
+    <view class="input-row">
+      <textarea 
+        class="message-input" 
+        value="{{inputValue}}"
+        bindinput="onInput"
+        bindconfirm="sendTextMessage"
+        placeholder="请输入您的问题..."
+        placeholder-class="input-placeholder"
+        maxlength="500"
+        auto-height="{{true}}"
+        fixed="{{true}}"
+        show-confirm-bar="{{false}}"
+        cursor-spacing="20"
+      ></textarea>
+      <button 
+        class="send-btn {{hasInput ? 'active' : ''}}" 
+        bindtap="sendTextMessage"
+        disabled="{{!hasInput || loading}}"
+      >
+        <text class="send-icon">发送</text>
+      </button>
+    </view>
+  </view>
+</view>

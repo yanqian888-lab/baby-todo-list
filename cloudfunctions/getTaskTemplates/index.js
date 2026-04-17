@@ -381,17 +381,20 @@ exports.main = async (event, context) => {
     // 如果数据库中没有模板，返回默认模板
     let result = templates.data
     if (result.length === 0) {
-      // 可以选择将默认模板保存到数据库中
-      for (const template of defaultTemplates) {
-        await db.collection('tasks').add({
-          data: {
-            ...template,
-            isTemplate: true,
-            status: 'pending',
-            createTime: new Date(),
-            updateTime: new Date()
-          }
-        })
+      // 使用 count 再次确认，防止并发重复插入
+      const doubleCheck = await db.collection('tasks').where({ isTemplate: true }).count();
+      if (doubleCheck.total === 0) {
+        for (const template of defaultTemplates) {
+          await db.collection('tasks').add({
+            data: {
+              ...template,
+              isTemplate: true,
+              status: 'pending',
+              createTime: new Date(),
+              updateTime: new Date()
+            }
+          })
+        }
       }
       result = defaultTemplates
     }

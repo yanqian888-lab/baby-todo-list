@@ -6,43 +6,57 @@
 
 const userService = {
   /**
-   * 登录接口 - 完全使用本地模拟数据，绕过云函数调用
+   * 登录接口 - 调用云函数进行真实登录
    * @param {string} code - 微信登录code
    * @param {Object} userInfo - 用户信息对象
    * @returns {Promise} 登录结果
    */
-  login: function(code, userInfo) {
+  login: async function(code, userInfo) {
     console.log('登录服务调用', code, userInfo);
     
-    // 确保userInfo至少包含默认值，且每个字段都有有效值
-    const safeUserInfo = {
-      nickName: (userInfo && userInfo.nickName) || '用户' + Math.floor(Math.random() * 10000),
-      avatarUrl: (userInfo && userInfo.avatarUrl) || '/images/default-avatar.svg',
-      gender: (userInfo && userInfo.gender) || 0
-    };
-    
-    // 直接使用本地生成的模拟openid，完全绕过云函数调用
-    const mockOpenid = wx.getStorageSync('mock_openid') || 'mock-openid-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    wx.setStorageSync('mock_openid', mockOpenid);
-    
-    // 构建完整的用户信息
-    const resultUserInfo = {
-      openId: mockOpenid,
-      nickName: safeUserInfo.nickName,
-      avatarUrl: safeUserInfo.avatarUrl,
-      gender: safeUserInfo.gender,
-      createdAt: new Date().toISOString(),
-      isMock: true // 标记是否为模拟openid
-    };
-    
-    // 直接返回成功结果，完全绕过云函数调用
-    return Promise.resolve({
-      success: true,
-      data: {
-        token: 'token-' + Date.now() + '-' + mockOpenid,
-        userInfo: resultUserInfo
+    try {
+      // 调用云函数进行登录
+      const result = await wx.cloud.callFunction({
+        name: 'login',
+        data: {
+          code: code,
+          userInfo: userInfo || {}
+        }
+      });
+      
+      console.log('云函数返回:', result);
+      
+      if (result.result && result.result.success) {
+        // 优先使用云函数返回的用户信息（包含自动生成的随机昵称）
+        const cloudUserInfo = result.result.userInfo || {};
+        // 构建用户信息
+        const userInfoData = {
+          openId: result.result.openid,
+          unionId: result.result.unionid,
+          nickName: cloudUserInfo.nickName || (userInfo && userInfo.nickName) || '用户',
+          avatarUrl: cloudUserInfo.avatarUrl || (userInfo && userInfo.avatarUrl) || '/images/logo.png',
+          gender: cloudUserInfo.gender !== undefined ? cloudUserInfo.gender : ((userInfo && userInfo.gender) || 0)
+        };
+        
+        const token = 'token-' + Date.now() + '-' + result.result.openid;
+        
+        // 保存到本地存储
+        this.saveUserInfo(userInfoData, token);
+        
+        return {
+          success: true,
+          data: {
+            token: token,
+            userInfo: userInfoData
+          }
+        };
+      } else {
+        throw new Error(result.result?.error || '登录失败');
       }
-    });
+    } catch (error) {
+      console.error('登录失败:', error);
+      throw new Error(error.message || '登录失败，请检查网络后重试');
+    }
   },
 
   /**
@@ -87,9 +101,23 @@ const userService = {
    * 退出登录
    */
   logout: function() {
-    wx.removeStorageSync('userInfo');
-    wx.removeStorageSync('token');
-    wx.removeStorageSync('authInfo');
+    try {
+      const storageInfo = wx.getStorageInfoSync();
+      (storageInfo.keys || []).forEach(key => {
+        wx.removeStorageSync(key);
+      });
+    } catch (e) {
+      // 降级：手动清理已知 key
+      ['userInfo','token','authInfo','currentFamilyId','currentFamily','babyInfo','sensitivity_records','custom_sensitivity_foods','userSettings','pendingFamilyCreation'].forEach(k => wx.removeStorageSync(k));
+    }
+    
+    const app = getApp();
+    if (app && app.globalData) {
+      app.globalData.userInfo = null;
+      app.globalData.currentFamilyId = null;
+      app.globalData.babyInfo = null;
+      app.globalData.lastSyncTime = null;
+    }
   },
 
   /**
@@ -120,77 +148,62 @@ const userService = {
     return new Promise((resolve, reject) => {
       // 检查用户是否已登录
       const token = wx.getStorageSync('token');
-      if (!token) {
-        // 如果用户未登录，返回模拟数据
-        console.log('ℹ️ 用户未登录，返回模拟统计数据');
+      const userInfo = wx.getStorageSync('userInfo');
+      
+      if (!token || !userInfo || !userInfo.openId) {
+        // 如果用户未登录，返回空数据
+        console.log('ℹ️ 用户未登录，返回空统计数据');
         resolve({
           success: true,
           data: {
-            totalTasks: 42,
-            completedTasks: 28,
-            streakDays: 5,
-            totalCheckIns: 36
+            totalTasks: 0,
+            completedTasks: 0,
+            streakDays: 0,
+            totalCheckIns: 0
           }
         });
         return;
       }
       
-      // 获取用户信息以获取openid
-      const userInfo = wx.getStorageSync('userInfo');
-      
-      // 调用云函数获取真实的用户统计数据
-      console.log('📞 调用getUserStatistics云函数');
+      // 调用云函数获取真实的用户统计数据（汇总所有关联家庭，不限制当前家庭）
+      const requestData = {
+        openid: userInfo.openId
+      };
+      console.log('📞 调用getUserStatistics云函数', requestData);
       wx.cloud.callFunction({
         name: 'getUserStatistics',
-        data: { 
-          dummyParam: true, // 添加默认参数，避免查询参数均为undefined
-          openid: userInfo ? userInfo.openId : undefined // 传递用户的openid作为备用方案
-        }
+        data: requestData
       }).then(res => {
         console.log('📥 云函数返回结果:', res);
         
-        if (res.result) {
-          if (res.result.success) {
-            resolve({
-              success: true,
-              data: res.result.data
-            });
-          } else {
-            console.error('❌ 云函数执行失败:', res.result.error);
-            // 如果云函数执行失败，返回默认模拟数据
-            resolve({
-              success: true,
-              data: {
-                totalTasks: 42,
-                completedTasks: 28,
-                streakDays: 5,
-                totalCheckIns: 36
-              }
-            });
-          }
+        if (res.result && res.result.success) {
+          resolve({
+            success: true,
+            data: res.result.data
+          });
         } else {
-          console.error('❌ 云函数返回格式错误:', res);
-          // 如果云函数返回格式错误，返回默认模拟数据
+          console.error('❌ 云函数执行失败:', res.result?.error || '未知错误');
+          // 云函数执行失败，返回空数据
           resolve({
             success: true,
             data: {
-              totalTasks: 42,
-              completedTasks: 28,
-              streakDays: 5,
-              totalCheckIns: 36
+              totalTasks: 0,
+              completedTasks: 0,
+              streakDays: 0,
+              totalCheckIns: 0
             }
           });
         }
       }).catch(error => {
         console.error('❌ 调用云函数失败:', error);
-        // 如果云函数调用失败，返回默认模拟数据
+        // 云函数调用失败，返回空数据
         resolve({
           success: true,
           data: {
-            totalTasks: 42,
-            completedTasks: 28,
-            streakDays: 5,
-            totalCheckIns: 36
+            totalTasks: 0,
+            completedTasks: 0,
+            streakDays: 0,
+            totalCheckIns: 0
           }
         });
       });

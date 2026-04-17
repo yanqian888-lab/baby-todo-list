@@ -12,7 +12,7 @@
   <!-- 宝宝信息卡片 -->
   <view class="baby-info-card" wx:if="{{babyInfo}}">
     <view class="baby-avatar">
-      <image src="{{babyInfo.avatar || '/images/default-avatar.svg'}}" mode="aspectFill"></image>
+      <image src="{{babyInfo.avatar || '/images/logo.png'}}" mode="aspectFill"></image>
     </view>
     <view class="baby-details">
       <view class="baby-name">{{babyInfo.name}}</view>

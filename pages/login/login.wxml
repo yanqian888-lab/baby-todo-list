@@ -1,58 +1,56 @@
-<!-- pages/login/login.wxml -->
-<view class="login-container">
-  <!-- 顶部logo和标题 -->
-  <view class="header">
-    <view class="logo">
-      <image src="/images/default-avatar.svg" mode="aspectFit"></image>
+<!-- pages/login/login.wxml - MUJI风格优化版 -->
+<view class="login-page">
+  <view class="login-card">
+    <view class="logo-wrap">
+      <image class="logo" src="/images/logo.png" mode="aspectFit"/>
     </view>
-    <view class="app-name">
-      <text class="main-title">母婴打卡</text>
+
+    <view class="title-block">
+      <text class="main-title">萌宝贝排敏生活记</text>
       <text class="sub-title">记录宝宝成长的每一天</text>
     </view>
-  </view>
 
-  <!-- 功能介绍 -->
-  <view class="features">
-    <view class="feature-item">
-      <icon class="feature-icon" type="success" size="20" color="#FF7A85"></icon>
-      <text class="feature-text">智能记录宝宝日常</text>
+    <view class="feature-list">
+      <view class="feature-card">
+        <view class="feature-icon">✓</view>
+        <text class="feature-text">科学育儿全家共同守护</text>
+      </view>
+      <view class="feature-card">
+        <view class="feature-icon">✓</view>
+        <text class="feature-text">宝宝日常管理便捷高效</text>
+      </view>
+      <view class="feature-card">
+        <view class="feature-icon">✓</view>
+        <text class="feature-text">辅食排敏精准记录建议</text>
+      </view>
     </view>
-    <view class="feature-item">
-      <icon class="feature-icon" type="success" size="20" color="#FF7A85"></icon>
-      <text class="feature-text">科学育儿计划推荐</text>
+
+    <view class="login-action">
+      <button class="login-btn" 
+              bindtap="getUserProfile"
+              loading="{{isLoading}}"
+              disabled="{{isLoading || !isAgreed}}"
+              style="background-color: #8B7355;">
+        微信一键登录
+      </button>
+
+      <view class="agreement">
+        <view class="checkbox-wrap" bindtap="toggleAgreement">
+          <view class="checkbox {{isAgreed ? 'checked' : ''}}">
+            <text wx:if="{{isAgreed}}">✓</text>
+          </view>
+        </view>
+        <view class="agreement-text">
+          <text>我已阅读并同意</text>
+          <text class="link" bindtap="navigateToAgreement">《用户协议》</text>
+          <text>和</text>
+          <text class="link" bindtap="navigateToPrivacy">《隐私政策》</text>
+        </view>
+      </view>
     </view>
-    <view class="feature-item">
-      <icon class="feature-icon" type="success" size="20" color="#FF7A85"></icon>
-      <text class="feature-text">成长数据可视化</text>
-    </view>
   </view>
 
-  <!-- 登录按钮 -->
-  <view class="login-btn-container">
-    <button 
-      class="login-btn" 
-      type="primary" 
-      bindtap="onLoginButtonTap"
-      loading="{{isLoading}}"
-      disabled="{{isLoading || !isAgreed}}"
-    >
-      微信一键登录
-    </button>
-  </view>
-
-  <!-- 用户协议 -->
-  <view class="agreement">
-    <checkbox class="checkbox" checked="{{isAgreed}}" bindtap="toggleAgreement"></checkbox>
-    <text class="agreement-text">
-      我已阅读并同意
-      <text class="link" bindtap="navigateToAgreement">《用户协议》</text>
-      和
-      <text class="link" bindtap="navigateToPrivacy">《隐私政策》</text>
-    </text>
-  </view>
-
-  <!-- 底部版权信息 -->
-  <view class="footer">
-    <text class="copyright">© 2024 母婴打卡 版权所有</text>
+  <view class="login-footer">
+    <text class="footer-note">使用微信登录，方便快捷，安全可信</text>
   </view>
 </view>

@@ -3,7 +3,7 @@
 
 
   <!-- 任务模板区域 -->
-  <view class="template-section" wx:if="{{mode === 'create'}}">
+  <view id="template-section" class="template-section" wx:if="{{mode === 'create'}}">
     <view class="template-header">
       <text class="template-title">使用任务模板</text>
     </view>
@@ -71,7 +71,7 @@
             <view 
               wx:for="{{pregnantTemplates}}" 
               wx:key="id"
-              class="template-item"
+              class="template-item {{selectedTemplateId === item.id ? 'active' : ''}}"
               bindtap="selectTemplate" 
               data-id="{{item.id}}"
             >
@@ -93,7 +93,7 @@
             <view 
               wx:for="{{newMomTemplates}}" 
               wx:key="id"
-              class="template-item"
+              class="template-item {{selectedTemplateId === item.id ? 'active' : ''}}"
               bindtap="selectTemplate" 
               data-id="{{item.id}}"
             >
@@ -116,7 +116,7 @@
               <view 
                 wx:for="{{babyTemplates_0_1}}" 
                 wx:key="id"
-                class="template-item"
+                class="template-item {{selectedTemplateId === item.id ? 'active' : ''}}"
                 bindtap="selectTemplate" 
                 data-id="{{item.id}}"
               >
@@ -136,7 +136,7 @@
               <view 
                 wx:for="{{babyTemplates_2_6}}" 
                 wx:key="id"
-                class="template-item"
+                class="template-item {{selectedTemplateId === item.id ? 'active' : ''}}"
                 bindtap="selectTemplate" 
                 data-id="{{item.id}}"
               >
@@ -156,7 +156,7 @@
               <view 
                 wx:for="{{babyTemplates_7_24}}" 
                 wx:key="id"
-                class="template-item"
+                class="template-item {{selectedTemplateId === item.id ? 'active' : ''}}"
                 bindtap="selectTemplate" 
                 data-id="{{item.id}}"
               >
@@ -189,7 +189,7 @@
   </view>
 
   <!-- 任务信息输入 -->
-  <view class="input-section">
+  <view class="input-section" id="task-form">
     <!-- 任务标题 -->
     <view class="input-group">
       <text class="label required">任务标题</text>
@@ -235,6 +235,17 @@
           <text class="frequency-name">{{item.name}}</text>
         </view>
       </view>
+    </view>
+    
+    <!-- 一次任务时选择日期 -->
+    <view class="input-group" wx:if="{{frequency === 'none'}}">
+      <text class="label required">选择日期</text>
+      <picker mode="date" value="{{dueDate}}" bindchange="onDueDateChange">
+        <view class="form-picker">
+          <text class="picker-text">{{dueDate || '请选择日期'}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
     </view>
     
     <!-- 每周循环时选择星期 -->

@@ -11,16 +11,23 @@ Page({
     foodDetail: null,     // 食物详情
     loading: false,       // 加载状态
     error: '',            // 错误信息
+    isLoggedIn: false     // 登录状态
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad: function (options) {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+
     const foodId = options.id;
     if (foodId) {
       this.setData({ foodId });
-      this.checkLogin();
+      this.setData({ isLoggedIn: true });
     } else {
       this.setData({ error: '食物ID不存在' });
     }
@@ -30,7 +37,12 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
-    if (this.data.isLoggedIn && this.data.foodId) {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+    if (this.data.foodId) {
       this.loadFoodDetail();
     }
   },

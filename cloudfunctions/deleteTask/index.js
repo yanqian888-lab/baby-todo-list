@@ -35,7 +35,7 @@ exports.main = async (event, context) => {
   try {
     // 获取用户信息
     const wxContext = cloud.getWXContext();
-    const openid = wxContext.OPENID;
+    const openid = wxContext.OPENID || wxContext.openid;
     const appid = wxContext.APPID;
     
     console.log('=== 云函数deleteTask开始执行 ===', {
@@ -85,21 +85,34 @@ exports.main = async (event, context) => {
       taskData = taskResult.data;
       console.log('查询任务成功，任务数据:', JSON.stringify(taskData).substring(0, 200) + '...'); // 限制日志长度
       
-      // 验证任务所属权限 - 更健壮的检查
-      if (!taskData.openid) {
-        console.warn('任务缺少openid字段，默认允许删除');
-      } else if (taskData.openid !== openid) {
-        console.error('权限验证失败: 当前用户openid与任务所属openid不匹配', {
+      // 验证任务所属权限：任务创建者或家庭创建者可删除
+      const taskOwnerId = taskData._openid || taskData.openid;
+      const taskFamilyId = taskData.familyId || null;
+      let canDelete = false;
+      if (taskOwnerId === openid) {
+        canDelete = true;
+      } else if (taskFamilyId) {
+        try {
+          const familyRes = await db.collection('families').doc(taskFamilyId).get();
+          const family = familyRes.data || null;
+          if (family && family.creatorOpenId === openid) {
+            canDelete = true;
+          }
+        } catch (e) {
+          console.warn('校验家庭创建者身份失败:', e);
+        }
+      }
+      if (!canDelete) {
+        console.error('权限验证失败: 当前用户无权删除此任务', {
           currentOpenid: openid,
-          taskOwnerOpenid: taskData.openid
+          taskOwnerOpenid: taskOwnerId
         });
         return {
           success: false,
-          error: '没有权限删除此任务'
+          error: '只有任务创建者或家庭创建者可以删除任务'
         };
-      } else {
-        console.log('权限验证通过，用户有权限删除此任务');
       }
+      console.log('权限验证通过，用户有权限删除此任务');
     } catch (getErr) {
       console.error('查询任务失败:', getErr);
       
@@ -147,6 +160,21 @@ exports.main = async (event, context) => {
       if (updateResult.stats) {
         if (updateResult.stats.updated === 1) {
           console.log('软删除成功，影响行数:', updateResult.stats.updated);
+          // 清理关联的打卡记录
+          try {
+            await db.collection('task_completions').where({ taskId }).remove();
+            console.log('关联打卡记录清理完成');
+          } catch (cleanupErr) {
+            console.warn('清理关联打卡记录失败:', cleanupErr);
+          }
+          // 递减用户总任务数
+          try {
+            await db.collection('users').where({ openid }).update({
+              data: { 'statistics.totalTasks': db.command.gt(0).inc(-1) }
+            });
+          } catch (statsErr) {
+            console.warn('更新用户统计失败:', statsErr);
+          }
           return {
             success: true,
             message: '任务删除成功',

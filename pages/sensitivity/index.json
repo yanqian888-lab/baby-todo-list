@@ -1,3 +1,7 @@
 {
+  "navigationBarTitleText": "萌宝贝排敏生活记",
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#FAFAF8",
   "usingComponents": {}
 }

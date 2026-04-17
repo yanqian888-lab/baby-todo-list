@@ -1,0 +1,105 @@
+/* pages/family/baby-info.wxss */
+.baby-info-container {
+  min-height: 100vh;
+  background: #FAFAF8;
+  padding: 30rpx;
+}
+
+.form-section {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin-bottom: 40rpx;
+}
+
+.form-item {
+  margin-bottom: 30rpx;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #2D2A26;
+  margin-bottom: 16rpx;
+  font-weight: 500;
+}
+
+.form-input {
+  height: 88rpx;
+  background: #F8F8F8;
+  border-radius: 16rpx;
+  padding: 0 30rpx;
+  font-size: 30rpx;
+  color: #2D2A26;
+  box-sizing: border-box;
+}
+
+.form-picker {
+  height: 88rpx;
+  background: #F8F8F8;
+  border-radius: 16rpx;
+  padding: 0 30rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.picker-text {
+  font-size: 30rpx;
+  color: #2D2A26;
+}
+
+.picker-arrow {
+  font-size: 32rpx;
+  color: #8A847A;
+}
+
+.gender-selector {
+  display: flex;
+  gap: 24rpx;
+}
+
+.gender-option {
+  flex: 1;
+  height: 88rpx;
+  background: #F8F8F8;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  color: #8A847A;
+  border: 2rpx solid transparent;
+}
+
+.gender-option.active {
+  background: #F5F3F0;
+  color: #8B7355;
+  border-color: #8B7355;
+}
+
+.btn-save {
+  width: 100%;
+  height: 96rpx;
+  background: #8B7355;
+  color: #FFFFFF;
+  font-size: 32rpx;
+  border-radius: 48rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 16rpx rgba(139, 115, 85, 0.2);
+}
+
+.btn-save::after {
+  border: none;
+}
+
+.btn-save:active {
+  background: #6B563B;
+}

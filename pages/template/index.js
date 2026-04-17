@@ -24,7 +24,20 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function () {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
     this.loadTemplates()
+  },
+
+  onShow: function () {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
   },
 
   /**
@@ -85,7 +98,7 @@ Page({
       
       // 跳转到创建任务页面，并传递模板ID作为参数
       wx.navigateTo({
-        url: `/pages/task/create.js?templateId=${templateId}`
+        url: `/pages/task/create?templateId=${templateId}`
       });
     } catch (error) {
       console.error('使用模板创建任务失败:', error);

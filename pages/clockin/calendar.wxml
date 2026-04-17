@@ -47,7 +47,7 @@
         bindtap="onDayTap"
       >
         <text class="day-number">{{item.day}}</text>
-        <view wx:if="isChecked(item.day)" class="check-mark">✓</view>
+        <view wx:if="{{isChecked(item.day)}}" class="check-mark">✓</view>
       </view>
     </block>
     <block wx:else>

@@ -12,19 +12,54 @@
       "outputPath": ""
     },
     "useCompilerPlugins": false,
-    "minifyWXML": true
+    "minifyWXML": true,
+    "compileWorklet": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
   },
-  "cloudfunctionRoot": "cloudfunctions",
+  "cloudfunctionRoot": "cloudfunctions/",
   "cloud": {
     "env": "cloud1-9g2wikx47c9ba4ec"
   },
   "compileType": "miniprogram",
   "simulatorPluginLibVersion": {},
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "regexp",
+        "value": "^cloudfunctions/"
+      },
+      {
+        "type": "regexp",
+        "value": "^scripts/"
+      },
+      {
+        "type": "regexp",
+        "value": "^docs/"
+      },
+      {
+        "type": "regexp",
+        "value": "^\\.git/"
+      },
+      {
+        "type": "regexp",
+        "value": "^miniprogram_npm/"
+      },
+      {
+        "type": "regexp",
+        "value": "test_.*\\.js$"
+      }
+    ],
     "include": []
   },
   "appid": "wx07137a5c4479d119",
   "editorSetting": {},
-  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
+  "libVersion": "3.11.2"
 }

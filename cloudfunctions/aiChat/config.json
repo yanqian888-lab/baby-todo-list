@@ -1,0 +1,9 @@
+{
+  "environment": {
+    "variables": {
+      "TENCENTCLOUD_SECRETID": "***REMOVED***",
+      "TENCENTCLOUD_SECRETKEY": "***REMOVED***"
+    }
+  },
+  "timeout": 20
+}

@@ -23,10 +23,23 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function () {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
     // 加载设置
     this.loadSettings();
     // 计算缓存大小
     this.calculateCacheSize();
+  },
+
+  onShow: function () {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
   },
   
   /**

@@ -1,7 +1,7 @@
-/* 排敏推荐页面样式 */
+/* 排敏推荐页面样式 - MUJI风格 */
 .sensitivity-recommend {
   min-height: 100vh;
-  background-color: #f8f8f8;
+  background-color: #FAFAF8;
 }
 
 /* 页面标题 */
@@ -11,8 +11,8 @@
   justify-content: space-between;
   height: 48px;
   padding: 0 16px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e8e8e8;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #EEEEEE;
   position: fixed;
   top: 0;
   left: 0;
@@ -26,22 +26,22 @@
 
 .icon-back {
   font-size: 24px;
-  color: #333333;
+  color: #8A847A;
 }
 
 .header-title {
   font-size: 18px;
   font-weight: bold;
-  color: #333333;
+  color: #2D2A26;
 }
 
 /* 宝宝信息卡片 */
 .baby-info-card {
   margin: 64px 16px 16px;
   padding: 16px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(45, 42, 38, 0.04);
   display: flex;
   align-items: center;
 }
@@ -66,21 +66,26 @@
 .baby-name {
   font-size: 18px;
   font-weight: bold;
-  color: #333333;
+  color: #2D2A26;
   margin-bottom: 4px;
 }
 
 .baby-age {
   font-size: 14px;
-  color: #666666;
+  color: #8A847A;
 }
 
 .edit-btn {
   padding: 6px 12px;
-  border: 1px solid #07c160;
+  border: 1px solid #8B7355;
   border-radius: 16px;
   font-size: 14px;
-  color: #07c160;
+  color: #8B7355;
+  background-color: transparent;
+}
+
+.edit-btn:active {
+  background-color: rgba(139, 115, 85, 0.05);
 }
 
 /* 推荐列表 */
@@ -91,7 +96,7 @@
 .section-title {
   font-size: 16px;
   font-weight: bold;
-  color: #333333;
+  color: #2D2A26;
   margin-bottom: 12px;
   padding-top: 8px;
 }
@@ -106,9 +111,9 @@
 /* 食物卡片 */
 .food-card {
   padding: 16px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(45, 42, 38, 0.04);
   cursor: pointer;
   transition: transform 0.2s ease;
 }
@@ -121,8 +126,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #07c160;
-  color: #ffffff;
+  background-color: #8B7355;
+  color: #FFFFFF;
   font-size: 20px;
   font-weight: bold;
   display: flex;
@@ -134,19 +139,19 @@
 .food-name {
   font-size: 16px;
   font-weight: bold;
-  color: #333333;
+  color: #2D2A26;
   margin-bottom: 4px;
 }
 
 .food-type {
   font-size: 12px;
-  color: #666666;
+  color: #8A847A;
   margin-bottom: 8px;
 }
 
 .food-reason {
   font-size: 12px;
-  color: #999999;
+  color: #8A847A;
 }
 
 .reason-label {
@@ -175,14 +180,14 @@
 
 .empty-state text {
   font-size: 14px;
-  color: #999999;
+  color: #8A847A;
   margin-bottom: 24px;
 }
 
 .refresh-btn {
   padding: 8px 24px;
-  background-color: #07c160;
-  color: #ffffff;
+  background-color: #8B7355;
+  color: #FFFFFF;
   border: none;
   border-radius: 20px;
   font-size: 14px;
@@ -198,5 +203,5 @@
 
 .loading-state text {
   font-size: 14px;
-  color: #999999;
+  color: #8A847A;
 }

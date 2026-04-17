@@ -1,0 +1,33 @@
+<!--pages/family/baby-info.wxml-->
+<view class="baby-info-container">
+  <view class="form-section">
+    <view class="form-item">
+      <text class="form-label">宝宝昵称</text>
+      <input class="form-input" placeholder="请输入宝宝昵称" value="{{babyInfo.nickname}}" bindinput="onNicknameInput" />
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">宝宝性别</text>
+      <view class="gender-selector">
+        <view class="gender-option {{babyInfo.gender === 'boy' ? 'active' : ''}}" bindtap="onSelectGender" data-gender="boy">
+          <text>男宝</text>
+        </view>
+        <view class="gender-option {{babyInfo.gender === 'girl' ? 'active' : ''}}" bindtap="onSelectGender" data-gender="girl">
+          <text>女宝</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">宝宝生日</text>
+      <picker mode="date" value="{{babyInfo.birthday}}" bindchange="onBirthdayChange">
+        <view class="form-picker">
+          <text class="picker-text">{{babyInfo.birthday || '请选择生日'}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <button class="btn-save" bindtap="saveBabyInfo">保存</button>
+</view>

@@ -1,156 +1,424 @@
-/* pages/sensitivity/index.wxss */
+/* pages/sensitivity/index.wxss - MUJI风格优化版 */
+
 .container {
   min-height: 100vh;
-  background-color: #f8f8f8;
+  background-color: #FAFAF8;
+  padding: 16px;
 }
 
-
-
-/* 主要内容区域 */
-.main-content {
-  padding: 30rpx;
+/* 家庭选择器 */
+/* 家庭切换 tabs */
+.family-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-/* 没有宝宝信息时的样式 */
-.no-baby-info {
+.tab-item {
+  padding: 10px 20px;
+  background-color: #FFFFFF;
+  border-radius: 999px;
+  font-size: 14px;
+  color: #6B6560;
+  border: 1px solid #E8E4DF;
+  transition: all 0.2s ease;
+}
+
+.tab-item.active {
+  background-color: rgba(196, 167, 125, 0.15);
+  color: #8B7355;
+  border-color: #C4A77D;
+  font-weight: 500;
+}
+
+/* ===== 宝宝信息表单 ===== */
+.baby-info-form-section {
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 32px 24px;
+  box-shadow: 0 2px 8px rgba(45, 42, 38, 0.04);
+}
+
+.form-header {
   text-align: center;
-  padding: 100rpx 0;
+  margin-bottom: 32px;
 }
 
-.info-text {
+.form-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2D2A26;
+  margin-bottom: 8px;
   display: block;
-  margin-bottom: 40rpx;
-  font-size: 32rpx;
-  color: #666;
 }
 
-/* 排敏进度条 */
+.form-subtitle {
+  font-size: 14px;
+  color: #8A847A;
+}
+
+.form-content {
+  margin-bottom: 32px;
+}
+
+.form-item {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #5A554D;
+  margin-bottom: 8px;
+}
+
+.required {
+  color: #C47D7D;
+}
+
+.form-input {
+  width: 100%;
+  height: 48px;
+  background-color: #F5F3F0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 15px;
+  color: #2D2A26;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: #8B7355;
+  background-color: #FFFFFF;
+}
+
+.form-picker {
+  width: 100%;
+  height: 48px;
+  background-color: #F5F3F0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 15px;
+  color: #8A847A;
+  line-height: 48px;
+  box-sizing: border-box;
+}
+
+.form-picker.has-value {
+  color: #2D2A26;
+  background-color: #FFFFFF;
+  border-color: #E8E4DE;
+}
+
+/* 性别选择 */
+.gender-selector {
+  display: flex;
+  gap: 12px;
+}
+
+.gender-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: #F5F3F0;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.gender-option.active {
+  background-color: #FFFFFF;
+  border-color: #8B7355;
+}
+
+.gender-icon {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.gender-text {
+  font-size: 14px;
+  color: #8A847A;
+  font-weight: 500;
+}
+
+.gender-option.active .gender-text {
+  color: #8B7355;
+}
+
+/* 保存按钮 */
+.save-btn {
+  width: 100%;
+  height: 48px;
+  line-height: 48px;
+  background-color: #8B7355;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 24px;
+  border: none;
+}
+
+.save-btn::after {
+  border: none;
+}
+
+.save-btn:active {
+  background-color: #6B5635;
+}
+
+.join-family-hint {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 16px;
+  gap: 4px;
+}
+
+.hint-text {
+  font-size: 13px;
+  color: #8A847A;
+}
+
+.hint-link {
+  font-size: 13px;
+  color: #8B7355;
+  font-weight: 500;
+}
+
+/* 弹窗样式 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: none;
+}
+
+.modal.show {
+  display: block;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #2D2A26;
+}
+
+.modal-close {
+  font-size: 24px;
+  color: #8A847A;
+  padding: 4px;
+}
+
+.modal-body {
+  margin-bottom: 20px;
+}
+
+.modal-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  background-color: #F7F7F7;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #2D2A26;
+  box-sizing: border-box;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-footer .btn-primary,
+.modal-footer .btn-secondary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  border: none;
+  line-height: 1;
+}
+
+.modal-footer .btn-primary {
+  background-color: #8B7355;
+  color: #FFFFFF;
+}
+
+.modal-footer .btn-secondary {
+  background-color: #F5F3F0;
+  color: #8A847A;
+}
+
+/* ===== 排敏进度 ===== */
 .progress-section {
-  background-color: white;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
 }
 
 .progress-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20rpx;
+  margin-bottom: 12px;
 }
 
 .progress-title {
-  font-size: 28rpx;
-  color: #333;
-  font-weight: bold;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2D2A26;
 }
 
 .progress-value {
-  font-size: 32rpx;
-  color: #07c160;
-  font-weight: bold;
+  font-size: 24px;
+  font-weight: 600;
+  color: #8B7355;
 }
 
 .progress-bar {
   width: 100%;
-  height: 12rpx;
-  background-color: #e8e8e8;
-  border-radius: 6rpx;
+  height: 6px;
+  background-color: #F0EDE8;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background-color: #07c160;
-  border-radius: 6rpx;
-  transition: width 0.3s ease;
+  background-color: #8B7355;
+  border-radius: 3px;
+  transition: width 0.4s ease;
 }
 
-/* 推荐食物区域 */
+/* ===== 推荐食物区域 ===== */
 .recommended-section {
-  background-color: white;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
 }
 
-/* 区域标题和添加按钮 */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20rpx;
+  margin-bottom: 16px;
 }
 
 .section-title {
-  font-size: 28rpx;
-  color: #333;
-  font-weight: bold;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2D2A26;
 }
 
-/* 添加按钮样式 */
 .add-food-btn {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 60rpx;
-  height: 60rpx;
-  background-color: #FF7A85;
-  color: white;
+  width: 32px;
+  height: 32px;
+  background-color: #8B7355;
   border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.add-food-btn:hover {
-  transform: scale(1.05);
+.add-food-btn:active {
+  background-color: #6B5635;
 }
 
 .add-icon {
-  font-size: 40rpx;
-  line-height: 60rpx;
+  color: #FFFFFF;
+  font-size: 18px;
+  font-weight: 300;
 }
 
 .food-list {
   display: flex;
   flex-direction: column;
-  gap: 15rpx;
+  gap: 10px;
 }
 
 .food-item {
-  padding: 20rpx;
-  border: 2rpx solid #e8e8e8;
-  border-radius: 12rpx;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 16px;
+  background-color: #FAFAF8;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.food-item:active {
+  background-color: #F5F3F0;
 }
 
 .food-item.selected {
-  border-color: #07c160;
-  background-color: rgba(7, 193, 96, 0.05);
+  border-color: #8B7355;
+  background-color: rgba(139, 115, 85, 0.03);
 }
 
 .food-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10rpx;
+  margin-bottom: 8px;
 }
 
 .food-name {
-  font-size: 28rpx;
-  color: #333;
-  font-weight: bold;
+  font-size: 15px;
+  font-weight: 500;
+  color: #2D2A26;
 }
 
 .food-category {
-  font-size: 24rpx;
-  color: #999;
-  background-color: #f5f5f5;
-  padding: 4rpx 12rpx;
-  border-radius: 12rpx;
+  font-size: 12px;
+  color: #8A847A;
+  background-color: #F0EDE8;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 .food-details {
@@ -160,159 +428,133 @@
 }
 
 .food-level {
-  font-size: 24rpx;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .level-low {
-  color: #07c160;
-  font-weight: bold;
+  color: #7A9E7E;
 }
 
 .level-medium {
-  color: #ff976a;
-  font-weight: bold;
+  color: #D4A574;
 }
 
 .level-high {
-  color: #ff4d4f;
-  font-weight: bold;
+  color: #C47D7D;
 }
 
 .food-days {
-  font-size: 24rpx;
-  color: #666;
+  font-size: 12px;
+  color: #8A847A;
 }
 
 .ongoing-tag {
-  position: absolute;
-  top: 10rpx;
-  right: 10rpx;
-  background-color: #07c160;
-  color: white;
-  font-size: 20rpx;
-  padding: 4rpx 12rpx;
-  border-radius: 10rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2rpx;
+  display: inline-block;
+  font-size: 11px;
+  color: #8B7355;
+  background-color: rgba(139, 115, 85, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 8px;
 }
 
-.sensitivity-days {
-  font-size: 18rpx;
-  background-color: rgba(255, 255, 255, 0.3);
-  padding: 2rpx 8rpx;
-  border-radius: 8rpx;
-  font-weight: bold;
-}
-
-/* 排敏记录区域 */
+/* ===== 今日排敏记录 ===== */
 .record-section {
-  background-color: white;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
 }
 
-/* 今日排敏记录样式 */
 .today-record {
-  background-color: #f0f9ff;
-  border: 1rpx solid #e0f2fe;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-top: 20rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  background-color: #FAFAF8;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 12px;
 }
 
 .record-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0;
-}
-
-.record-subtitle {
-  font-size: 26rpx;
-  color: #333;
-  font-weight: bold;
+  align-items: flex-start;
 }
 
 .record-content {
   flex: 1;
-  padding-right: 30rpx;
-}
-
-.modify-btn {
-  background-color: #07c160;
-  color: white;
-  font-size: 24rpx;
-  padding: 10rpx 24rpx;
-  border-radius: 24rpx;
-  border: none;
-  line-height: 1.5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-  margin-left: 20rpx;
-}
-
-.modify-btn:active {
-  background-color: #06ae56;
-  transform: scale(0.98);
 }
 
 .record-item {
   display: flex;
-  align-items: center;
-  margin-bottom: 15rpx;
-  padding: 5rpx 0;
-  border-bottom: 1rpx solid #e8f4fd;
+  margin-bottom: 10px;
 }
 
 .record-item:last-child {
   margin-bottom: 0;
-  border-bottom: none;
 }
 
 .record-label {
-  font-size: 26rpx;
-  color: #555;
-  width: 140rpx;
-  font-weight: bold;
-  padding-right: 15rpx;
-  text-align: right;
+  font-size: 13px;
+  color: #8A847A;
+  width: 70px;
+  flex-shrink: 0;
 }
 
 .record-value {
-  font-size: 26rpx;
-  color: #333;
-  flex: 1;
-  padding-left: 15rpx;
-  background-color: white;
-  padding: 8rpx 16rpx;
-  border-radius: 8rpx;
-  border: 1rpx solid #e0e0e0;
-  min-height: 44rpx;
-  line-height: 44rpx;
+  font-size: 14px;
+  color: #2D2A26;
+  font-weight: 500;
 }
 
-/* 今日未排敏提示 */
+.record-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modify-btn {
+  width: 60px;
+  height: 32px;
+  line-height: 30px;
+  background-color: transparent;
+  color: #8B7355;
+  font-size: 13px;
+  border: 1px solid #8B7355;
+  border-radius: 16px;
+  padding: 0;
+}
+
+.modify-btn::after {
+  border: none;
+}
+
+.modify-btn:active {
+  background-color: rgba(139, 115, 85, 0.05);
+}
+
+.delete-btn {
+  width: 60px;
+  height: 32px;
+  line-height: 30px;
+  background-color: transparent;
+  color: #999;
+  font-size: 13px;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  padding: 0;
+}
+
+.delete-btn::after {
+  border: none;
+}
+
+.delete-btn:active {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
 .no-record {
   text-align: center;
-  padding: 40rpx 0;
-  color: #999;
-  font-size: 24rpx;
-}
-
-/* 空状态 */
-.empty-state {
-  text-align: center;
-  padding: 100rpx 0;
-}
-
-.empty-text {
-  font-size: 28rpx;
-  color: #999;
+  padding: 40px 20px;
+  color: #B8B2A8;
+  font-size: 14px;
 }

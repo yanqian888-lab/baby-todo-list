@@ -1,64 +1,37 @@
-<!-- pages/profile/index.wxml -->
+<!-- pages/profile/index.wxml - MUJI风格优化版 -->
 <view class="container">
-  <!-- 用户信息卡片 -->
-    <view class="user-card">
-      <view class="user-info">
-        <view class="info">
-          <view class="name-container">
-            <text class="nickname">{{userInfo.nickName}}</text>
-            <view wx:if="{{userInfo.babyName}}" class="baby-info">
-              <text class="baby-icon">👶</text>
-              <text class="baby-name">{{userInfo.babyName}}</text>
-              <text wx:if="{{userInfo.babyAge}}" class="baby-age">{{userInfo.babyAge}}</text>
-            </view>
-          </view>
-          
-          <button 
-            wx:if="{{!hasUserInfo}}" 
-            open-type="getUserInfo" 
-            bindgetuserinfo="getUserInfo"
-            class="login-btn"
-            type="primary"
-          >
-            登录/注册
-          </button>
+  <!-- 用户信息 -->
+  <view class="user-card">
+    <view class="user-info" bindtap="handleUserCardTap" hover-class="user-info-hover">
+      <view class="avatar-wrap">
+        <image wx:if="{{userInfo.avatarUrl}}" class="avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"/>
+        <image wx:else class="avatar" src="/images/touxiang_moren.png" mode="aspectFill"/>
+      </view>
+      <view class="info">
+        <text class="nickname">{{userInfo.nickName}}</text>
+        <view wx:if="{{userInfo.babyName}}" class="baby-info">
+          <text class="baby-icon">👶</text>
+          <text class="baby-name">{{userInfo.babyName}}</text>
+          <text wx:if="{{userInfo.babyAge}}" class="baby-age">{{userInfo.babyAge}}</text>
         </view>
       </view>
-      <!-- 宝宝头像和更多信息 -->
-      <view class="baby-card" wx:if="{{userInfo.babyInfo && (userInfo.babyInfo.avatar || userInfo.babyInfo.gender)}}">
-        <view class="baby-avatar-section">
-          <image class="baby-avatar" src="{{userInfo.babyInfo.avatar || '/images/default-avatar.svg'}}" mode="aspectFill"></image>
-          <view class="baby-basic-info">
-            <text class="gender-icon">{{userInfo.babyInfo.gender === 'male' ? '👦' : '👧'}}</text>
-            <text class="baby-birthday" wx:if="{{userInfo.babyInfo.birthday}}">{{userInfo.babyInfo.birthday}}</text>
-          </view>
-        </view>
-        <view class="baby-physical-info" wx:if="{{userInfo.babyInfo.height || userInfo.babyInfo.weight}}">
-          <text wx:if="{{userInfo.babyInfo.height}}" class="info-item">身高: {{userInfo.babyInfo.height}}cm</text>
-          <text wx:if="{{userInfo.babyInfo.weight}}" class="info-item">体重: {{userInfo.babyInfo.weight}}kg</text>
-        </view>
-      </view>
-    </view>
-
-  <!-- 统计信息卡片 -->
-  <view class="stats-card" bindtap="viewStatsDetail">
-    <view class="stats-item">
-      <text class="stats-value">{{stats.totalTasks}}</text>
-      <text class="stats-label">总任务</text>
-    </view>
-    <view class="divider"></view>
-    <view class="stats-item">
-      <text class="stats-value">{{stats.completedTasks}}</text>
-      <text class="stats-label">已完成</text>
-    </view>
-    <view class="divider"></view>
-    <view class="stats-item">
-      <text class="stats-value">{{stats.streakDays}}</text>
-      <text class="stats-label">连续打卡</text>
+      <button wx:if="{{!hasUserInfo}}" class="login-btn" catchtap="navigateToLogin">登录</button>
     </view>
   </view>
 
-  <!-- 排敏进度卡片 -->
+  <!-- 统计 -->
+  <view class="stats-card">
+    <view class="stats-item" bindtap="goToTaskList" data-type="all">
+      <text class="stats-value">{{stats.totalTasks}}</text>
+      <text class="stats-label">总任务</text>
+    </view>
+    <view class="stats-item" bindtap="goToTaskList" data-type="completed">
+      <text class="stats-value">{{stats.completedTasks}}</text>
+      <text class="stats-label">已完成</text>
+    </view>
+  </view>
+
+  <!-- 排敏进度 -->
   <view class="progress-card" wx:if="{{hasUserInfo && sensitivityProgress.total > 0}}">
     <view class="progress-header">
       <text class="progress-title">排敏进度</text>
@@ -74,36 +47,28 @@
 
   <!-- 功能菜单 -->
   <view class="menu-section">
-    <view 
-      wx:for="{{menuItems}}" 
-      wx:key="id"
-      class="menu-item"
-      data-id="{{item.id}}"
-      bindtap="onMenuItemTap"
-    >
-      <view class="menu-left">
+    <view class="menu-item" wx:for="{{menuItems}}" wx:key="id" bindtap="onMenuItemTap" data-id="{{item.id}}">
+      <view class="menu-icon-wrap">
         <text class="menu-icon">{{item.icon}}</text>
+      </view>
+      <view class="menu-content">
         <text class="menu-title">{{item.title}}</text>
       </view>
-      <view wx:if="{{item.showArrow}}" class="menu-right">
-        <text class="arrow">></text>
-      </view>
+      <text class="menu-arrow">›</text>
     </view>
   </view>
 
-  <!-- 退出登录按钮 -->
-  <view class="logout-section">
-    <button 
-      wx:if="{{hasUserInfo}}" 
-      bindtap="logout"
-      class="logout-btn"
-      type="warn"
-    >
-      退出登录
-    </button>
+  <!-- 退出登录 -->
+  <view class="logout-section" wx:if="{{hasUserInfo}}">
+    <button class="logout-btn" bindtap="logout">退出登录</button>
   </view>
 
-  <!-- 版本信息 -->
+  <!-- 注销账号 -->
+  <view class="delete-account-section" wx:if="{{hasUserInfo}}">
+    <text class="delete-account-link" bindtap="deleteAccount">注销账号</text>
+  </view>
+
+  <!-- 版本 -->
   <view class="version-info">
     <text>版本 1.0.0</text>
   </view>

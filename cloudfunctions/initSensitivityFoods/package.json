@@ -1,0 +1,9 @@
+{
+  "name": "initSensitivityFoods",
+  "version": "1.0.0",
+  "description": "初始化并同步 sensitivity_foods 云端数据",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

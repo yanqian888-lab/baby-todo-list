@@ -1,0 +1,49 @@
+.page-container {
+  min-height: 100vh;
+  padding: 22px 18px 18px;
+  background-color: #F6F3EE;
+  box-sizing: border-box;
+}
+
+.page-header {
+  padding: 18px 16px;
+  background-color: #FFFFFF;
+  border-radius: 22px;
+  margin-bottom: 12px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2D2A26;
+}
+
+.page-content {
+  min-height: calc(100vh - 120px);
+  background-color: #FFFFFF;
+  border-radius: 22px;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.section {
+  margin-bottom: 18px;
+}
+
+.section-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2D2A26;
+  margin-bottom: 16px;
+}
+
+.section-text {
+  display: block;
+}
+
+.section-text {
+  font-size: 14px;
+  color: #6F6B60;
+  line-height: 1.8;
+}

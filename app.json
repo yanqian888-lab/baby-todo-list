@@ -1,12 +1,15 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/ai-master/index",
     "pages/suggest/list",
     "pages/task/create",
     "pages/profile/index",
     "pages/profile/baby-info",
     "pages/settings/index",
     "pages/login/login",
+    "pages/user-agreement/index",
+    "pages/privacy-policy/index",
     "pages/auth/auth",
     "pages/clockin/index",
     "pages/clockin/calendar",
@@ -14,46 +17,54 @@
     "pages/template/index",
     "pages/statistics/index",
     "pages/task/index",
-    "pages/test/test",
+    "pages/task/detail",
     "pages/sensitivity/index",
     "pages/sensitivity/records",
     "pages/sensitivity/recommend",
     "pages/sensitivity/detail",
     "pages/sensitivity/add-record",
     "pages/sensitivity/food-select",
-    "pages/debug/index",
-    "pages/debug/cleanup",
-    "pages/debug/cleanup-today"
+    "pages/family/index",
+    "pages/family/join",
+    "pages/family/baby-info"
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#FF7A85",
-    "navigationBarTitleText": "母婴打卡",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#f8f8f8"
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "萌宝贝排敏生活记",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FAFAF8",
+    "navigationStyle": "default"
   },
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#07c160",
-    "backgroundColor": "#ffffff",
+    "color": "#AFAFAF",
+    "selectedColor": "#8B7355",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "打卡",
-        "iconPath": "images/icon-stat.png",
-        "selectedIconPath": "images/icon-stat.png"
+        "text": "宝宝事项",
+        "iconPath": "images/tabbar/checkin.png",
+        "selectedIconPath": "images/tabbar/checkin-active.png"
       },
       {
         "pagePath": "pages/sensitivity/index",
         "text": "排敏",
-        "iconPath": "images/icon-stat.png",
-        "selectedIconPath": "images/icon-stat.png"
+        "iconPath": "images/tabbar/food.png",
+        "selectedIconPath": "images/tabbar/food-active.png"
+      },
+      {
+        "pagePath": "pages/ai-master/index",
+        "text": "AI育儿大师",
+        "iconPath": "images/tabbar/ai-master.png",
+        "selectedIconPath": "images/tabbar/ai-master-active.png"
       },
       {
         "pagePath": "pages/profile/index",
         "text": "我的",
-        "iconPath": "images/icon-stat.png",
-        "selectedIconPath": "images/icon-stat.png"
+        "iconPath": "images/tabbar/profile.png",
+        "selectedIconPath": "images/tabbar/profile-active.png"
       }
     ]
   },

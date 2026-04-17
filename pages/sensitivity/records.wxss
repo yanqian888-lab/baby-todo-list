@@ -1,17 +1,18 @@
-/* pages/sensitivity/records.wxss */
+/* pages/sensitivity/records.wxss - MUJI风格 */
 .container {
   min-height: 100vh;
-  background-color: #f8f8f8;
+  background-color: #FAFAF8;
 }
 
-/* 页面标题栏 */
+/* 页面标题栏 - MUJI风格 */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20rpx 30rpx;
-  background-color: #FF7A85;
-  color: white;
+  background-color: #FFFFFF;
+  color: #2D2A26;
+  border-bottom: 1rpx solid #EEEEEE;
 }
 
 .header-left, .header-right {
@@ -20,18 +21,44 @@
 
 .back-icon {
   font-size: 36rpx;
-  color: white;
+  color: #8A847A;
   font-weight: bold;
 }
 
 .page-title {
   font-size: 36rpx;
   font-weight: bold;
+  color: #2D2A26;
 }
 
 /* 主要内容区域 */
 .main-content {
   padding: 30rpx;
+}
+
+/* 家庭切换 tabs */
+.family-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.tab-item {
+  padding: 16rpx 32rpx;
+  background-color: #FFFFFF;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  color: #6B6560;
+  border: 1rpx solid #E8E4DF;
+  transition: all 0.2s ease;
+}
+
+.tab-item.active {
+  background-color: rgba(196, 167, 125, 0.15);
+  color: #8B7355;
+  border-color: #C4A77D;
+  font-weight: 500;
 }
 
 /* 筛选条件 */
@@ -42,10 +69,10 @@
 .filter-tabs {
   display: flex;
   gap: 20rpx;
-  background-color: white;
+  background-color: #FFFFFF;
   padding: 10rpx;
-  border-radius: 16rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 8rpx rgba(45, 42, 38, 0.04);
 }
 
 .filter-tab {
@@ -53,22 +80,22 @@
   text-align: center;
   padding: 20rpx;
   font-size: 28rpx;
-  color: #999;
-  border-radius: 12rpx;
+  color: #8A847A;
+  border-radius: 8rpx;
   transition: all 0.2s ease;
 }
 
 .filter-tab.active {
-  background-color: #FF7A85;
-  color: white;
+  background-color: #8B7355;
+  color: #FFFFFF;
 }
 
 /* 排敏记录列表 */
 .records-section {
-  background-color: white;
-  border-radius: 16rpx;
+  background-color: #FFFFFF;
+  border-radius: 12rpx;
   padding: 30rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2rpx 8rpx rgba(45, 42, 38, 0.04);
 }
 
 .records-list {
@@ -79,15 +106,16 @@
 
 .record-item {
   padding: 30rpx;
-  border: 2rpx solid #e8e8e8;
-  border-radius: 16rpx;
+  border: 2rpx solid #EEEEEE;
+  border-radius: 12rpx;
   cursor: pointer;
   transition: all 0.2s ease;
+  background-color: #FFFFFF;
 }
 
 .record-item:active {
   transform: translateY(2rpx);
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2rpx 8rpx rgba(45, 42, 38, 0.04);
 }
 
 .record-header {
@@ -104,17 +132,17 @@
 .food-name {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: #2D2A26;
   margin-bottom: 8rpx;
   display: block;
 }
 
 .food-category {
   font-size: 24rpx;
-  color: #999;
-  background-color: #f5f5f5;
+  color: #8A847A;
+  background-color: #F5F5F5;
   padding: 4rpx 12rpx;
-  border-radius: 12rpx;
+  border-radius: 8rpx;
 }
 
 .record-status {
@@ -128,11 +156,15 @@
 }
 
 .status-safe {
-  color: #07c160;
+  color: #8B7355;
 }
 
 .status-allergy {
-  color: #ff4d4f;
+  color: #D32F2F;
+}
+
+.status-unrecorded {
+  color: #8A847A;
 }
 
 .record-details {
@@ -147,13 +179,13 @@
 
 .detail-label {
   font-size: 24rpx;
-  color: #999;
+  color: #8A847A;
   width: 160rpx;
 }
 
 .detail-value {
   font-size: 24rpx;
-  color: #333;
+  color: #2D2A26;
   flex: 1;
 }
 
@@ -161,36 +193,39 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  border-top: 2rpx solid #f5f5f5;
+  border-top: 2rpx solid #F5F5F5;
   padding-top: 20rpx;
 }
 
 .arrow-icon {
   font-size: 24rpx;
-  color: #ccc;
+  color: #8A847A;
 }
 
 /* 空状态 */
 .empty-state {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 100rpx 0;
 }
 
 .empty-icon {
   font-size: 80rpx;
   margin-bottom: 20rpx;
-  display: block;
+  line-height: 1;
 }
 
 .empty-text {
   font-size: 28rpx;
   color: #666;
   margin-bottom: 10rpx;
-  display: block;
+  text-align: center;
 }
 
 .empty-subtext {
   font-size: 24rpx;
   color: #999;
-  display: block;
+  text-align: center;
 }

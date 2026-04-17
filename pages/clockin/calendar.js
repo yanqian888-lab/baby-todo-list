@@ -15,6 +15,12 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function () {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+
     // 初始化云环境
     if (!wx.cloud) {
       console.error('请使用 2.2.3 或以上的基础库以使用云能力');
@@ -97,7 +103,7 @@ Page({
       
       if (res.result.success) {
         this.setData({
-          checkedDays: res.result.dates || []
+          checkedDays: res.result.clockInDates || []
         });
       }
     } catch (error) {
@@ -111,6 +117,15 @@ Page({
         loading: false
       });
     }
+  },
+
+  /**
+   * 计算本月打卡完成率
+   */
+  calculateCompletionRate: function() {
+    const days = this.data.checkedDays.length;
+    const total = new Date(this.data.currentYear, this.data.currentMonth, 0).getDate();
+    return total > 0 ? Math.round((days / total) * 100) : 0;
   },
 
   /**

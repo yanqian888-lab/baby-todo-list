@@ -6,15 +6,15 @@ Page({
    */
   data: {
     userInfo: {
-      avatarUrl: '/images/default-avatar.svg',
+      avatarUrl: '/images/logo.png',
       nickName: '未登录',
       babyName: '',
       babyAge: ''
     },
     stats: {
-      totalTasks: 42,
-      completedTasks: 38,
-      streakDays: 7
+      totalTasks: 0,
+      completedTasks: 0,
+      streakDays: 0
     },
     sensitivityProgress: {
       completed: 0,
@@ -22,6 +22,12 @@ Page({
       percentage: 0
     },
     menuItems: [
+      {
+        id: 'family',
+        icon: '👨‍👩‍👧',
+        title: '我的家庭',
+        showArrow: true
+      },
       {
         id: 'baby-info',
         icon: '👶',
@@ -33,30 +39,6 @@ Page({
         icon: '📋',
         title: '排敏记录',
         showArrow: true
-      },
-      {
-        id: 'growth-records',
-        icon: '📈',
-        title: '成长记录',
-        showArrow: true
-      },
-      {
-        id: 'settings',
-        icon: '⚙️',
-        title: '设置',
-        showArrow: true
-      },
-      {
-        id: 'help',
-        icon: '❓',
-        title: '帮助与反馈',
-        showArrow: true
-      },
-      {
-        id: 'about',
-        icon: 'ℹ️',
-        title: '关于我们',
-        showArrow: true
       }
     ],
     hasUserInfo: false,
@@ -67,6 +49,12 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function () {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+    this.setData({ hasLoaded: true });
     // 页面加载时初始化数据
     this.initData();
   },
@@ -75,8 +63,17 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
-    // 每次显示页面时刷新数据
-    this.initData();
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+    if (this.data.hasLoaded) {
+      // 每次显示页面时刷新数据
+      this.initData();
+    } else {
+      this.setData({ hasLoaded: true });
+    }
   },
 
   /**
@@ -85,17 +82,19 @@ Page({
   initData: function () {
     userService.getUserInfo().then((userInfo) => {
       this.setData({
-        userInfo: userInfo,
+        userInfo: this._sanitizeUserInfo(userInfo),
         hasUserInfo: true
       });
       // 获取用户统计信息
       this.getUserStats();
       // 获取排敏进度
       this.getSensitivityProgress();
+      // 从云端同步最新用户信息（确保随机昵称等数据最新）
+      this.syncUserInfoFromCloud();
     }).catch(() => {
       this.setData({
         userInfo: {
-          avatarUrl: '/images/default-avatar.svg',
+          avatarUrl: '/images/logo.png',
           nickName: '未登录',
           babyName: '',
           babyAge: ''
@@ -108,6 +107,44 @@ Page({
         }
       });
     });
+  },
+
+  /**
+   * 判断是否为微信默认头像
+   */
+  _isWechatDefaultAvatar: function(url) {
+    return typeof url === 'string' && (url.includes('thirdwx.qlogo.cn') || url.includes('mmopen'));
+  },
+
+  /**
+   * 判断是否为微信默认昵称
+   */
+  _isWechatDefaultNickName: function(name) {
+    return name === '微信用户';
+  },
+
+  /**
+   * 清理微信默认信息，避免覆盖系统生成的随机昵称
+   */
+  _sanitizeUserInfo: function(userInfo) {
+    if (!userInfo) return userInfo;
+    const sanitized = { ...userInfo };
+    if (this._isWechatDefaultAvatar(sanitized.avatarUrl)) {
+      sanitized.avatarUrl = '';
+    }
+    return sanitized;
+  },
+
+  /**
+   * 从云端同步用户信息
+   */
+  syncUserInfoFromCloud: function() {
+    // 当前未部署 getUserInfo 云函数，改为从本地缓存和 login 云函数已缓存的数据读取
+    // 如需实时同步，建议后续部署 getUserInfo 云函数
+    const localUserInfo = wx.getStorageSync('userInfo') || {};
+    if (localUserInfo.nickName) {
+      this.setData({ userInfo: this._sanitizeUserInfo(localUserInfo) });
+    }
   },
 
   /**
@@ -129,39 +166,8 @@ Page({
    * 获取用户信息
    */
   getUserInfo: function (e) {
-    if (e.detail.userInfo) {
-      // 用户同意授权
-      const { userInfo } = e.detail;
-      // 调用登录服务
-      wx.login({  
-        success: (res) => {
-          if (res.code) {
-            userService.login(res.code, userInfo).then((loginRes) => {
-              if (loginRes.success) {
-                // 保存用户信息
-                userService.saveUserInfo(loginRes.data.userInfo, loginRes.data.token);
-                
-                this.setData({
-                  userInfo: {
-                    ...loginRes.data.userInfo,
-                    babyName: '',
-                    babyAge: ''
-                  },
-                  hasUserInfo: true
-                });
-                
-                // 获取统计信息
-                this.getUserStats();
-              }
-            });
-          }
-        }
-      });
-      
-      wx.showToast({
-        title: '登录成功',
-        icon: 'success'
-      });
+    if (e.detail && e.detail.userInfo) {
+      this.processUserLogin(e.detail.userInfo);
     } else {
       // 用户拒绝授权
       wx.showToast({
@@ -171,16 +177,147 @@ Page({
     }
   },
 
+  handleUserCardTap: function () {
+    if (wx.getUserProfile) {
+      wx.getUserProfile({
+        desc: '用于完善用户信息',
+        success: (res) => {
+          if (res.userInfo) {
+            if (this.data.hasUserInfo) {
+              // 已登录，更新头像昵称
+              this.updateUserProfile(res.userInfo);
+            } else {
+              // 未登录，走登录流程
+              this.processUserLogin(res.userInfo);
+            }
+          }
+        },
+        fail: () => {
+          wx.showToast({
+            title: '授权失败',
+            icon: 'none'
+          });
+        }
+      });
+    } else {
+      wx.getUserInfo({
+        lang: 'zh_CN',
+        success: (res) => {
+          if (res.userInfo) {
+            if (this.data.hasUserInfo) {
+              this.updateUserProfile(res.userInfo);
+            } else {
+              this.processUserLogin(res.userInfo);
+            }
+          }
+        },
+        fail: () => {
+          wx.showToast({
+            title: '授权失败',
+            icon: 'none'
+          });
+        }
+      });
+    }
+  },
+
+  /**
+   * 更新用户头像昵称到云端
+   */
+  updateUserProfile: function(userInfo) {
+    const openId = this.data.userInfo.openId || this.data.userInfo.openid;
+    if (!openId) return;
+
+    // 过滤微信默认信息，避免覆盖系统随机昵称
+    const payload = {};
+    if (userInfo.nickName && !this._isWechatDefaultNickName(userInfo.nickName)) {
+      payload.nickName = userInfo.nickName;
+    }
+    if (!this._isWechatDefaultAvatar(userInfo.avatarUrl)) {
+      payload.avatarUrl = userInfo.avatarUrl;
+    }
+    if (userInfo.gender !== undefined) {
+      payload.gender = userInfo.gender;
+    }
+
+    // 如果没有有效字段需要更新，直接提示成功
+    if (Object.keys(payload).length === 0) {
+      wx.showToast({ title: '无需更新', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '更新中...' });
+
+    wx.cloud.callFunction({
+      name: 'updateUserInfo',
+      data: {
+        userInfo: payload
+      }
+    }).then(() => {
+      wx.hideLoading();
+      const updated = {
+        ...this.data.userInfo,
+        ...payload
+      };
+      wx.setStorageSync('userInfo', this._sanitizeUserInfo(updated));
+      this.setData({ userInfo: this._sanitizeUserInfo(updated) });
+      wx.showToast({ title: '更新成功', icon: 'success' });
+    }).catch((err) => {
+      wx.hideLoading();
+      console.error('更新用户信息失败:', err);
+      wx.showToast({ title: '更新失败', icon: 'none' });
+    });
+  },
+
+  processUserLogin: function (userInfo) {
+    wx.login({  
+      success: (res) => {
+        if (res.code) {
+          userService.login(res.code, userInfo).then((loginRes) => {
+            if (loginRes.success) {
+              // 保存用户信息
+              userService.saveUserInfo(loginRes.data.userInfo, loginRes.data.token);
+              
+              this.setData({
+                userInfo: {
+                  ...loginRes.data.userInfo,
+                  babyName: '',
+                  babyAge: ''
+                },
+                hasUserInfo: true
+              });
+              
+              // 获取统计信息
+              this.getUserStats();
+            }
+          }).catch(() => {
+            wx.showToast({
+              title: '登录失败，请重试',
+              icon: 'none'
+            });
+          });
+        }
+      },
+      fail: () => {
+        wx.showToast({
+          title: '登录失败，请重试',
+          icon: 'none'
+        });
+      }
+    });
+  },
+
   /**
    * 获取排敏进度
    */
   getSensitivityProgress: function() {
-    // 引入排敏服务
     const sensitivityService = require('../../services/sensitivityService');
     
-    // 检查用户是否已登录
     if (this.data.userInfo && this.data.userInfo.openId) {
-      sensitivityService.getSensitivityProgress(this.data.userInfo.openId, this.data.userInfo.openId) // 这里使用openId作为babyId临时替代
+      const userId = this.data.userInfo.openId;
+      const babyId = this.data.userInfo.babyInfo ? this.data.userInfo.babyInfo._id : 'local-baby-id';
+      
+      sensitivityService.getSensitivityProgress(userId, babyId)
         .then((progress) => {
           this.setData({
             sensitivityProgress: progress
@@ -192,12 +329,49 @@ Page({
   },
 
   /**
+   * 跳转到任务列表
+   */
+  goToTaskList: function (e) {
+    const type = e.currentTarget.dataset.type;
+    let url = '/pages/task/index';
+    
+    switch (type) {
+      case 'completed':
+        // 定位到已完成标签
+        url += '?tab=completed';
+        break;
+      case 'streak':
+        // 定位到顶部（默认待办标签）
+        url += '?tab=pending';
+        break;
+      default:
+        // 总任务，显示全部
+        url += '?tab=all';
+    }
+    
+    wx.navigateTo({
+      url: url
+    });
+  },
+
+  /**
    * 菜单项点击处理
    */
+  navigateToLogin: function () {
+    wx.navigateTo({
+      url: '/pages/login/login'
+    });
+  },
+
   onMenuItemTap: function (e) {
     const id = e.currentTarget.dataset.id;
     
     switch (id) {
+      case 'family':
+        wx.navigateTo({
+          url: '/pages/family/index'
+        });
+        break;
       case 'baby-info':
         wx.navigateTo({
           url: '/pages/profile/baby-info'
@@ -258,7 +432,7 @@ Page({
           
           this.setData({
             userInfo: {
-              avatarUrl: '/images/default-avatar.svg',
+              avatarUrl: '/images/logo.png',
               nickName: '未登录',
               babyName: '',
               babyAge: ''
@@ -275,6 +449,8 @@ Page({
             title: '已退出登录',
             icon: 'success'
           });
+          
+          wx.reLaunch({ url: '/pages/login/login' });
         }
       }
     });
@@ -289,5 +465,148 @@ Page({
       path: '/pages/index/index',
       imageUrl: '/assets/share-cover.png'
     };
+  },
+
+  /**
+   * 注销账号 - 清除所有用户数据
+   */
+  deleteAccount: function () {
+    wx.showModal({
+      title: '注销账号',
+      content: '注销账号将清除所有数据（包括云端和本地的宝宝信息、排敏记录、任务数据等），此操作不可恢复，确定要继续吗？',
+      confirmText: '确定注销',
+      confirmColor: '#ff4444',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          // 执行注销操作
+          this.performDeleteAccount();
+        }
+      }
+    });
+  },
+
+  /**
+   * 执行账号注销
+   */
+  performDeleteAccount: async function () {
+    const app = getApp();
+    
+    // 显示加载中
+    wx.showLoading({
+      title: '正在注销...',
+      mask: true
+    });
+    
+    try {
+      // 1. 获取当前用户ID
+      const userInfo = this.data.userInfo;
+      const userId = userInfo && (userInfo.openId || userInfo.openid);
+      
+      console.log('开始注销，用户ID:', userId);
+      
+      // 2. 调用云函数删除云端数据
+      if (userId) {
+        try {
+          console.log('调用云函数删除云端数据...');
+          const result = await wx.cloud.callFunction({
+            name: 'deleteUserData',
+            data: {
+              userId: userId
+            }
+          });
+          console.log('云端数据删除结果:', result);
+          // 打印详细的删除结果
+          if (result.result) {
+            console.log('云函数返回结果:', result.result);
+            console.log('删除详情:', result.result.details);
+          }
+        } catch (cloudError) {
+          console.warn('删除云端数据失败:', cloudError);
+          // 继续执行本地清理，不中断流程
+        }
+      }
+      
+      // 3. 先获取所有存储的 key，然后全部删除
+      try {
+        const res = wx.getStorageInfoSync();
+        console.log('当前所有存储的 keys:', res.keys);
+        
+        // 删除所有 key
+        res.keys.forEach(key => {
+          try {
+            wx.removeStorageSync(key);
+            console.log(`已删除: ${key}`);
+          } catch (e) {
+            console.warn(`删除 ${key} 失败:`, e);
+          }
+        });
+      } catch (e) {
+        console.warn('获取存储信息失败:', e);
+      }
+      
+      // 4. 再次尝试清除所有缓存
+      try {
+        wx.clearStorageSync();
+        console.log('clearStorageSync 执行完成');
+      } catch (e) {
+        console.warn('清除所有缓存失败:', e);
+      }
+      
+      // 5. 验证是否已清空
+      try {
+        const checkRes = wx.getStorageInfoSync();
+        console.log('清除后的 keys:', checkRes.keys);
+      } catch (e) {
+        console.warn('验证存储失败:', e);
+      }
+      
+      // 6. 清除全局数据
+      app.globalData.userInfo = null;
+      
+      wx.hideLoading();
+      
+      // 6. 更新页面状态
+      this.setData({
+        userInfo: {
+          avatarUrl: '/images/logo.png',
+          nickName: '未登录',
+          babyName: '',
+          babyAge: ''
+        },
+        hasUserInfo: false,
+        stats: {
+          totalTasks: 0,
+          completedTasks: 0,
+          streakDays: 0
+        },
+        sensitivityProgress: {
+          completed: 0,
+          total: 0,
+          percentage: 0
+        }
+      });
+      
+      wx.showToast({
+        title: '账号已注销',
+        icon: 'success',
+        duration: 2000
+      });
+      
+      // 7. 延迟后跳转到登录页
+      setTimeout(() => {
+        wx.reLaunch({
+          url: '/pages/login/login'
+        });
+      }, 1500);
+      
+    } catch (error) {
+      wx.hideLoading();
+      console.error('注销账号失败:', error);
+      wx.showToast({
+        title: '注销失败，请重试',
+        icon: 'none'
+      });
+    }
   }
 });

@@ -1,0 +1,96 @@
+<!--pages/family/index.wxml - 我的家庭页面-->
+<view class="container">
+  <!-- 我创建的家庭 -->
+  <view class="section" wx:if="{{createdFamilies.length > 0}}">
+    <view class="section-title">我的创建的家庭</view>
+    <view class="family-list">
+      <view wx:for="{{createdFamilies}}" wx:key="_id" class="family-card">
+        <view class="family-header">
+          <text class="family-name">[{{item.babyNickname || '宝宝'}}]的家</text>
+        </view>
+        <!-- 成员列表 - 只显示非创建者的其他成员 -->
+        <view class="member-list" wx:if="{{item.members && item.members.length > 1}}">
+          <view wx:for="{{item.members}}" wx:for-item="member" wx:key="userId" wx:if="{{member.userId !== currentUserId}}" class="member-item">
+            <text class="member-name">{{member.nickName || '家庭成员'}}</text>
+            <view class="btn-remove" 
+                  bindtap="confirmRemoveMember" 
+                  data-family-id="{{item._id}}" 
+                  data-member-id="{{member.userId}}"
+                  data-member-name="{{member.nickName}}">移出</view>
+          </view>
+        </view>
+        <!-- 邀请按钮 -->
+        <view class="invite-section">
+          <view class="btn-invite" bindtap="showInviteModal" data-family-id="{{item._id}}">邀请</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 我加入的家庭 -->
+  <view class="section" wx:if="{{joinedFamilies.length > 0}}">
+    <view class="section-title">我的加入的家庭</view>
+    <view class="family-list">
+      <view wx:for="{{joinedFamilies}}" wx:key="_id" class="family-card simple">
+        <view class="family-header-row">
+          <text class="family-name">[{{item.babyNickname || '宝宝'}}]的家</text>
+          <view class="btn-exit" bindtap="confirmExitFamily" data-family-id="{{item._id}}" data-family-name="{{item.name}}">退出</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加入其他家庭按钮 -->
+  <view class="section" wx:if="{{createdFamilies.length > 0 || joinedFamilies.length > 0}}">
+    <view class="btn-join-other" bindtap="showJoinModal">加入其他家庭</view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{createdFamilies.length === 0 && joinedFamilies.length === 0}}">
+    <view class="empty-icon">👨‍👩‍👧</view>
+    <text class="empty-title">我的家庭</text>
+    <text class="empty-desc">加入其他家庭，与家人共同管理宝宝任务和排敏记录</text>
+    <view class="btn-primary" bindtap="showJoinModal">加入家庭</view>
+  </view>
+
+  <!-- 加入家庭弹窗 -->
+  <view class="modal {{showJoinModal ? 'show' : ''}}">
+    <view class="modal-mask" bindtap="hideJoinModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">加入家庭</text>
+        <text class="modal-close" bindtap="hideJoinModal">×</text>
+      </view>
+      <view class="modal-body">
+        <view class="form-item">
+          <text class="form-label">邀请码</text>
+          <input class="form-input" placeholder="请输入6位邀请码" maxlength="6" value="{{joinForm.inviteCode}}" bindinput="onJoinCodeInput" />
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-primary" bindtap="joinFamily">加入</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 邀请弹窗 -->
+  <view class="modal {{showInviteModal ? 'show' : ''}}">
+    <view class="modal-mask" bindtap="hideInviteModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">邀请成员</text>
+        <text class="modal-close" bindtap="hideInviteModal">×</text>
+      </view>
+      <view class="modal-body">
+        <view class="invite-code-section">
+          <text class="invite-label">邀请码</text>
+          <view class="invite-code">
+            <text class="code-text">{{inviteCode}}</text>
+            <text class="copy-btn" bindtap="copyInviteCode">复制</text>
+          </view>
+          <text class="invite-tip">有效期1小时</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

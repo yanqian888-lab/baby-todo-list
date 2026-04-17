@@ -1,0 +1,24 @@
+<!--pages/family/join.wxml-->
+<view class="join-container">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-section">
+    <view class="loading-icon">⏳</view>
+    <text class="loading-text">正在处理邀请...</text>
+  </view>
+
+  <!-- 成功状态 -->
+  <view wx:elif="{{familyName}}" class="success-section">
+    <view class="success-icon">✓</view>
+    <text class="success-title">加入成功</text>
+    <text class="success-desc">您已成功加入 {{familyName}}</text>
+    <button class="btn-primary" bindtap="goToFamily">查看家庭</button>
+  </view>
+
+  <!-- 错误状态 -->
+  <view wx:else class="error-section">
+    <view class="error-icon">✕</view>
+    <text class="error-title">加入失败</text>
+    <text class="error-desc">{{error}}</text>
+    <button class="btn-primary" bindtap="goHome">返回首页</button>
+  </view>
+</view>

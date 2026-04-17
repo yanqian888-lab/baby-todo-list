@@ -75,6 +75,13 @@ async function ensureCollectionsExist() {
 exports.main = async (event, context) => {
   console.log('=== 开始执行 ensureCollections 云函数 ===')
   
+  // 只允许已登录用户调用，防止被恶意探测
+  const wxContext = cloud.getWXContext()
+  const openid = wxContext.OPENID || wxContext.openid
+  if (!openid) {
+    return { success: false, error: '未登录' }
+  }
+  
   try {
     const results = await ensureCollectionsExist()
     

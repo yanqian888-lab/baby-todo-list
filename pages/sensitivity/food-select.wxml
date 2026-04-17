@@ -7,8 +7,8 @@
     <text class="search-icon">🔍</text>
   </view>
 
-  <!-- 日期选择器 -->
-  <view class="date-picker-section">
+  <!-- 日期选择器（仅在排敏tab页进入时显示） -->
+  <view class="date-picker-section" wx:if="{{showDatePicker}}">
     <text class="date-label">选择排敏日期：</text>
     <picker mode="date" bindchange="onDateChange" value="{{selectedDate}}" start="{{startDate}}" end="{{endDate}}">
       <view class="date-picker-value">
@@ -26,7 +26,7 @@
   </view>
 
   <!-- 食物列表 -->
-  <scroll-view scroll-y="true" class="food-scroll">
+  <view class="food-scroll" id="foodScroll">
     <view wx:for="{{foodCategories}}" wx:key="id" class="category-section">
       <!-- 分类标题 -->
       <view class="category-title">{{item.name}}</view>
@@ -42,19 +42,24 @@
         
         <!-- 分类下的食物列表 -->
         <view wx:for="{{item.foods}}" wx:for-item="food" wx:key="_id" 
-              class="food-item">
+              class="food-item {{selectedFoodMap[food._id] ? 'selected' : ''}}"
+              id="food-{{food._id}}">
           <!-- 食物基本信息和选择按钮 -->
-          <view class="food-header">
+          <view class="food-header" bindtap="toggleFoodSelection" data-food-id="{{food._id}}">
             <view class="food-basic-info">
               <view class="food-name-container">
                 <text class="food-name">{{food.name}}</text>
                 <text class="food-category-tag">{{food.category}}</text>
               </view>
-              <text class="food-recommendation">{{item.recommendation}}</text>
+              <view class="food-recommendation">{{item.recommendation}}</view>
               <!-- 排敏天数显示 -->
-              <text class="food-allergy-info">
-                需排敏{{food.allergyLevel === 3 ? 5 : 3}}天
-              </text>
+              <view class="food-allergy-info {{food.sensitivityProgress ? (food.sensitivityProgress.isComplete ? 'completed' : 'in-progress') : ''}}">
+                <block wx:if="{{food.sensitivityProgress}}">
+                  <block wx:if="{{food.sensitivityProgress.isComplete}}">已完成排敏</block>
+                  <block wx:else>排敏中 {{food.sensitivityProgress.currentDays}}/{{food.sensitivityProgress.totalDays}}天</block>
+                </block>
+                <block wx:else>需排敏{{food.allergyLevel === 3 ? 5 : 3}}天</block>
+              </view>
             </view>
             <view class="select-btn" catchtap="toggleFoodSelection" data-food-id="{{food._id}}">
               <view class="select-circle {{selectedFoodMap[food._id] ? 'selected' : ''}}"></view>
@@ -62,11 +67,11 @@
           </view>
           
           <!-- 偏好设置，只有当食物被选中时才显示 -->
-          <view class="food-preferences" wx:if="{{selectedFoodMap[food._id]}}">
+          <view class="food-preferences" wx:if="{{selectedFoodMap[food._id]}}" catchtap="preventBubble">
             <view class="preference-item">
               <picker bindchange="onLikeChange" data-food-id="{{food._id}}" value="{{(foodPreferences[food._id] && foodPreferences[food._id].likeIndex) || 0}}" range="{{likeOptions}}">
                 <view class="picker">
-                  是否喜欢
+                  <text>是否喜欢</text>
                   <text class="picker-value">{{likeOptions[(foodPreferences[food._id] && foodPreferences[food._id].likeIndex) || 0]}}</text>
                   <text class="picker-arrow">▼</text>
                 </view>
@@ -75,7 +80,7 @@
             <view class="preference-item">
               <picker bindchange="onAllergyChange" data-food-id="{{food._id}}" value="{{(foodPreferences[food._id] && foodPreferences[food._id].allergyIndex) || 0}}" range="{{allergyOptions}}">
                 <view class="picker">
-                  是否过敏
+                  <text>是否过敏</text>
                   <text class="picker-value">{{allergyOptions[(foodPreferences[food._id] && foodPreferences[food._id].allergyIndex) || 0]}}</text>
                   <text class="picker-arrow">▼</text>
                 </view>
@@ -90,7 +95,7 @@
     <view wx:if="{{foodCategories.length === 0}}" class="empty-state">
       <text class="empty-text">未找到匹配的食物</text>
     </view>
-  </scroll-view>
+  </view>
 
   <!-- 自定义食物弹窗 -->
   <view wx:if="{{showCustomFoodModal}}" class="modal-overlay">
@@ -118,7 +123,7 @@
         <!-- 排敏天数 -->
         <view class="form-item">
           <text class="form-label">排敏天数 <text class="required">*</text></text>
-          <picker bindchange="onCustomFoodDaysChange" value="{{customFood.allergyLevel - 1}}" range="['3天', '5天']">
+          <picker bindchange="onCustomFoodDaysChange" value="{{customFood.allergyLevel - 1}}" range="{{['3天', '5天']}}">
             <view class="picker form-picker">
               <text class="picker-value">{{customFood.allergyLevel === 1 ? '3天' : '5天'}}</text>
               <text class="picker-arrow">▼</text>
@@ -155,7 +160,7 @@
 
   <!-- 底部操作栏 -->
   <view class="bottom-bar">
-    <button type="primary" class="confirm-btn" bindtap="confirmSelection" disabled="{{selectedFoodIds.length === 0}}">
+    <button class="confirm-btn" bindtap="confirmSelection" disabled="{{selectedFoodIds.length === 0}}">
       完成（{{selectedFoodIds.length}}）
     </button>
   </view>

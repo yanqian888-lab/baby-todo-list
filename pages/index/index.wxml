@@ -1,137 +1,240 @@
-<!-- pages/index/index.wxml -->
-<view class="container">
-  <!-- 页面标题栏 -->
-  <view class="page-header">
-    <view class="header-left">
+<!-- pages/index/index.wxml - MUJI风格优化版 -->
+<view class="container {{showBabyInfoForm ? 'form-page' : ''}}">
+  <block wx:if="{{!showBabyInfoForm}}">
+    <!-- 头部区域 -->
+    <view class="header-section">
       <text class="date-text">{{currentDate}}</text>
-      <text class="greeting">{{greeting}}，{{userInfo.nickName}}</text>
+      <view class="family-selector" bindtap="{{families.length > 1 ? 'openFamilyPicker' : ''}}">
+        <text class="greeting-text">{{greeting}}，{{currentFamilyName}}</text>
+        <image wx:if="{{families.length > 1}}" class="drop-icon" src="/images/arrow.png" mode="aspectFit" />
+      </view>
     </view>
-    <view class="header-right">
-    </view>
-  </view>
 
-  <!-- 统计卡片 -->
-  <view class="stats-card">
-    <view class="stats-item">
-      <text class="stats-number">{{todayStats.total}}</text>
-      <text class="stats-label">今日任务</text>
+    <!-- 统计卡片 -->
+    <view class="stats-section">
+      <view class="stats-row">
+        <view class="stats-item">
+          <text class="stats-value">{{todayStats.total}}</text>
+          <text class="stats-label">今日总任务</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-value">{{todayStats.remaining}}</text>
+          <text class="stats-label">今日未完成</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-value">{{userStats.streakDays}}</text>
+          <text class="stats-label">连续打卡</text>
+        </view>
+      </view>
     </view>
-    <view class="stats-divider"></view>
-    <view class="stats-item">
-      <text class="stats-number">{{todayStats.completed}}</text>
-      <text class="stats-label">已完成</text>
-    </view>
-    <view class="stats-divider"></view>
-    <view class="stats-item">
-      <text class="stats-number">{{userStats.streakDays}}</text>
-      <text class="stats-label">连续打卡</text>
-    </view>
-    <view class="stats-divider"></view>
-    <view class="stats-item">
-      <text class="stats-number">{{todayStats.percentage}}%</text>
-      <text class="stats-label">完成率</text>
-    </view>
-  </view>
+  </block>
 
-  <!-- 待打卡区域 -->
-  <view class="section">
-    <view class="section-header">
-      <text class="section-title">待打卡</text>
-      <text class="section-count">{{todayTasks.length}}</text>
+  <view wx:if="{{showBabyInfoForm}}" class="baby-info-form-section">
+    <view class="form-header">
+      <text class="form-title">完善宝宝信息</text>
+      <text class="form-subtitle">首次使用任务管理，请填写宝宝的基本信息</text>
     </view>
-    
-    <view class="task-list">
-      <block wx:for="{{todayTasks}}" wx:key="id">
-        <view class="task-item {{item.completed ? 'completed' : ''}}" bindtap="handleTaskTap" data-id="{{item.id}}">
-          <view class="task-left">
-            <view class="checkbox" bindtap="handleCheckIn" data-id="{{item.id}}">
-              <icon wx:if="{{item.completed}}" type="success" size="20" color="#FF7A85"></icon>
-            </view>
-            <view class="task-info">
-              <view class="task-name">{{item.name}}</view>
-              <view class="task-subtitle">{{item.subtitle}}</view>
-              <!-- 调试信息已移除 -->
-              
-              <view wx:if="{{item.frequency && item.frequency !== 'none'}}" class="task-frequency">
-                <text class="frequency-icon">🔄</text>
-                <!-- 针对daily类型 -->
-                <text wx:if="{{item.frequency === 'daily'}}" class="frequency-text">每天</text>
-                
-                <!-- 针对weekly类型 -->
-              <text wx:elif="{{item.frequency === 'weekly'}}" class="frequency-text">
-                {{item.weekdayText}}
-              </text>
-              
-              <!-- 针对monthly类型 -->
-              <text wx:elif="{{item.frequency === 'monthly'}}" class="frequency-text">
-                {{item.monthdayText}}
-              </text>
-              </view>
-            </view>
+
+    <view class="form-content">
+      <view class="form-item">
+        <text class="form-label">宝宝昵称 <text class="required">*</text></text>
+        <input
+          class="form-input"
+          type="text"
+          placeholder="请输入宝宝昵称"
+          value="{{babyInfoForm.nickname}}"
+          bindinput="onNicknameInput"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">出生日期 <text class="required">*</text></text>
+        <picker
+          mode="date"
+          start="{{startDate}}"
+          end="{{pickerEndDate}}"
+          value="{{babyInfoForm.birthday}}"
+          bindchange="onBirthdayChange"
+        >
+          <view class="form-picker {{babyInfoForm.birthday ? 'has-value' : ''}}">
+            {{babyInfoForm.birthday || '请选择出生日期'}}
           </view>
-          <view class="task-right">
-            <view class="task-actions">
-              <button class="action-btn edit" bindtap="handleEditTask" data-id="{{item.id}}">编辑</button>
-            </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">性别</text>
+        <view class="gender-selector">
+          <view class="gender-option {{babyInfoForm.gender === 'boy' ? 'active' : ''}}"
+                bindtap="onGenderChange" data-gender="boy">
+            <text class="gender-icon">👦</text>
+            <text class="gender-text">男宝</text>
+          </view>
+          <view class="gender-option {{babyInfoForm.gender === 'girl' ? 'active' : ''}}"
+                bindtap="onGenderChange" data-gender="girl">
+            <text class="gender-icon">👧</text>
+            <text class="gender-text">女宝</text>
           </view>
         </view>
-      </block>
+      </view>
     </view>
-  </view>
 
-  <!-- 已完成区域 -->
-  <view class="section" wx:if="{{completedTasks.length > 0}}">
-    <view class="section-header">
-      <text class="section-title">已完成</text>
+    <button class="save-btn" bindtap="saveBabyInfo">保存并开始使用</button>
+    <view class="join-family-hint">
+      <text class="hint-text">已有宝宝家庭？</text>
+      <text class="hint-link" bindtap="showJoinFamilyModal">点击加入</text>
     </view>
-    
-    <view class="completed-list">
-      <view wx:for="{{completedTasks}}" wx:key="id" class="completed-item" bindtap="handleTaskTap" data-id="{{item.id}}">
-        <view class="completed-left">
-          <icon type="success" size="16" color="#999"></icon>
-          <view class="completed-info">
-            <view class="completed-name">{{item.name}}</view>
-            <view class="completed-subtitle">{{item.subtitle}}</view>
-            <!-- 调试信息已移除 -->
-            
-            <view wx:if="{{item.frequency && item.frequency !== 'none'}}" class="task-frequency">
-              <text class="frequency-icon">🔄</text>
-              <!-- 针对daily类型 -->
-              <text wx:if="{{item.frequency === 'daily'}}" class="frequency-text">每天</text>
-              
-              <!-- 针对weekly类型 -->
-              <text wx:elif="{{item.frequency === 'weekly'}}" class="frequency-text">
-                {{item.weekdayText}}
-              </text>
-              
-              <!-- 针对monthly类型 -->
-              <text wx:elif="{{item.frequency === 'monthly'}}" class="frequency-text">
-                {{item.monthdayText}}
-              </text>
-            </view>
+
+    <!-- 加入家庭弹窗 -->
+    <view class="modal {{showJoinFamilyModal ? 'show' : ''}}">
+      <view class="modal-mask" bindtap="hideJoinFamilyModal"></view>
+      <view class="modal-content">
+        <view class="modal-header">
+          <text class="modal-title">加入家庭</text>
+          <text class="modal-close" bindtap="hideJoinFamilyModal">×</text>
+        </view>
+        <view class="modal-body">
+          <view class="form-item">
+            <text class="form-label">邀请码</text>
+            <input
+              class="form-input"
+              type="text"
+              placeholder="请输入邀请码"
+              value="{{inviteCode}}"
+              bindinput="onInviteCodeInput"
+              maxlength="10"
+            />
           </view>
         </view>
-        <!-- 右侧时间显示已移除 -->
+        <view class="modal-footer">
+          <button class="btn-secondary" bindtap="hideJoinFamilyModal">取消</button>
+          <button class="btn-primary" bindtap="submitJoinFamily">加入</button>
+        </view>
       </view>
     </view>
   </view>
 
-  <!-- 快速添加按钮 -->
-  <view class="float-action">
-    <view class="add-btn" bindtap="openCreateTask">
-      <text class="add-icon">+</text>
-    </view>
+  <block wx:if="{{!showBabyInfoForm}}">
+  <!-- 今日任务区域 - 加载完成或今日任务不为空时显示 -->
+  <view class="section-header" wx:if="{{!loading || todayTasks.length > 0}}">
+    <text class="section-title">今日任务</text>
+    <text class="section-count" wx:if="{{todayTasks.length > 0}}">{{todayTasks.length}}</text>
   </view>
-  
-  <!-- 测试按钮已移除 -->
 
-  <!-- 事项建议入口 -->
-  <view class="suggest-entry" bindtap="openSuggestPage">
-    <view class="suggest-icon">💡</view>
-    <view class="suggest-text">
-      <text class="suggest-title">事项建议</text>
-      <text class="suggest-desc">为您推荐适合的育儿任务</text>
+  <!-- 今日任务列表 -->
+  <view class="task-item-wrapper" 
+        wx:for="{{todayTasks}}" 
+        wx:key="id"
+        data-index="{{index}}"
+        bindtouchstart="touchStart"
+        bindtouchmove="touchMove"
+        bindtouchend="touchEnd">
+    
+    <!-- 操作按钮层（左滑显示） -->
+    <view class="task-actions" wx:if="{{item.canEdit}}">
+      <view class="action-btn edit" catchtap="handleEditTask" data-id="{{item.id}}">
+        <text>编辑</text>
+      </view>
+      <view class="action-btn delete" catchtap="handleDeleteTask" data-id="{{item.id}}">
+        <text>删除</text>
+      </view>
     </view>
-    <icon type="arrowright" size="16" color="#999"></icon>
+    
+    <!-- 任务卡片层 -->
+    <view class="task-card {{item.swipeLeft ? 'swiped' : ''}}"
+          bindtap="handleTaskTap" 
+          data-id="{{item.id}}"
+          data-clickable="true">
+      
+      <view class="task-checkbox" data-id="{{item.id}}"></view>
+      
+      <view class="task-content">
+        <view class="task-name">{{item.name}}</view>
+        <view class="task-desc" wx:if="{{item.subtitle}}">{{item.subtitle}}</view>
+        
+        <view class="task-meta" wx:if="{{item.frequency && item.frequency !== 'none'}}">
+          <text class="task-tag" wx:if="{{item.frequency === 'daily'}}">每天</text>
+          <text class="task-tag" wx:elif="{{item.frequency === 'weekly'}}">{{item.weekdayText}}</text>
+          <text class="task-tag" wx:elif="{{item.frequency === 'monthly'}}">{{item.monthdayText}}</text>
+        </view>
+      </view>
+    </view>
   </view>
+
+  <!-- 用户今日没有任务（含从未添加过任务） -->
+  <block wx:if="{{!loading && todayTasks.length === 0 && todayStats.completed === 0}}">
+    <view class="empty-no-task">
+      <view class="empty-icon">🌱</view>
+      <text class="empty-text">今天还没有填写任务，快去添加吧！</text>
+    </view>
+  </block>
+
+  <!-- 用户今日任务已全部完成 -->
+  <block wx:elif="{{!loading && todayTasks.length === 0 && todayStats.completed > 0}}">
+    <view class="empty-today-tasks">
+      <view class="empty-icon">🎉</view>
+      <text class="empty-text">恭喜你已完成今日所有任务，再接再厉！</text>
+    </view>
+  </block>
+
+  <!-- 待完成区域 -->
+  <view class="section-header" wx:if="{{upcomingTasks.length > 0}}">
+    <text class="section-title">待完成</text>
+    <text class="section-count" wx:if="{{upcomingTasks.length > 0}}">{{upcomingTasks.length}}</text>
+  </view>
+
+  <!-- 待完成任务列表 -->
+  <view class="task-item-wrapper" 
+        wx:for="{{upcomingTasks}}" 
+        wx:key="id"
+        data-index="{{index}}"
+        bindtouchstart="touchStartUpcoming"
+        bindtouchmove="touchMoveUpcoming"
+        bindtouchend="touchEndUpcoming">
+    
+    <!-- 操作按钮层（左滑显示） -->
+    <view class="task-actions" wx:if="{{item.canEdit}}">
+      <view class="action-btn edit" catchtap="handleEditTask" data-id="{{item.id}}">
+        <text>编辑</text>
+      </view>
+      <view class="action-btn delete" catchtap="handleDeleteTask" data-id="{{item.id}}">
+        <text>删除</text>
+      </view>
+    </view>
+    
+    <!-- 任务卡片层 -->
+    <view class="task-card disabled {{item.swipeLeft ? 'swiped' : ''}}"
+          bindtap="handleTaskTap" 
+          data-id="{{item.id}}"
+          data-clickable="false">
+      
+      <view class="task-checkbox disabled" data-id="{{item.id}}"></view>
+      
+      <view class="task-content">
+        <view class="task-name disabled">{{item.name}}</view>
+        <view class="task-desc disabled">{{item.subtitle}}</view>
+        
+        <view class="task-meta" wx:if="{{item.disabledText}}">
+          <text class="task-tag disabled-tag">{{item.disabledText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+
+  <!-- 事项建议卡片 -->
+  <view class="suggestion-card" bindtap="openSuggestPage">
+    <view class="suggestion-icon">💡</view>
+    <view class="suggestion-content">
+      <view class="suggestion-title">事项建议</view>
+      <view class="suggestion-desc">为您推荐适合的育儿任务</view>
+    </view>
+    <view class="suggestion-arrow">›</view>
+  </view>
+
+  <!-- 浮动添加按钮 -->
+  <view wx:if="{{!showBabyInfoForm}}" class="add-btn" bindtap="openCreateTask">
+    <text class="add-btn-icon">+</text>
+  </view>
+  </block>
 </view>

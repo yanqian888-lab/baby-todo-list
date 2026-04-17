@@ -1,3 +1,7 @@
 {
+  "navigationBarTitleText": "排敏记录",
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#FAFAF8",
   "usingComponents": {}
 }

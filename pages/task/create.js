@@ -10,6 +10,7 @@ Page({
     description: '',
     frequency: 'none', // none, daily, weekly, monthly
     category: 'care', // 任务分类：care, feeding, health, development
+    selectedTemplateId: '', // 当前选中的模板ID
     categories: [
       { id: 'care', name: '日常护理', icon: '👶' },
       { id: 'feeding', name: '喂养', icon: '🍼' },
@@ -20,16 +21,16 @@ Page({
       { id: 'study', name: '学习', icon: '📖' }
     ],
     templateGroups: [
-      { id: 'pregnant', name: '孕妈妈', icon: '🤰' },
+      { id: 'baby', name: '宝宝', icon: '👶' },
       { id: 'new_mom', name: '新手妈妈', icon: '👩‍🍼' },
-      { id: 'baby', name: '宝宝', icon: '👶' }
+      { id: 'pregnant', name: '孕妈妈', icon: '🤰' }
     ],
     ageRanges: [
       { id: '0-1', name: '0~1月' },
       { id: '2-6', name: '2~6个月' },
       { id: '7-24', name: '7~24个月' }
     ],
-    selectedGroup: 'pregnant', // 当前选中的模板组
+    selectedGroup: 'baby', // 当前选中的模板组，默认显示宝宝
     selectedAgeRange: '0-1', // 当前选中的年龄段
     groupedTemplates: {}, // 分组后的模板数据
     frequencies: [
@@ -46,6 +47,8 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
     computedSelectedMonthDays: [], // 用于WXML绑定的计算数组，每个元素表示对应索引的日期是否选中
     monthDays: Array.from({length: 31}, (_, i) => String(i + 1)), // 1-31天
 
+    dueDate: '', // 一次任务的日期，默认当天
+    
     showTemplates: true,
     templates: []
   },
@@ -71,11 +74,20 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
    * 生命周期函数--监听页面加载
    */
   onLoad: function (options) {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+
     // 初始化云环境
     if (!wx.cloud) {
       console.error('请使用 2.2.3 或以上的基础库以使用云能力');
       return;
     }
+
+    // 读取URL传入的家庭ID
+    this.familyId = options.familyId || wx.getStorageSync('currentFamilyId') || null;
     
     // 存储模板ID，将在模板加载后使用
     this.templateId = options.templateId;
@@ -83,8 +95,14 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
     // 设置默认日期为今天
     const today = new Date();
     const date = today.getDate();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const dayStr = date.toString().padStart(2, '0');
+    const todayDateStr = `${year}-${month}-${dayStr}`;
+    
     this.setData({ 
       selectedDate: date.toString(),
+      dueDate: todayDateStr, // 一次任务默认日期为今天
       selectedDays: {}, // 初始不选择任何天数
       computedSelectedDays: [], // 初始不选择任何天数
       // 确保没有调试信息属性
@@ -104,53 +122,77 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
       this.loadTaskTemplates();
     }
     
+    // 如果参数指定显示模板区域，页面加载完成后滚动到模板区域
+    if (options.showTemplates === 'true') {
+      this.scrollToTemplates = true;
+    }
+    
     // 确保界面中没有调试信息
     this.clearDebugInfo();
   },
   
   /**
-   * 加载任务模板
-   * 优先使用模拟数据，确保模板能够正常显示
+   * 生命周期函数--监听页面显示
    */
-  loadTaskTemplates: function() {
+  onShow: function() {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+  },
+
+  /**
+   * 生命周期函数--监听页面初次渲染完成
+   */
+  onReady: function() {
+    // 如果需要滚动到模板区域
+    if (this.scrollToTemplates) {
+      // 延迟一点时间确保页面渲染完成
+      setTimeout(() => {
+        wx.createSelectorQuery()
+          .select('#template-section')
+          .boundingClientRect(rect => {
+            if (rect) {
+              wx.pageScrollTo({
+                scrollTop: rect.top,
+                duration: 300
+              });
+            }
+          })
+          .exec();
+      }, 300);
+    }
+  },
+  
+  /**
+   * 加载任务模板
+   * 优先尝试从云函数获取，失败时使用模拟数据
+   */
+  loadTaskTemplates: async function() {
     try {
-      // 直接调用setMockData设置模拟数据，确保模板立即显示
+      // 先设置模拟数据确保页面有内容显示
       this.setMockData();
-      
-      // 清除任何可能的调试信息
       this.clearDebugInfo();
       
-      // 简洁的日志记录
-      console.log('模板加载完成');
-      
-      // 注意：暂时注释掉云函数调用，专注于确保模拟数据正确显示
-      /*
-      // 尝试调用云函数获取模板数据
+      // 尝试从云函数获取模板数据
       const result = await wx.cloud.callFunction({
         name: 'getTaskTemplates',
         data: {}
       });
       
-      console.log('云函数返回结果:', result);
-      
-      // 检查结果
-      if (result.result && Array.isArray(result.result.templates)) {
-        const templates = result.result.templates;
-        console.log('获取到的模板数量:', templates.length);
-        
-        // 为每个模板添加图标
-        const templatesWithIcons = templates.map(template => ({
+      if (result.result && Array.isArray(result.result.templates) && result.result.templates.length > 0) {
+        const templates = result.result.templates.map(template => ({
           ...template,
           icon: template.icon || this.getTemplateIcon(template.category)
         }));
         
-        // 对模板进行分组并更新数据
-        // 这里可以根据实际需要更新数据
+        this.setData({ templates });
+        console.log('从云端加载模板成功:', templates.length);
       }
-      */
     } catch (error) {
-      console.error('加载模板数据失败:', error);
-      // 如果出错，仍然使用模拟数据
+      console.warn('从云端加载模板失败，使用模拟数据:', error);
+      // 继续使用模拟数据
     }
   },
   
@@ -160,20 +202,54 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
   setMockData: function() {
     console.log('设置模拟数据，确保字段名与WXML中使用的完全一致');
     
-    // 精简模拟数据示例，确保字段匹配
+    // 任务模板数据 - 按用户要求重新组织
+    // 孕妈妈阶段
     const mockPregnantTemplates = [
       {
         id: 'preg_001',
-        title: '产前检查',
-        description: '定期进行产前检查，确保母婴健康',
-        icon: '🏥',
+        title: '称体重',
+        description: '记录孕期体重变化',
+        icon: '⚖️',
+        category: 'health',
+        group: 'pregnant',
+        priority: 'medium',
+        recordData: true,
+        dataType: 'weight'
+      },
+      {
+        id: 'preg_002',
+        title: '血压',
+        description: '监测血压，预防妊娠高血压',
+        icon: '🩺',
+        category: 'health',
+        group: 'pregnant',
+        priority: 'high',
+        recordData: true,
+        dataType: 'bloodPressure'
+      },
+      {
+        id: 'preg_003',
+        title: '血糖',
+        description: '监测血糖，预防妊娠糖尿病',
+        icon: '🩸',
+        category: 'health',
+        group: 'pregnant',
+        priority: 'high',
+        recordData: true,
+        dataType: 'bloodSugar'
+      },
+      {
+        id: 'preg_004',
+        title: '胎心监测',
+        description: '监测胎心，了解宝宝健康状况',
+        icon: '💓',
         category: 'health',
         group: 'pregnant',
         priority: 'high'
       },
       {
-        id: 'preg_002',
-        title: '补充叶酸',
+        id: 'preg_005',
+        title: '吃叶酸',
         description: '每日补充叶酸，预防胎儿神经管畸形',
         icon: '💊',
         category: 'health',
@@ -181,100 +257,359 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
         priority: 'high'
       },
       {
-        id: 'preg_003',
-        title: '适当运动',
-        description: '进行散步等适当运动，有助于顺产',
-        icon: '🏃',
+        id: 'preg_006',
+        title: '其他补剂',
+        description: '根据医生建议补充其他营养素',
+        icon: '🧪',
+        category: 'health',
+        group: 'pregnant',
+        priority: 'medium',
+        suggestions: ['钙片', '多维', '铁', 'DHA']
+      },
+      {
+        id: 'preg_007',
+        title: '孕期运动',
+        description: '适当运动有助于顺产',
+        icon: '🧘',
         category: 'activity',
         group: 'pregnant',
+        priority: 'medium',
+        suggestions: ['散步', '孕期瑜伽', '凯格尔运动', '爬楼梯']
+      },
+      {
+        id: 'preg_008',
+        title: '胎教',
+        description: '与宝宝互动，促进感官发育',
+        icon: '🎵',
+        category: 'development',
+        group: 'pregnant',
         priority: 'medium'
+      },
+      {
+        id: 'preg_009',
+        title: '自定义',
+        description: '自定义任务标题和内容',
+        icon: '✏️',
+        category: 'care',
+        group: 'pregnant',
+        priority: 'low',
+        isCustom: true
       }
     ];
     
+    // 新手妈妈阶段
     const mockNewMomTemplates = [
       {
         id: 'newmom_001',
-        title: '哺乳准备',
-        description: '学习正确的哺乳姿势和技巧',
-        icon: '🍼',
-        category: 'feeding',
+        title: '凯格尔运动',
+        description: '恢复盆底肌，预防产后问题',
+        icon: '🧘',
+        category: 'health',
         group: 'new_mom',
         priority: 'high'
       },
       {
         id: 'newmom_002',
-        title: '产后恢复',
-        description: '进行产后身体恢复训练',
-        icon: '🏥',
+        title: '腹式呼吸',
+        description: '恢复腹直肌，重塑腹部线条',
+        icon: '🌬️',
         category: 'health',
         group: 'new_mom',
         priority: 'medium'
+      },
+      {
+        id: 'newmom_003',
+        title: '自定义',
+        description: '自定义任务标题和内容',
+        icon: '✏️',
+        category: 'care',
+        group: 'new_mom',
+        priority: 'low',
+        isCustom: true
       }
     ];
     
+    // 宝宝 0～1月
     const mockBabyTemplates_0_1 = [
       {
         id: 'baby_001',
-        title: '新生儿喂养',
-        description: '按需喂养，确保宝宝营养充足',
-        icon: '🍼',
-        category: 'feeding',
+        title: '脐部消毒',
+        description: '每日清洁消毒脐部，防止感染',
+        icon: '🧴',
+        category: 'hygiene',
         group: 'baby',
         ageRange: '0-1',
         priority: 'high'
       },
       {
         id: 'baby_002',
-        title: '脐部护理',
-        description: '清洁消毒脐部，防止感染',
-        icon: '🧴',
+        title: '洗屁屁',
+        description: '保持屁屁清洁，预防红屁屁',
+        icon: '🚿',
         category: 'hygiene',
+        group: 'baby',
+        ageRange: '0-1',
+        priority: 'high'
+      },
+      {
+        id: 'baby_003',
+        title: '晾屁屁',
+        description: '适当晾晒，保持屁屁干爽',
+        icon: '🌬️',
+        category: 'hygiene',
+        group: 'baby',
+        ageRange: '0-1',
+        priority: 'medium'
+      },
+      {
+        id: 'baby_004',
+        title: '黑白卡追视训练',
+        description: '刺激视觉发育，训练追视能力',
+        icon: '👀',
+        category: 'development',
+        group: 'baby',
+        ageRange: '0-1',
+        priority: 'medium'
+      },
+      {
+        id: 'baby_005',
+        title: '抚触操',
+        description: '轻柔抚触，促进亲子 bonding',
+        icon: '🤲',
+        category: 'care',
+        group: 'baby',
+        ageRange: '0-1',
+        priority: 'medium'
+      },
+      {
+        id: 'baby_006',
+        title: '排气操',
+        description: '帮助宝宝排气，缓解肠胀气',
+        icon: '🌀',
+        category: 'care',
+        group: 'baby',
+        ageRange: '0-1',
+        priority: 'medium'
+      },
+      {
+        id: 'baby_007',
+        title: '吃AD',
+        description: '补充维生素A和D，促进钙吸收',
+        icon: '💊',
+        category: 'health',
+        group: 'baby',
+        ageRange: '0-1',
+        priority: 'high'
+      },
+      {
+        id: 'baby_008',
+        title: '打疫苗',
+        description: '按时接种疫苗，保护宝宝健康',
+        icon: '💉',
+        category: 'health',
         group: 'baby',
         ageRange: '0-1',
         priority: 'high'
       }
     ];
     
+    // 宝宝 2～6个月
     const mockBabyTemplates_2_6 = [
       {
-        id: 'baby_003',
-        title: '辅食添加',
-        description: '开始添加米粉等辅食',
-        icon: '🥣',
-        category: 'feeding',
+        id: 'baby_009',
+        title: '追听训练',
+        description: '用声音吸引宝宝，训练听觉追迹',
+        icon: '👂',
+        category: 'development',
         group: 'baby',
         ageRange: '2-6',
         priority: 'medium'
       },
       {
-        id: 'baby_004',
-        title: '抬头训练',
-        description: '帮助宝宝练习抬头，增强颈部力量',
-        icon: '👶',
+        id: 'baby_010',
+        title: '追视训练',
+        description: '用玩具吸引宝宝，训练视觉追迹',
+        icon: '👀',
         category: 'development',
         group: 'baby',
         ageRange: '2-6',
         priority: 'medium'
+      },
+      {
+        id: 'baby_011',
+        title: '洗屁屁',
+        description: '保持屁屁清洁，预防红屁屁',
+        icon: '🚿',
+        category: 'hygiene',
+        group: 'baby',
+        ageRange: '2-6',
+        priority: 'high'
+      },
+      {
+        id: 'baby_012',
+        title: '晾屁屁',
+        description: '适当晾晒，保持屁屁干爽',
+        icon: '🌬️',
+        category: 'hygiene',
+        group: 'baby',
+        ageRange: '2-6',
+        priority: 'medium'
+      },
+      {
+        id: 'baby_013',
+        title: '抚触操',
+        description: '轻柔抚触，促进亲子 bonding',
+        icon: '🤲',
+        category: 'care',
+        group: 'baby',
+        ageRange: '2-6',
+        priority: 'medium'
+      },
+      {
+        id: 'baby_014',
+        title: '排气操',
+        description: '帮助宝宝排气，缓解肠胀气',
+        icon: '🌀',
+        category: 'care',
+        group: 'baby',
+        ageRange: '2-6',
+        priority: 'medium'
+      },
+      {
+        id: 'baby_015',
+        title: '被动操',
+        description: '帮助宝宝活动四肢，促进发育',
+        icon: '🤸',
+        category: 'activity',
+        group: 'baby',
+        ageRange: '2-6',
+        priority: 'medium'
+      },
+      {
+        id: 'baby_016',
+        title: '吃AD',
+        description: '补充维生素A和D，促进钙吸收',
+        icon: '💊',
+        category: 'health',
+        group: 'baby',
+        ageRange: '2-6',
+        priority: 'high'
+      },
+      {
+        id: 'baby_017',
+        title: '其他补剂',
+        description: '根据医生建议补充其他营养素',
+        icon: '🧪',
+        category: 'health',
+        group: 'baby',
+        ageRange: '2-6',
+        priority: 'medium',
+        suggestions: ['钙片', '铁', 'DHA']
+      },
+      {
+        id: 'baby_018',
+        title: '自定义',
+        description: '自定义任务标题和内容',
+        icon: '✏️',
+        category: 'care',
+        group: 'baby',
+        ageRange: '2-6',
+        priority: 'low',
+        isCustom: true
+      },
+      {
+        id: 'baby_019',
+        title: '打疫苗',
+        description: '按时接种疫苗，保护宝宝健康',
+        icon: '💉',
+        category: 'health',
+        group: 'baby',
+        ageRange: '2-6',
+        priority: 'high'
       }
     ];
     
+    // 宝宝 7～24个月
     const mockBabyTemplates_7_24 = [
       {
-        id: 'baby_005',
-        title: '自主进食训练',
-        description: '培养宝宝自己吃饭的能力',
-        icon: '🍽️',
-        category: 'feeding',
+        id: 'baby_020',
+        title: '洗屁屁',
+        description: '保持屁屁清洁，预防红屁屁',
+        icon: '🚿',
+        category: 'hygiene',
+        group: 'baby',
+        ageRange: '7-24',
+        priority: 'high'
+      },
+      {
+        id: 'baby_021',
+        title: '晾屁屁',
+        description: '适当晾晒，保持屁屁干爽',
+        icon: '🌬️',
+        category: 'hygiene',
         group: 'baby',
         ageRange: '7-24',
         priority: 'medium'
       },
       {
-        id: 'baby_006',
-        title: '语言启蒙',
-        description: '多与宝宝交流，促进语言发育',
-        icon: '🗣️',
+        id: 'baby_022',
+        title: '吃AD',
+        description: '补充维生素A和D，促进钙吸收',
+        icon: '💊',
+        category: 'health',
+        group: 'baby',
+        ageRange: '7-24',
+        priority: 'high'
+      },
+      {
+        id: 'baby_023',
+        title: '其他补剂',
+        description: '根据医生建议补充其他营养素',
+        icon: '🧪',
+        category: 'health',
+        group: 'baby',
+        ageRange: '7-24',
+        priority: 'medium',
+        suggestions: ['钙片', '铁', 'DHA']
+      },
+      {
+        id: 'baby_024',
+        title: '刷牙',
+        description: '培养刷牙习惯，保护牙齿健康',
+        icon: '🪥',
+        category: 'hygiene',
+        group: 'baby',
+        ageRange: '7-24',
+        priority: 'high'
+      },
+      {
+        id: 'baby_025',
+        title: '自定义',
+        description: '自定义任务标题和内容',
+        icon: '✏️',
+        category: 'care',
+        group: 'baby',
+        ageRange: '7-24',
+        priority: 'low',
+        isCustom: true
+      },
+      {
+        id: 'baby_026',
+        title: '早教',
+        description: '通过游戏和学习促进智力发展',
+        icon: '📚',
         category: 'development',
+        group: 'baby',
+        ageRange: '7-24',
+        priority: 'medium',
+        suggestions: ['看绘本', '熏听']
+      },
+      {
+        id: 'baby_027',
+        title: '打疫苗',
+        description: '按时接种疫苗，保护宝宝健康',
+        icon: '💉',
+        category: 'health',
         group: 'baby',
         ageRange: '7-24',
         priority: 'high'
@@ -452,7 +787,8 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
   switchTemplateGroup: function(e) {
     const group = e.currentTarget.dataset.group;
     this.setData({
-      selectedGroup: group
+      selectedGroup: group,
+      selectedTemplateId: '' // 切换分组时清空选中状态
     });
     
     // 如果切换到宝宝组，默认选择第一个年龄段
@@ -490,7 +826,8 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
   switchAgeRange: function(e) {
     const ageRange = e.currentTarget.dataset.age;
     this.setData({
-      selectedAgeRange: ageRange
+      selectedAgeRange: ageRange,
+      selectedTemplateId: '' // 切换年龄段时清空选中状态
     });
   },
   
@@ -498,8 +835,28 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
    * 从模板加载任务数据
    */
   loadTemplateData: function(templateId) {
+    // 根据当前选中的分组获取对应的模板数组
+    let templateList = [];
+    const { selectedGroup, selectedAgeRange } = this.data;
+    
+    if (selectedGroup === 'pregnant') {
+      templateList = this.data.pregnantTemplates || [];
+    } else if (selectedGroup === 'new_mom') {
+      templateList = this.data.newMomTemplates || [];
+    } else if (selectedGroup === 'baby') {
+      // 宝宝组根据年龄段选择
+      if (selectedAgeRange === '0-1') {
+        templateList = this.data.babyTemplates_0_1 || [];
+      } else if (selectedAgeRange === '2-6') {
+        templateList = this.data.babyTemplates_2_6 || [];
+      } else if (selectedAgeRange === '7-24') {
+        templateList = this.data.babyTemplates_7_24 || [];
+      }
+    }
+    
     // 查找模板
-    const template = this.data.templates.find(t => t._id === templateId || t.id === templateId);
+    const template = templateList.find(t => t._id === templateId || t.id === templateId);
+    
     if (template) {
       // 使用正确的字段名（与表单字段匹配）
       this.setData({
@@ -507,6 +864,26 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
         description: template.description || template.subtitle || '',
         category: template.category || 'care',
       });
+      
+      // 滚动到表单输入区域
+      setTimeout(() => {
+        wx.createSelectorQuery()
+          .select('#task-form')
+          .boundingClientRect(rect => {
+            wx.createSelectorQuery()
+              .selectViewport()
+              .scrollOffset(offset => {
+                if (rect && offset) {
+                  wx.pageScrollTo({
+                    scrollTop: rect.top + offset.scrollTop - 20,
+                    duration: 300
+                  });
+                }
+              })
+              .exec();
+          })
+          .exec();
+      }, 100);
     }
   },
   
@@ -520,12 +897,13 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
   },
   
   /**
-   * 选择模板
+   * 选择模板 - 点击后自动填充表单
    */
   selectTemplate: function(e) {
     const templateId = e.currentTarget.dataset.id;
+    this.setData({ selectedTemplateId: templateId });
     this.loadTemplateData(templateId);
-    this.setData({ showTemplates: false });
+    // 不再隐藏模板列表，允许用户继续选择其他模板或修改已填充的内容
   },
   
   /**
@@ -546,10 +924,26 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
    */
   loadTaskData: async function () {
     try {
-      const db = wx.cloud.database();
-      const res = await db.collection('tasks').doc(this.data.taskId).get();
-      
-      const task = res.data;
+      const result = await wx.cloud.callFunction({
+        name: 'getTaskDetail',
+        data: { taskId: this.data.taskId }
+      });
+      const task = result.result.data && result.result.data.task;
+      if (!task) throw new Error('任务不存在');
+
+      // 编辑权限校验：任务创建者或家庭创建者可编辑
+      const currentOpenId = wx.getStorageSync('userInfo')?.openid || wx.getStorageSync('userInfo')?.openId || '';
+      let canEdit = false;
+      if (task._openid && task._openid === currentOpenId) {
+        canEdit = true;
+      } else if (task.familyCreatorOpenId && task.familyCreatorOpenId === currentOpenId) {
+        canEdit = true;
+      }
+      if (!canEdit) {
+        wx.showToast({ title: '只有任务创建者或家庭创建者可编辑', icon: 'none' });
+        setTimeout(() => wx.navigateBack(), 1500);
+        return;
+      }
       
       this.setData({
         title: task.title,
@@ -562,11 +956,18 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
       // 根据任务频率设置相关数据
       if (task.frequency === 'weekly') {
         // 每周模式：设置选中的天数
+        // 数据库中存储的是 JS 标准索引（0=周日，1=周一...6=周六）
+        // 页面索引为（0=周一，1=周二...6=周日），需要反向转换
         const selectedDays = {};
-        if (task.selectedDays && Array.isArray(task.selectedDays)) {
-          task.selectedDays.forEach(day => {
-            selectedDays[String(day)] = true;
+        if (task.selectedDays && Array.isArray(task.selectedDays) && task.selectedDays.length > 0) {
+          task.selectedDays.forEach(jsIndex => {
+            // JS 标准 → 页面索引：周日(0) -> 6，周一(1) -> 0，...，周六(6) -> 5
+            const pageIndex = jsIndex === 0 ? 6 : jsIndex - 1;
+            selectedDays[String(pageIndex)] = true;
           });
+        } else if (!task.selectedDays || (Array.isArray(task.selectedDays) && task.selectedDays.length === 0)) {
+          console.warn('周任务 selectedDays 为空，默认选中周一');
+          selectedDays['0'] = true;
         }
         
         // 生成计算后的选中天数数组
@@ -603,6 +1004,26 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
         });
       } else if (task.frequency === 'daily') {
         // 每天模式：无需设置循环次数（默认1次）
+      } else if (!task.frequency || task.frequency === 'none') {
+        // 一次任务：加载 dueDate
+        if (task.dueDate) {
+          let date;
+          if (task.dueDate.toDate && typeof task.dueDate.toDate === 'function') {
+            date = task.dueDate.toDate();
+          } else if (task.dueDate.$date) {
+            date = new Date(task.dueDate.$date);
+          } else if (typeof task.dueDate === 'object' && task.dueDate._seconds) {
+            date = new Date(task.dueDate._seconds * 1000);
+          } else {
+            date = new Date(task.dueDate);
+          }
+          if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            this.setData({ dueDate: `${year}-${month}-${day}` });
+          }
+        }
       }
     } catch (error) {
       console.error('加载任务数据失败:', error);
@@ -779,6 +1200,17 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
       computedSelectedMonthDays: computedSelectedMonthDays
     });
   },
+
+  /**
+   * 选择一次任务的日期
+   */
+  onDueDateChange: function(e) {
+    const dueDate = e.detail.value;
+    console.log('选择一次任务日期:', dueDate);
+    this.setData({
+      dueDate: dueDate
+    });
+  },
   
 
 
@@ -804,6 +1236,7 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
    * 保存任务
    */
   saveTask: async function () {
+    if (this.data.loading) return;
     // 验证输入
     if (!this.data.title.trim()) {
       wx.showToast({
@@ -814,7 +1247,15 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
     }
     
     // 循环选项验证
-    const { frequency, selectedDays, selectedMonthDays } = this.data;
+    const { frequency, selectedDays, selectedMonthDays, dueDate } = this.data;
+    if (frequency === 'none' && !dueDate) {
+      wx.showToast({
+        title: '请选择任务日期',
+        icon: 'none'
+      });
+      return;
+    }
+    
     if (frequency === 'weekly' && Object.keys(selectedDays).filter(key => selectedDays[key]).length === 0) {
       wx.showToast({
         title: '每周循环请选择周几',
@@ -851,6 +1292,17 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
           console.log('📅 周任务索引转换 - 页面索引:', selectedIndices, '转换后JS索引:', saveSelectedDays);
         }
         
+        // 准备日期数据（一次任务），传递带明确时区的 ISO 字符串
+        let dueDate = null;
+        if (this.data.frequency === 'none' && this.data.dueDate) {
+          dueDate = `${this.data.dueDate}T00:00:00+08:00`;
+        }
+        
+        // 复用页面级幂等性请求ID，防止网络抖动后手动重试导致重复创建
+        if (!this.createRequestId) {
+          this.createRequestId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        }
+
         // 创建新任务
         const result = await wx.cloud.callFunction({
           name: 'createTask',
@@ -858,6 +1310,9 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
             title: this.data.title,
             description: this.data.description,
             category: this.data.category,
+            dueDate: dueDate,
+            familyId: this.familyId || null,
+            requestId: this.createRequestId,
         
             // 循环相关设置
             frequency: this.data.frequency,
@@ -867,16 +1322,10 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
         });
         
         if (result.result.success) {
-          wx.showToast({
-            title: '创建成功',
-            icon: 'success',
-            duration: 1500,
-            success: () => {
-              setTimeout(() => {
-                wx.navigateBack();
-              }, 1500);
-            }
-          });
+          this.createRequestId = null;
+          wx.showToast({ title: '创建成功', icon: 'success', duration: 1500 });
+          await new Promise(r => setTimeout(r, 1500));
+          wx.navigateBack();
         } else {
           throw new Error(result.result.error || '创建失败');
         }
@@ -893,37 +1342,48 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
           console.log('📅 更新周任务索引转换 - 页面索引:', selectedIndices, '转换后JS索引:', saveSelectedDays);
         }
         
-        // 更新任务
-        const db = wx.cloud.database();
-        await db.collection('tasks').doc(this.data.taskId).update({
+        // 准备日期数据（一次任务），传递带明确时区的 ISO 字符串
+        let updateDueDate = null;
+        if (this.data.frequency === 'none' && this.data.dueDate) {
+          updateDueDate = `${this.data.dueDate}T00:00:00+08:00`;
+        }
+
+        // 更新任务（通过云函数确保权限校验和数据一致性）
+        const result = await wx.cloud.callFunction({
+          name: 'updateTask',
           data: {
+            taskId: this.data.taskId,
             title: this.data.title,
             description: this.data.description,
             category: this.data.category,
             priority: this.data.priority,
-            updateTime: new Date(),
-            // 循环相关设置
+            dueDate: updateDueDate,
             frequency: this.data.frequency,
             selectedDays: saveSelectedDays,
             selectedMonthDays: this.data.frequency === 'monthly' ? Object.keys(this.data.selectedMonthDays).filter(key => this.data.selectedMonthDays[key]).map(day => parseInt(day)) : []
           }
         });
-        
-        wx.showToast({
-          title: '更新成功',
-          icon: 'success',
-          duration: 1500,
-          success: () => {
-            setTimeout(() => {
-              wx.navigateBack();
-            }, 1500);
-          }
-        });
+
+        if (result.result && result.result.success) {
+          wx.showToast({ title: '更新成功', icon: 'success', duration: 1500 });
+          await new Promise(r => setTimeout(r, 1500));
+          wx.navigateBack();
+        } else {
+          throw new Error(result.result ? result.result.error : '更新失败');
+        }
       }
     } catch (error) {
       console.error('保存任务失败:', error);
+      let errorMsg = '保存失败，请稍后重试';
+      if (error.errMsg) {
+        if (error.errMsg.includes('cloud.callFunction:fail') || error.errMsg.includes('request:fail')) {
+          errorMsg = '网络异常，请检查网络后重试';
+        } else if (error.errMsg.includes('FunctionName')) {
+          errorMsg = '云函数异常，请联系管理员';
+        }
+      }
       wx.showToast({
-        title: '保存失败: ' + error.message,
+        title: errorMsg,
         icon: 'none'
       });
     } finally {
@@ -1049,6 +1509,6 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
    * 绑定返回（兼容旧方法）
    */
   bindBack: function () {
-    this.navigateBack();
+    wx.navigateBack();
   }
 });

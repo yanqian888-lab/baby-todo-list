@@ -4,7 +4,7 @@ cloud.init()
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
-  const { openid } = wxContext
+  const openid = wxContext.OPENID || wxContext.openid
   const { memo } = event
   
   try {
@@ -16,10 +16,10 @@ exports.main = async (event, context) => {
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
     
-    // 检查今天是否已经打卡
-    const todayClockIn = await db.collection('clockIns').where({
-      openid: openid,
-      createTime: db.command.gte(today).and(db.command.lt(tomorrow))
+    // 检查今天是否已经打卡（统一查询 task_completions）
+    const todayClockIn = await db.collection('task_completions').where({
+      _openid: openid,
+      completedAt: db.command.gte(today).and(db.command.lt(tomorrow))
     }).get()
     
     if (todayClockIn.data.length > 0) {
@@ -30,9 +30,9 @@ exports.main = async (event, context) => {
     }
     
     // 获取最近一次的打卡记录
-    const lastClockIn = await db.collection('clockIns')
-      .where({ openid: openid })
-      .orderBy('createTime', 'desc')
+    const lastClockIn = await db.collection('task_completions')
+      .where({ _openid: openid })
+      .orderBy('completedAt', 'desc')
       .limit(1)
       .get()
     
@@ -40,7 +40,7 @@ exports.main = async (event, context) => {
     let consecutiveDays = 1
     
     if (lastClockIn.data.length > 0) {
-      const lastDate = new Date(lastClockIn.data[0].createTime)
+      const lastDate = new Date(lastClockIn.data[0].completedAt)
       const yesterday = new Date(today)
       yesterday.setDate(yesterday.getDate() - 1)
       
@@ -48,17 +48,27 @@ exports.main = async (event, context) => {
       if (lastDate.getFullYear() === yesterday.getFullYear() &&
           lastDate.getMonth() === yesterday.getMonth() &&
           lastDate.getDate() === yesterday.getDate()) {
-        consecutiveDays = lastClockIn.data[0].consecutiveDays + 1
+        consecutiveDays = (lastClockIn.data[0].consecutiveDays || 0) + 1
       }
     }
     
-    // 创建打卡记录
-    await db.collection('clockIns').add({
+    // 二次校验：最小化竞态窗口
+    const doubleCheck = await db.collection('task_completions').where({
+      _openid: openid,
+      completedAt: db.command.gte(today).and(db.command.lt(tomorrow))
+    }).get();
+    if (doubleCheck.data.length > 0) {
+      return { success: false, error: '今天已经打卡' };
+    }
+    
+    // 创建打卡记录（统一写入 task_completions）
+    await db.collection('task_completions').add({
       data: {
-        openid,
+        _openid: openid,
         memo: memo || '',
-        createTime: now,
-        consecutiveDays
+        completedAt: now,
+        consecutiveDays,
+        isGeneralClockIn: true
       }
     })
     

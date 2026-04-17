@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "openapi": []
+  },
+  "triggers": [
+    {
+      "name": "cleanupExpiredInvitations",
+      "type": "timer",
+      "config": "0 0 * * * *"
+    }
+  ]
+}

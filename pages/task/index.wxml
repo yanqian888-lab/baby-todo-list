@@ -1,22 +1,27 @@
 <!-- 任务管理页面 -->
 <view class="container">
-  <!-- 页面标题 -->
+  <!-- 页面标题 + 家庭切换 tabs -->
   <view class="header">
     <text class="title">任务管理</text>
-    <view class="actions">
-      <button class="btn-template" type="default" size="mini" bindtap="goToTaskTemplates">任务模板</button>
-      <button class="btn-create" type="primary" bindtap="goToCreateTask">创建任务</button>
+    <view class="family-tabs" wx:if="{{families.length > 0}}">
+      <view
+        wx:for="{{families}}"
+        wx:key="_id"
+        class="tab-item {{currentFamilyId === item._id ? 'active' : ''}}"
+        bindtap="switchFamilyTab"
+        data-tab-id="{{item._id}}"
+      >{{item.name || item.displayName}}</view>
     </view>
   </view>
 
   <!-- 状态标签栏 -->
   <view class="tab-bar">
     <view 
-      class="tab {{currentTab === 'pending' ? 'active' : ''}}" 
-      data-tab="pending" 
+      class="tab {{currentTab === 'all' ? 'active' : ''}}" 
+      data-tab="all" 
       bindtap="switchTab"
     >
-      待办
+      全部任务
     </view>
     <view 
       class="tab {{currentTab === 'completed' ? 'active' : ''}}" 
@@ -24,13 +29,6 @@
       bindtap="switchTab"
     >
       已完成
-    </view>
-    <view 
-      class="tab {{currentTab === 'all' ? 'active' : ''}}" 
-      data-tab="all" 
-      bindtap="switchTab"
-    >
-      全部
     </view>
   </view>
 
@@ -63,37 +61,41 @@
       <view 
         wx:for="{{tasks}}" 
         wx:key="_id"
-        class="task-item {{item.status === 'completed' ? 'completed' : ''}}"
+        class="task-item {{item.displayStatus === '已完成' ? 'completed' : ''}} {{currentTab === 'completed' && item.taskType === '单次' ? 'disabled' : ''}}"
+        bindtap="goToTaskDetail"
+        data-id="{{item._id}}"
+        data-type="{{item.taskType}}"
       >
-        <view class="task-content">
-          <view class="task-header">
-            <view class="task-title-wrapper">
-              <checkbox 
-                checked="{{item.status === 'completed'}}" 
-                class="task-checkbox"
-                data-id="{{item._id}}"
-                bindtap="toggleTaskStatus"
-              />
-              <text class="task-title">{{item.title}}</text>
-              <view class="task-category">{{getCategoryName(item.category)}}</view>
-            </view>
+        <!-- 标题 + 状态 -->
+        <view class="task-row task-row-top">
+          <text class="task-title">{{item.title}}</text>
+          <view class="task-status {{item.displayStatus === '已完成' ? 'status-completed' : 'status-pending'}}">
+            {{item.displayStatus}}
           </view>
-          <view wx:if="{{item.description}}" class="task-description">{{item.description}}</view>
-          <view class="task-footer">
-            <view class="task-date" wx:if="{{item.dueDate}}">
-              <text class="iconfont icon-date"></text>
-              {{item.dueDate}}
-            </view>
+        </view>
 
+        <!-- 描述 -->
+        <view wx:if="{{item.description}}" class="task-desc">{{item.description}}</view>
+
+        <!-- 底部信息：周期/日期 + 分类/创建人 -->
+        <view class="task-row task-row-bottom">
+          <view class="task-meta-left">
+            <text wx:if="{{item.taskType && item.taskType !== '单次'}}" class="meta-tag cycle-tag">{{item.taskType}}</text>
+            <block wx:if="{{!item.taskType || item.taskType === '单次'}}">
+              <text class="meta-tag type-tag">单次</text>
+              <text wx:if="{{item.displayDueDate}}" class="meta-tag date-tag">{{item.displayDueDate}}</text>
+            </block>
+          </view>
+          <view class="task-meta-right">
+            <text wx:if="{{item.creatorNickName}}" class="task-creator">{{item.creatorNickName}}</text>
+            <text wx:if="{{item.categoryName}}" class="task-cat">{{item.categoryName}}</text>
           </view>
         </view>
       </view>
     </block>
     
     <view wx:elif="{{!loading}}" class="empty-state">
-      <image src="/images/empty-tasks.png" class="empty-image"></image>
       <text class="empty-text">暂无任务</text>
-      <text class="empty-hint">点击右上角创建你的第一个任务</text>
     </view>
     
     <view wx:if="{{loading && tasks.length > 0}}" class="loading-more">

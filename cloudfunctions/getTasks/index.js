@@ -34,9 +34,17 @@ exports.main = async (event, context) => {
     console.log('🔍 事件参数:', JSON.stringify(event, null, 2));
     
     // 构建查询条件
+    const { familyId } = event;
     const query = {
-      _openid: openid, // 使用微信云开发自动添加的_openid字段
       isTemplate: false
+    };
+    
+    // 优先按家庭查询，否则按个人_openid查询
+    if (familyId) {
+      query.familyId = familyId;
+      console.log('👨‍👩‍👧‍👦 按家庭查询任务:', familyId);
+    } else {
+      query._openid = openid;
     }
     console.log('🔍 查询条件:', JSON.stringify(query, null, 2));
     
@@ -100,222 +108,71 @@ exports.main = async (event, context) => {
     }
     
     // 处理循环任务的逻辑
-    // 过滤出今天需要执行的任务
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayDayOfWeek = now.getDay(); // 0-6，0是周日
-    const todayDateOfMonth = now.getDate(); // 1-31
+    // 首页场景需要返回所有任务（包括未来日期的循环任务），由前端判断显示在今日任务还是待完成
+    const isHomeQuery = (status === 'pending' && includeCompleted === true);
     
-    // 输出原始任务数据，用于调试
-    console.log('📥 从数据库获取的原始任务数量:', tasks.length);
-    tasks.forEach(task => {
-      console.log(`📋 原始任务: ID=${task._id}, 标题=${task.title}, 状态=${task.status}, 频率=${task.frequency}, selectedDays=${JSON.stringify(task.selectedDays)}`);
-    });
+    let filteredTasks = tasks;
     
-    // 计算任务下一次打卡日期并进行排序
-    console.log('🔍 开始处理任务...');
-    
-    // 处理每个任务，计算下一次打卡日期
-    const processedTasks = tasks.map(task => {
-      // 为任务添加下一次打卡日期
-      let nextCheckInDate = new Date();
+    if (isHomeQuery) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
-      // 根据任务类型计算下一次打卡日期
-      if (task.frequency === 'none' || !task.frequency) {
-        // 非循环任务使用创建日期作为打卡日期
-        nextCheckInDate = new Date(task.createTime || Date.now());
-      } else if (task.frequency === 'daily') {
-        // 每日任务使用今天日期
-        nextCheckInDate = new Date(today);
-      } else if (task.frequency === 'weekly' || task.frequency === 'monthly') {
-        // 循环任务暂时使用今天日期，过滤逻辑会在后面处理
-        nextCheckInDate = new Date(today);
-      }
+      // 输出原始任务数据，用于调试
+      console.log('📥 从数据库获取的原始任务数量:', tasks.length);
+      tasks.forEach(task => {
+        console.log(`📋 原始任务: ID=${task._id}, 标题=${task.title}, 状态=${task.status}, 频率=${task.frequency}, dueDate=${task.dueDate || 'null'}, createTime=${task.createTime || 'null'}`);
+      });
       
-      return {
-        ...task,
-        nextCheckInDate
-      };
-    });
-    
-    // 过滤出今天需要执行的任务或已完成任务
-    const filteredTasks = processedTasks.filter(task => {
-      // 先检查任务状态是否符合要求
-      console.log(`🔍 处理任务: ${task.title}, ID=${task._id}, 状态=${task.status}`);
-      
-      // 如果是已完成任务，不需要再过滤日期，直接返回true
-      if (event.status === 'completed' || task.status === 'completed') {
-        console.log(`✅ 已完成任务，直接返回true`);
-        return true;
-      }
-      
-      // 如果不是循环任务
-      if (task.frequency === 'none' || !task.frequency) {
-        console.log(`📅 非循环任务，创建日期: ${task.createTime}, 今天: ${today.toISOString()}`);
-        // 移除日期过滤，所有非循环任务都应显示
-        console.log(`✅ 非循环任务直接显示`);
-        return true;
-      }
-      
-      // 每日循环任务
-      if (task.frequency === 'daily') {
-        console.log(`✅ 每日循环任务，直接返回true`);
-        return true;
-      }
-      
-      // 每周循环任务
-      if (task.frequency === 'weekly') {
-        try {
-          // 输出详细调试信息
-          console.log(`📅 今日星期(0-6): ${todayDayOfWeek}`);
-          
-          // 确保selectedDays是数组，处理各种可能的数据情况
-          let selectedDaysArray = [];
-          
-          // 增强的类型检查和转换逻辑
-          if (Array.isArray(task.selectedDays)) {
-            selectedDaysArray = task.selectedDays;
-            console.log(`📊 selectedDays已是数组格式: ${JSON.stringify(selectedDaysArray)}`);
-          } else if (typeof task.selectedDays === 'object' && task.selectedDays !== null) {
-            // 处理对象格式的selectedDays，提取所有为true的键
-            selectedDaysArray = Object.keys(task.selectedDays).filter(day => task.selectedDays[day] === true);
-            console.log(`📋 对象格式selectedDays转换为数组: ${JSON.stringify(selectedDaysArray)}`);
-          } else if (task.selectedDays !== undefined && task.selectedDays !== null) {
-            // 处理单个值
-            selectedDaysArray = [task.selectedDays];
-            console.log(`📋 单个值selectedDays转换为数组: ${JSON.stringify(selectedDaysArray)}`);
-          } else {
-            console.log(`⚠️ 任务${task.title}没有selectedDays字段或为空`);
-          }
-          
-          // 确保所有元素都是字符串或数字类型
-          selectedDaysArray = selectedDaysArray.filter(day => day !== undefined && day !== null);
-          console.log(`📋 过滤后的selectedDays数组: ${JSON.stringify(selectedDaysArray)}`);
-          
-          // 增强的比较逻辑
-          const todayDayStr = String(todayDayOfWeek);
-          
-          console.log(`🔍 开始匹配检查，今日星期: ${todayDayOfWeek} (${todayDayStr})`);
-          const matchFound = selectedDaysArray.some((day, index) => {
-            // 确保day是有效字符串或数字
-            const dayStr = String(day).trim();
-            const dayNum = parseInt(dayStr);
-            const isNumberValid = !isNaN(dayNum);
-            
-            console.log(`🔢 检查索引${index}: 原始值=${day}, 字符串=${dayStr}, 数字=${dayNum}, 是否有效数字=${isNumberValid}`);
-            
-            // 双重匹配逻辑
-            const stringMatch = dayStr === todayDayStr;
-            const numberMatch = isNumberValid && dayNum === todayDayOfWeek;
-            const match = stringMatch || numberMatch;
-            
-            if (match) {
-              console.log(`✅ 匹配成功: ${dayStr} (${typeof day}) 匹配 ${todayDayStr}`);
-            } else {
-              console.log(`❌ 匹配失败: ${dayStr} (${typeof day}) 不匹配 ${todayDayStr}`);
-            }
-            
-            return match;
-          });
-          
-          console.log(`🎯 任务${task.title}最终匹配结果: ${matchFound}`);
-          return matchFound;
-        } catch (err) {
-          console.error('❌ 处理每周任务时出错:', err, `任务ID: ${task._id}`);
-          return false;
+      // 为任务添加 nextCheckInDate，并预处理月任务日期供前端使用
+      filteredTasks = tasks.map(task => {
+        let nextCheckInDate = new Date();
+        if (task.frequency === 'none' || !task.frequency) {
+          nextCheckInDate = new Date(task.dueDate || task.createTime || Date.now());
+        } else if (task.frequency === 'daily') {
+          nextCheckInDate = new Date(today);
+        } else {
+          nextCheckInDate = new Date(today);
         }
-      }
-      
-      // 每月循环任务
-      if (task.frequency === 'monthly') {
-        try {
-          // 处理selectedMonthDays，支持数组、JSON字符串、对象等多种格式
+        
+        // 对月任务预处理 selectedMonthDays（与前端逻辑保持一致）
+        if (task.frequency === 'monthly' && task.selectedMonthDays) {
           let processedMonthDays = [];
           const monthDaysData = task.selectedMonthDays;
-          
-          console.log(`📅 处理月任务 ${task.title} 的selectedMonthDays数据:`, monthDaysData);
-          
-          // 数据类型规范化处理 - 增强版
           if (Array.isArray(monthDaysData)) {
-            // 数组格式直接使用
-            processedMonthDays = monthDaysData.map(day => {
-              // 确保每个元素都被正确解析为数字
-              const numDay = Number(day);
-              return isNaN(numDay) ? 0 : numDay;
-            });
+            processedMonthDays = monthDaysData.map(day => isNaN(Number(day)) ? 0 : Number(day));
           } else if (typeof monthDaysData === 'string') {
-            // 清理字符串并尝试多种解析方式
             const trimmedStr = monthDaysData.trim();
             if (trimmedStr) {
-              // 尝试解析JSON字符串
               try {
                 const parsed = JSON.parse(trimmedStr);
                 if (Array.isArray(parsed)) {
-                  processedMonthDays = parsed.map(day => {
-                    const numDay = Number(day);
-                    return isNaN(numDay) ? 0 : numDay;
-                  });
+                  processedMonthDays = parsed.map(day => isNaN(Number(day)) ? 0 : Number(day));
                 } else if (typeof parsed === 'object') {
-                  // 对象格式，取键名作为日期
-                  processedMonthDays = Object.keys(parsed).map(day => {
-                    const numDay = Number(day);
-                    return isNaN(numDay) ? 0 : numDay;
-                  });
+                  processedMonthDays = Object.keys(parsed).map(day => isNaN(Number(day)) ? 0 : Number(day));
                 }
               } catch (e) {
-                console.log(`📝 非JSON字符串，尝试其他解析方式:`, e.message);
-                // 支持多种分隔符: 逗号、空格、分号、顿号等
                 const normalizedStr = trimmedStr.replace(/[,，;；\s+]/g, ',');
                 processedMonthDays = normalizedStr.split(',')
-                  .filter(day => day.trim() !== '') // 过滤空字符串
-                  .map(day => {
-                    const numDay = Number(day.trim());
-                    return isNaN(numDay) ? 0 : numDay;
-                  });
+                  .filter(day => day.trim() !== '')
+                  .map(day => isNaN(Number(day.trim())) ? 0 : Number(day.trim()));
               }
             }
           } else if (typeof monthDaysData === 'object' && monthDaysData !== null) {
-            // 对象格式，处理多种对象结构
-            // 1. 处理键值对形式 {"1": true, "2": false}
             processedMonthDays = Object.keys(monthDaysData)
               .filter(key => monthDaysData[key] === true || monthDaysData[key] === 1)
-              .map(key => {
-                const numDay = Number(key);
-                return isNaN(numDay) ? 0 : numDay;
-              });
-              
-            // 如果通过键值对方式没有获取到数据，尝试直接使用所有键
+              .map(key => isNaN(Number(key)) ? 0 : Number(key));
             if (processedMonthDays.length === 0) {
-              processedMonthDays = Object.keys(monthDaysData).map(key => {
-                const numDay = Number(key);
-                return isNaN(numDay) ? 0 : numDay;
-              });
+              processedMonthDays = Object.keys(monthDaysData).map(key => isNaN(Number(key)) ? 0 : Number(key));
             }
           } else if (typeof monthDaysData === 'number') {
-            // 单一数字的情况
             processedMonthDays = [monthDaysData];
           }
-          
-          // 过滤有效日期（1-31之间）并去重
-          processedMonthDays = [...new Set(processedMonthDays)].filter(day => day >= 1 && day <= 31);
-          console.log(`📅 任务 ${task.title} 处理后的有效日期列表:`, processedMonthDays);
-          
-          // 保存处理后的日期数据，方便前端使用
-          task.processedMonthDays = processedMonthDays;
-          
-          // 检查当前日期是否在有效日期列表中
-          const matches = processedMonthDays.includes(todayDateOfMonth);
-          console.log(`📅 每月循环任务，日期: ${todayDateOfMonth}, 匹配: ${matches}`);
-          return matches;
-        } catch (error) {
-          console.error(`❌ 处理月任务 ${task.title} 的selectedMonthDays时出错:`, error);
-          return false;
+          task.processedMonthDays = [...new Set(processedMonthDays)].filter(day => day >= 1 && day <= 31);
         }
-      }
-      
-      console.log(`❌ 不匹配任何条件，返回false`);
-      return false;
-    });
+        
+        return { ...task, nextCheckInDate };
+      });
+    }
     
     // 输出过滤前的任务列表信息，用于调试
     console.log('过滤后的任务数量:', filteredTasks.length);
@@ -364,7 +221,8 @@ exports.main = async (event, context) => {
     
     return {
       success: true,
-      total: finalTasks.length, // 确保返回最终过滤后的任务总数，而不是原始任务总数
+      total: finalTasks.length, // 当前页过滤后的任务总数
+      totalTasksCount: totalResult.total, // 用户创建过的任务总数（用于首页空状态判断）
       tasks: finalTasks,
       page,
       size

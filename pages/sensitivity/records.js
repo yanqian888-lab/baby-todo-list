@@ -1,6 +1,8 @@
 // pages/sensitivity/records.js
 const app = getApp();
 const sensitivityService = require('../../services/sensitivityService');
+const familyService = require('../../services/familyService');
+const { getUserId, getBabyId, safeDateFormat, getAllergyStatusText, getLikeStatusText } = require('../../utils/helpers');
 
 Page({
   /**
@@ -9,7 +11,10 @@ Page({
   data: {
     records: [],
     activeFilter: 'all',
-    loading: true
+    loading: true,
+    families: [],
+    currentFamilyId: null,
+    currentFamilyName: '我的家庭'
   },
 
   /**
@@ -17,16 +22,23 @@ Page({
    */
   onLoad: function (options) {
     // 检查用户登录状态
-    this.checkLogin();
+    if (!this.checkLogin()) return;
+    this.loadFamilyInfo().then(() => {
+      this.cleanupLocalRecords();
+      this.getSensitivityRecords();
+    });
   },
 
   /**
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
-    // 每次显示页面时先清理重复记录，再刷新
-    this.cleanupLocalRecords();
-    this.getSensitivityRecords();
+    if (!this.checkLogin()) return;
+    // 每次显示页面时先加载家庭信息，再刷新
+    this.loadFamilyInfo().then(() => {
+      this.cleanupLocalRecords();
+      this.getSensitivityRecords();
+    });
   },
 
   /**
@@ -36,12 +48,119 @@ Page({
     const token = wx.getStorageSync('token');
     if (!token) {
       // 用户未登录，跳转到登录页
-      wx.navigateTo({
+      wx.redirectTo({
         url: '/pages/login/login'
       });
       return false;
     }
     return true;
+  },
+
+  /**
+   * 加载家庭信息并设置当前家庭
+   */
+  loadFamilyInfo: async function() {
+    const currentUserInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+    const currentOpenId = currentUserInfo.openId || currentUserInfo._id || currentUserInfo.openid || currentUserInfo.openID || '';
+
+    try {
+      const result = await familyService.getMyFamilies();
+      const familiesRaw = result.families || [];
+      const createdFamilies = [];
+      const joinedFamilies = [];
+      const families = [];
+
+      familiesRaw.forEach(family => {
+        const rawBabyNickname = family.babyInfo?.nickname || family.babyNickname || '宝宝';
+        const sanitizedBabyNickname = /^(微信用户|家庭成员)/.test(rawBabyNickname) ? '宝宝' : rawBabyNickname;
+        const sanitizedFamilyName = family.familyName && !/^(微信用户|家庭成员)/.test(family.familyName) ? family.familyName : '';
+        const familyData = {
+          ...family,
+          babyNickname: sanitizedBabyNickname,
+          creatorOpenId: family.creatorOpenId || family.creator || family.ownerOpenId || '',
+          name: sanitizedFamilyName || `${sanitizedBabyNickname}的家`,
+          displayName: sanitizedFamilyName || `${sanitizedBabyNickname}的家`
+        };
+
+        families.push(familyData);
+        if (familyData.creatorOpenId && familyData.creatorOpenId === currentOpenId) {
+          createdFamilies.push(familyData);
+        } else {
+          joinedFamilies.push(familyData);
+        }
+      });
+
+      // 自己创建的家庭排在前面
+      families.sort((a, b) => {
+        const aOwner = a.creatorOpenId === currentOpenId ? 1 : 0;
+        const bOwner = b.creatorOpenId === currentOpenId ? 1 : 0;
+        return bOwner - aOwner;
+      });
+
+      let currentFamilyId = this.data.currentFamilyId;
+      let currentFamily = families.find(f => f._id === currentFamilyId);
+      
+      if (!currentFamily) {
+        currentFamilyId = wx.getStorageSync('currentFamilyId') || result.currentFamilyId || null;
+        currentFamily = families.find(f => f._id === currentFamilyId);
+      }
+      
+      if (!currentFamily) {
+        if (createdFamilies.length > 0) {
+          currentFamily = createdFamilies[0];
+        } else if (joinedFamilies.length > 0) {
+          currentFamily = joinedFamilies[0];
+        }
+      }
+
+      if (currentFamily) {
+        currentFamilyId = currentFamily._id;
+        wx.setStorageSync('currentFamilyId', currentFamilyId);
+        const currentFamilyName = currentFamily.displayName || currentFamily.name || `${currentFamily.babyNickname || '宝宝'}的家`;
+        this.setData({
+          families,
+          currentFamilyId,
+          currentFamilyName
+        });
+      } else {
+        this.setData({
+          families,
+          currentFamilyId: null,
+          currentFamilyName: '我的家庭'
+        });
+      }
+    } catch (error) {
+      console.error('加载家庭信息失败:', error);
+    }
+  },
+
+  /**
+   * 切换家庭 tab
+   */
+  switchFamilyTab: async function(e) {
+    const familyId = e.currentTarget.dataset.tabId;
+    if (!familyId || familyId === this.data.currentFamilyId) {
+      return;
+    }
+
+    const family = this.data.families.find(f => f._id === familyId);
+    if (!family) return;
+
+    try {
+      wx.showLoading({ title: '切换中...' });
+      await familyService.switchFamily(familyId);
+      this.setData({
+        currentFamilyId: familyId,
+        currentFamilyName: family.displayName || family.name || `${family.babyNickname || '宝宝'}的家`
+      });
+      this.cleanupLocalRecords();
+      this.getSensitivityRecords();
+    } catch (error) {
+      console.error('切换家庭失败:', error);
+      wx.showToast({ title: '切换家庭失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
 
   /**
@@ -51,14 +170,21 @@ Page({
     try {
       const userId = app.globalData.userInfo._id;
       const babyId = app.globalData.userInfo.babyInfo ? app.globalData.userInfo.babyInfo._id : 'local-baby-id';
+      const familyId = this.data.currentFamilyId;
       
       // 从本地存储获取所有记录
       let allRecords = wx.getStorageSync('sensitivity_records') || [];
       console.log('清理前的本地存储记录数量:', allRecords.length);
       
-      // 对所有记录进行严格去重
+      // 对所有记录进行严格去重（按家庭隔离）
       const uniqueRecordsMap = new Map();
       allRecords.forEach(record => {
+        // 只处理属于当前家庭或没有 familyId 的旧记录
+        const recordFamilyId = record.familyId || null;
+        if (familyId && recordFamilyId && recordFamilyId !== familyId) {
+          return; // 跳过其他家庭的记录
+        }
+        
         // 确保记录有必要字段
         const recordUserId = record.userId || userId;
         const recordBabyId = record.babyId || babyId;
@@ -74,9 +200,9 @@ Page({
         }
         const dateKey = new Date(recordDate).toISOString().split('T')[0];
         
-        // 创建复合键
+        // 创建复合键（加入家庭ID，避免跨家庭去重）
         const foodId = record.foodId || foodName;
-        const compositeKey = `${recordUserId}-${recordBabyId}-${foodId}-${dateKey}`;
+        const compositeKey = `${recordUserId}-${recordBabyId}-${foodId}-${dateKey}-${recordFamilyId || ''}`;
         
         // 只保留最新的记录
         const existingRecord = uniqueRecordsMap.get(compositeKey);
@@ -87,11 +213,22 @@ Page({
           }
           record.date = recordDate;
           uniqueRecordsMap.set(compositeKey, record);
+        } else {
+          // 如果有重复，保留 updatedAt 更新的记录
+          const existingUpdatedAt = existingRecord.updatedAt ? new Date(existingRecord.updatedAt).getTime() : 0;
+          const currentUpdatedAt = record.updatedAt ? new Date(record.updatedAt).getTime() : 0;
+          if (currentUpdatedAt > existingUpdatedAt) {
+            uniqueRecordsMap.set(compositeKey, record);
+          }
         }
       });
       
-      // 转换为数组
-      const uniqueRecords = Array.from(uniqueRecordsMap.values());
+      // 转换为数组：保留当前家庭去重后的记录 + 其他家庭的原始记录
+      const otherFamilyRecords = allRecords.filter(r => {
+        const rFamilyId = r.familyId || null;
+        return familyId && rFamilyId && rFamilyId !== familyId;
+      });
+      const uniqueRecords = Array.from(uniqueRecordsMap.values()).concat(otherFamilyRecords);
       
       // 保存回本地存储
       wx.setStorageSync('sensitivity_records', uniqueRecords);
@@ -112,15 +249,37 @@ Page({
     // 先清理本地存储中的重复记录
     this.cleanupLocalRecords();
     
-    // 获取用户ID
-    const userId = app.globalData.userInfo._id;
-    const babyId = app.globalData.userInfo.babyInfo ? app.globalData.userInfo.babyInfo._id : 'local-baby-id';
+    // 获取用户ID（使用辅助函数）
+    const userInfo = app.globalData?.userInfo;
+    if (!userInfo) {
+      console.warn('用户未登录');
+      this.setData({ records: [], loading: false });
+      return;
+    }
+    
+    const userId = getUserId(userInfo);
+    const babyId = getBabyId(userInfo.babyInfo);
     
     // 获取筛选条件
     const filter = this.data.activeFilter;
     
-    // 调用静态方法获取排敏记录
-    sensitivityService.getUserSensitivityRecords(userId, babyId).then((records) => {
+    const familyId = this.data.currentFamilyId;
+    
+    // 同时获取排敏记录、宝宝信息中的已排敏食物、以及所有食物列表（用于补全分类）
+    Promise.all([
+      sensitivityService.getUserSensitivityRecords(userId, babyId, familyId),
+      sensitivityService.getFamilyBabyInfo(familyId),
+      sensitivityService.getSensitivityFoods()
+    ]).then(([records, babyInfo, allFoods]) => {
+      // 提取宝宝信息中已标记为已排敏的食物名称集合
+      const babySafeFoodNames = new Set();
+      const safeFoodsList = babyInfo?.safeFoodsList || [];
+      safeFoodsList.forEach(food => {
+        const foodName = typeof food === 'string' ? food : (food.foodName || food.name);
+        if (foodName) babySafeFoodNames.add(foodName);
+      });
+      console.log('👶 宝宝信息中的已排敏食物:', Array.from(babySafeFoodNames));
+      
       // 处理记录，确保所有必需的字段都存在且格式正确
       const processedRecords = records.map(record => {
         console.log('处理前的记录:', record);
@@ -198,13 +357,30 @@ Page({
         const allergyStatus = record.allergyStatus !== undefined ? record.allergyStatus : 0;
         const likeStatus = record.likeStatus !== undefined ? record.likeStatus : 0;
         
-        // 计算排敏进度
-        const sensitivityDays = this.calculateSensitivityDays(displayDate);
+        // 计算排敏进度 - 统计该食物的唯一记录日期数（仅在当前家庭记录中计算）
+        const foodName = record.foodName || '';
+        const uniqueDates = new Set();
+        records.forEach(r => {
+          if (r.foodName === foodName) {
+            let rDate = r.date || r.createTime;
+            if (rDate) {
+              const d = new Date(rDate);
+              if (!isNaN(d.getTime())) {
+                uniqueDates.add(d.toISOString().split('T')[0]);
+              }
+            }
+          }
+        });
+        const sensitivityDays = uniqueDates.size;
+        
         const allergyLevel = record.allergyLevel || 1;
         const totalDays = allergyLevel === 3 ? 5 : 3;
         let progressText = '';
         
-        if (sensitivityDays >= totalDays) {
+        // 如果宝宝信息页已标记该食物为已排敏，直接显示已完成
+        if (babySafeFoodNames.has(foodName)) {
+          progressText = '排敏完成';
+        } else if (sensitivityDays >= totalDays) {
           progressText = '排敏完成';
         } else {
           progressText = `${sensitivityDays}/${totalDays}`;
@@ -241,6 +417,17 @@ Page({
           }
         };
         
+        // 计算状态标签和样式
+        let statusTag = '未记录';
+        let statusClass = 'status-unrecorded';
+        if (allergyStatus === 0) {
+          statusTag = '安全';
+          statusClass = 'status-safe';
+        } else if (allergyStatus === 1 || allergyStatus === 2) {
+          statusTag = '过敏';
+          statusClass = 'status-allergy';
+        }
+        
         const processedRecord = {
           _id: record._id || `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           foodName: record.foodName || '',
@@ -253,15 +440,16 @@ Page({
           likeText: getLikeText(likeStatus),
           progressText: progressText,
           sensitivityDays: sensitivityDays,
-          totalDays: totalDays
+          totalDays: totalDays,
+          statusTag: statusTag,
+          statusClass: statusClass
         };
         
         console.log('处理后的记录:', processedRecord);
         return processedRecord;
       });
       
-      // 再次去重，确保最终返回的记录中没有重复
-      // 关键改进：使用严格的去重逻辑，确保userId和babyId存在
+      // 再次去重，确保最终返回的记录中没有重复（按家庭隔离）
       const uniqueRecordsMap = new Map();
       processedRecords.forEach(record => {
         // 确保userId和babyId存在
@@ -269,18 +457,19 @@ Page({
         const babyId = record.babyId || app.globalData.userInfo.babyInfo?._id || 'local-baby-id';
         const foodName = record.foodName || '';
         const dateKey = record.date.substring(0, 10); // 只取日期部分
-        // 使用更严格的复合键，确保去重效果
-        const compositeKey = `${userId}-${babyId}-${foodName}-${dateKey}`;
+        const recordFamilyId = record.familyId || '';
+        // 使用更严格的复合键（包含家庭ID），确保去重效果
+        const compositeKey = `${userId}-${babyId}-${foodName}-${dateKey}-${recordFamilyId}`;
         
         // 只保留最新的记录
         const existingRecord = uniqueRecordsMap.get(compositeKey);
         if (!existingRecord) {
           uniqueRecordsMap.set(compositeKey, record);
         } else {
-          // 如果有重复，保留日期更新的记录
-          const existingRecordDate = new Date(existingRecord.date).getTime();
-          const currentRecordDate = new Date(record.date).getTime();
-          if (currentRecordDate > existingRecordDate) {
+          // 如果有重复，保留 updatedAt 更新的记录
+          const existingUpdatedAt = existingRecord.updatedAt ? new Date(existingRecord.updatedAt).getTime() : 0;
+          const currentUpdatedAt = record.updatedAt ? new Date(record.updatedAt).getTime() : 0;
+          if (currentUpdatedAt > existingUpdatedAt) {
             uniqueRecordsMap.set(compositeKey, record);
           }
         }
@@ -296,6 +485,43 @@ Page({
       
       console.log('最终去重后的记录数量:', finalRecords.length);
       console.log('最终去重后的记录:', finalRecords);
+      
+      // 补充宝宝信息页添加的已排敏食物（没有每日排敏记录的）
+      const dailyFoodNames = new Set(finalRecords.map(r => r.foodName));
+      const foodMap = new Map();
+      if (Array.isArray(allFoods)) {
+        allFoods.forEach(food => foodMap.set(food.name, food));
+      }
+      babySafeFoodNames.forEach(foodName => {
+        if (!dailyFoodNames.has(foodName)) {
+          const food = foodMap.get(foodName);
+          const todayStr = new Date().toISOString().split('T')[0];
+          finalRecords.push({
+            _id: `baby-safe-${foodName}`,
+            foodName: foodName,
+            category: food ? food.category : '',
+            date: new Date().toISOString(),
+            displayDate: todayStr,
+            allergyStatus: -1,
+            likeStatus: -2,
+            statusText: '未记录',
+            likeText: '未记录',
+            progressText: '排敏完成',
+            sensitivityDays: food ? (food.allergyLevel === 3 ? 5 : 3) : 3,
+            totalDays: food ? (food.allergyLevel === 3 ? 5 : 3) : 3,
+            statusTag: '未记录',
+            statusClass: 'status-unrecorded'
+          });
+          console.log(`✅ 补充宝宝信息页记录: ${foodName}`);
+        }
+      });
+      
+      // 再次排序，确保补充记录排在合适位置
+      finalRecords.sort((a, b) => {
+        const dateA = new Date(a.date || 0).getTime();
+        const dateB = new Date(b.date || 0).getTime();
+        return dateB - dateA;
+      });
       
       // 根据筛选条件过滤记录
       let filteredRecords = finalRecords;

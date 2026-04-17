@@ -21,6 +21,12 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function (options) {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+
     // 获取食物信息参数
     const foodId = options.foodId;
     const foodName = options.foodName;
@@ -31,9 +37,9 @@ Page({
         foodId,
         foodName,
         foodType: foodType || '其他',
-        recordDate: this.formatDate(new Date())
+        recordDate: this.formatDate(new Date()),
+        isLoggedIn: true
       });
-      this.checkLogin();
     } else {
       wx.showToast({
         title: '参数错误',
@@ -47,16 +53,12 @@ Page({
     }
   },
 
-  /**
-   * 检查登录状态
-   */
-  checkLogin: function () {
-    const isLoggedIn = authService.isLoggedIn();
-    if (!isLoggedIn) {
-      wx.navigateTo({ url: '/pages/login/login' });
+  onShow: function () {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
       return;
     }
-    this.setData({ isLoggedIn: true });
   },
 
   /**

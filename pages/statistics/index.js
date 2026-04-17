@@ -18,6 +18,12 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function () {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+    this.setData({ hasLoaded: true });
     this.loadStatistics()
   },
 
@@ -25,8 +31,17 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
-    // 每次显示页面时重新加载数据
-    this.loadStatistics()
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+    if (this.data.hasLoaded) {
+      // 每次显示页面时重新加载数据
+      this.loadStatistics()
+    } else {
+      this.setData({ hasLoaded: true });
+    }
   },
 
   /**
@@ -37,7 +52,7 @@ Page({
     this.setData({ loading: true })
 
     // 添加一个标志控制是否使用mock数据（方便开发测试）
-    const USE_MOCK_DATA = true; // 设置为true使用mock数据，false调用云函数
+    const USE_MOCK_DATA = false; // 生产环境设为false，网络失败时自动降级使用mock数据
     
     if (USE_MOCK_DATA) {
       // 使用本地mock数据
@@ -52,9 +67,10 @@ Page({
       return;
     }
 
+    const familyId = wx.getStorageSync('currentFamilyId') || null;
     wx.cloud.callFunction({
       name: 'getStatistics',
-      data: { timeRange },
+      data: { timeRange, familyId },
       success: res => {
         console.log('云函数调用结果:', JSON.stringify(res));
         if (res.result && res.result.success) {

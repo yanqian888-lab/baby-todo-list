@@ -1,248 +1,336 @@
-/* pages/profile/baby-info.wxss */
+/* pages/profile/baby-info.wxss - MUJI风格 */
 
-.baby-info-container {
-  padding: 30rpx;
-  background-color: #fff;
+.container {
   min-height: 100vh;
+  background-color: #F5F3F0;
+  padding: 32rpx;
 }
 
-/* 页面标题 */
-.page-header {
-  margin-bottom: 40rpx;
+/* 家庭切换 tabs */
+.family-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 32rpx;
+}
+
+.tab-item {
+  padding: 16rpx 32rpx;
+  background-color: #FFFFFF;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  color: #6B6560;
+  border: 1rpx solid #E8E4DF;
+  transition: all 0.2s ease;
+}
+
+.tab-item.active {
+  background-color: rgba(196, 167, 125, 0.15);
+  color: #8B7355;
+  border-color: #C4A77D;
+  font-weight: 500;
+}
+
+/* 只读区域 */
+.readonly-section {
+  background-color: #FAF9F7;
+  border-radius: 20rpx;
+  padding: 48rpx 40rpx;
+  box-shadow: 0 2rpx 12rpx rgba(107, 101, 96, 0.04);
+}
+
+.readonly-header {
+  text-align: center;
+  margin-bottom: 48rpx;
+}
+
+.readonly-title {
+  font-size: 36rpx;
+  color: #4A4540;
+  font-weight: 400;
+  letter-spacing: 2rpx;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.readonly-subtitle {
+  font-size: 26rpx;
+  color: #B5ADA5;
+  font-weight: 400;
+}
+
+.readonly-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx 0;
+  border-bottom: 1rpx solid #F0EDE8;
+}
+
+.readonly-item:last-child {
+  border-bottom: none;
+}
+
+.readonly-label {
+  font-size: 28rpx;
+  color: #6B6560;
+}
+
+.readonly-value {
+  font-size: 30rpx;
+  color: #4A4540;
+  font-weight: 500;
+}
+
+.readonly-tip {
+  margin-top: 32rpx;
+  padding: 20rpx;
+  background-color: #F5F3F0;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  color: #B5ADA5;
   text-align: center;
 }
 
-.page-title {
-  font-size: 44rpx;
-  font-weight: bold;
-  color: #333;
+.form-section {
+  background-color: #FAF9F7;
+  border-radius: 20rpx;
+  padding: 48rpx 40rpx;
+  box-shadow: 0 2rpx 12rpx rgba(107, 101, 96, 0.04);
 }
 
-/* 表单样式 */
-.baby-form {
-  margin-bottom: 40rpx;
+.form-header {
+  text-align: center;
+  margin-bottom: 48rpx;
+}
+
+.form-title {
+  font-size: 36rpx;
+  color: #4A4540;
+  font-weight: 400;
+  letter-spacing: 2rpx;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.form-subtitle {
+  font-size: 26rpx;
+  color: #B5ADA5;
+  font-weight: 400;
+}
+
+.form-content {
+  margin-bottom: 48rpx;
 }
 
 .form-item {
   margin-bottom: 40rpx;
 }
 
-.label {
+.form-label {
   display: block;
-  font-size: 32rpx;
-  color: #666;
+  font-size: 28rpx;
+  color: #6B6560;
   margin-bottom: 16rpx;
+  font-weight: 400;
+  letter-spacing: 1rpx;
 }
 
-.input {
+.form-input {
   width: 100%;
-  height: 90rpx;
-  background-color: #f8f8f8;
-  border-radius: 10rpx;
-  padding: 0 30rpx;
-  font-size: 32rpx;
-  color: #333;
+  height: 96rpx;
+  background-color: #FFFFFF;
+  border: 1rpx solid #E8E4DF;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 30rpx;
+  color: #4A4540;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  border-color: #C4A77D;
+}
+
+.form-picker {
+  width: 100%;
+  height: 96rpx;
+  background-color: #FFFFFF;
+  border: 1rpx solid #E8E4DF;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 30rpx;
+  color: #B5ADA5;
+  line-height: 96rpx;
   box-sizing: border-box;
 }
 
-/* 日期选择器样式 */
-.date-picker {
-  width: 100%;
-  height: 90rpx;
-  background-color: #f8f8f8;
-  border-radius: 10rpx;
-  padding: 0 30rpx;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-sizing: border-box;
+.form-picker.has-value {
+  color: #4A4540;
 }
 
-.date-value {
-  font-size: 32rpx;
-  color: #333;
-}
-
-/* 性别选择器样式 */
-.gender-select {
+.gender-selector {
   display: flex;
-  gap: 30rpx;
+  gap: 24rpx;
 }
 
 .gender-option {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 180rpx;
-  height: 180rpx;
-  background-color: #f8f8f8;
-  border-radius: 10rpx;
+  padding: 40rpx 32rpx;
+  background-color: #FFFFFF;
+  border: 1rpx solid #E8E4DF;
+  border-radius: 16rpx;
   transition: all 0.3s ease;
 }
 
-.gender-option.selected {
-  background-color: #FFE0E3;
-  border: 2rpx solid #FF7A85;
+.gender-option.active {
+  background-color: rgba(196, 167, 125, 0.1);
+  border-color: #C4A77D;
 }
 
 .gender-icon {
-  font-size: 80rpx;
-  margin-bottom: 10rpx;
+  font-size: 56rpx;
+  margin-bottom: 16rpx;
 }
 
 .gender-text {
-  font-size: 32rpx;
-  color: #333;
+  font-size: 28rpx;
+  color: #B5ADA5;
 }
 
-/* 保存按钮样式 */
-.save-btn-container {
-  margin-top: 60rpx;
-  padding: 0 20rpx;
+.gender-option.active .gender-text {
+  color: #C4A77D;
+  font-weight: 500;
 }
 
-.save-btn {
+.safe-foods-section {
+  margin-top: 8rpx;
+}
+
+.safe-foods-header {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.safe-foods-hint {
+  font-size: 24rpx;
+  color: #B5ADA5;
+}
+
+/* 添加食物按钮 */
+.add-food-btn {
   width: 100%;
-  height: 96rpx;
-  background-color: #FF7A85;
-  border-radius: 48rpx;
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #fff;
+  height: 80rpx;
+  background-color: #F5F3F0;
+  border: 2rpx dashed #D4CFC7;
+  border-radius: 12rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 24rpx;
 }
 
-.save-btn:active {
-  background-color: #E85C6A;
+.add-food-btn:active {
+  background-color: #EBE8E4;
 }
 
-/* 已排敏食物按钮样式 */
-.safe-foods-section {
-  margin-top: 10px;
+.add-icon {
+  font-size: 40rpx;
+  color: #B5ADA5;
+  font-weight: 300;
 }
 
-.safe-foods-button {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 40px;
-  background-color: #fff;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  padding: 0 10px;
-  margin-bottom: 10px;
-  box-sizing: border-box;
-}
-
-.button-text {
-  font-size: 14px;
-  color: #333;
-}
-
-.button-arrow {
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
-  text-align: center;
-  font-size: 18px;
-  color: #fff;
-  background-color: #ff6b6b;
-  border-radius: 50%;
-}
-
-.safe-foods-tip {
-  margin-top: 5px;
-}
-
-.tip-text {
-  font-size: 12px;
-  color: #999;
-  text-align: center;
-}
-
-/* 已选择的食物列表样式 */
+/* 已选食物列表 */
 .selected-foods-list {
-  margin-top: 24rpx;
-  background-color: #fff;
+  background-color: #FFFFFF;
   border-radius: 12rpx;
-  border: 1px solid #e8e8e8;
-  overflow: hidden;
+  padding: 0 24rpx;
 }
 
 .food-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20rpx 24rpx;
-  border-bottom: 1px solid #f0f0f0;
+  justify-content: space-between;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #F0EDE8;
 }
 
 .food-item:last-child {
   border-bottom: none;
 }
 
-.food-info {
-  flex: 1;
-}
-
 .food-name {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8rpx;
-  display: block;
+  font-size: 30rpx;
+  color: #4A4540;
 }
 
-.food-category {
-  font-size: 26rpx;
-  color: #666;
-  margin-bottom: 8rpx;
-  display: block;
-}
-
-.food-prefs {
-  font-size: 28rpx;
-  color: #999;
-  display: block;
-  font-weight: 400;
-}
-
-.delete-btn {
-  width: 56rpx;
-  height: 56rpx;
+.food-tags {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: transparent;
-  color: #999;
-  border: 1px solid #e8e8e8;
-  border-radius: 50%;
-  margin-left: 16rpx;
+  gap: 16rpx;
+}
+
+.food-tag {
+  font-size: 26rpx;
+  color: #8A847A;
+  min-width: 100rpx;
+  text-align: center;
+}
+
+.food-tag.liked {
+  color: #5A8C5A;
+}
+
+.food-tag.disliked {
+  color: #C4A77D;
+}
+
+.food-tag.neutral {
+  color: #8A847A;
+}
+
+.food-tag.allergic {
+  color: #C45C5C;
+}
+
+.food-tag.severe {
+  color: #C45C5C;
+  font-weight: 500;
+}
+
+.food-tag.safe {
+  color: #5A8C5A;
+}
+
+.save-btn {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  background-color: #C4A77D;
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 400;
+  border-radius: 48rpx;
+  border: none;
+  letter-spacing: 2rpx;
   transition: all 0.3s ease;
 }
 
-.delete-btn:active {
-  background-color: #f5f5f5;
-  color: #ff6b6b;
-  border-color: #ff6b6b;
+.save-btn::after {
+  border: none;
 }
 
-.delete-icon {
-  font-size: 36rpx;
-  line-height: 56rpx;
-  font-weight: bold;
+.save-btn[disabled] {
+  background-color: #D4CFC7;
 }
 
-/* 适配不同设备尺寸 */
-@media screen and (min-width: 375px) {
-  .baby-info-container {
-    padding: 40rpx;
-  }
-  
-  .form-item {
-    margin-bottom: 48rpx;
-  }
+.save-btn:not([disabled]):active {
+  background-color: #D4BC9A;
+  transform: scale(0.98);
 }

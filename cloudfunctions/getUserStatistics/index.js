@@ -4,47 +4,11 @@ cloud.init()
 const db = cloud.database()
 const _ = db.command
 
-/**
- * 确保集合存在（通过创建文档的方式隐式创建）
- * @param {string} collectionName - 集合名称
- */
-async function ensureCollectionExists(collectionName) {
-  try {
-    console.log(`🔍 开始检查集合: ${collectionName}`)
-    
-    // 直接尝试创建测试文档来确保集合存在
-    // 这是最可靠的方式，因为即使count()失败，创建文档也能成功创建集合
-    const testDocId = `test_${Date.now()}`
-    await db.collection(collectionName).doc(testDocId).set({
-      data: {
-        test: true,
-        createdAt: db.serverDate(),
-        openid: 'test_openid'
-      }
-    })
-    
-    // 删除测试文档
-    await db.collection(collectionName).doc(testDocId).remove()
-    
-    console.log(`✅ ${collectionName} 集合已成功确保存在`)
-    return true
-  } catch (error) {
-    console.error(`❌ 处理 ${collectionName} 集合时发生错误:`, error)
-    return false
-  }
-}
-
 exports.main = async (event, context) => {
   console.log('📥 接收到getUserStatistics云函数请求:', event)
   
   const wxContext = cloud.getWXContext()
-  // 优先从微信上下文获取openid，如果没有则从请求参数中获取
-  let openid = wxContext.OPENID;
-  
-  // 如果上下文没有openid，尝试从请求参数中获取
-  if (!openid && event.openid) {
-    openid = event.openid;
-  }
+  const openid = wxContext.OPENID || wxContext.openid;
   
   try {
     // 检查openid是否存在
@@ -58,8 +22,7 @@ exports.main = async (event, context) => {
     
     console.log('✅ 成功获取openid:', openid)
     
-    // 1. 确保users集合存在，然后获取用户统计信息
-    await ensureCollectionExists('users')
+    // 1. 获取用户统计信息
     let userRes
     try {
       userRes = await db.collection('users').where({
@@ -92,6 +55,22 @@ exports.main = async (event, context) => {
     
     const userInfo = userRes.data[0]
     
+    const familyId = event.familyId || null;
+    if (familyId) {
+      // 校验调用者是否为家庭成员，防止跨家庭统计泄露
+      const familyRes = await db.collection('families').doc(familyId).get().catch(() => null);
+      const family = familyRes ? familyRes.data : null;
+      const isMember = family && (family.members || []).some(m => m.openId === openid);
+      const isCreator = family && family.creatorOpenId === openid;
+      if (!isMember && !isCreator) {
+        return {
+          success: false,
+          error: '没有权限查看该家庭的统计'
+        };
+      }
+      console.log('🔍 使用家庭ID过滤统计数据:', familyId)
+    }
+
     // 2. 从task_completions集合获取所有打卡记录
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -99,14 +78,20 @@ exports.main = async (event, context) => {
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
     
-    // 不再需要确保clockIns集合存在
-    // await ensureCollectionExists('clockIns')
     let todayCheckinRes, lastCheckinRes, allClockInsRes
     try {
+      const taskCompletionsQuery = {}
+      if (familyId) {
+        taskCompletionsQuery.familyId = familyId
+      } else {
+        taskCompletionsQuery._openid = openid
+      }
       // 获取用户所有任务完成记录
-      const taskCompletionsRes = await db.collection('task_completions').where({
-        _openid: openid
-      }).orderBy('completedAt', 'desc').get()
+      const taskCompletionsRes = await db.collection('task_completions')
+        .where(taskCompletionsQuery)
+        .orderBy('completedAt', 'desc')
+        .limit(1000)
+        .get()
       console.log('✅ 任务完成记录查询成功:', taskCompletionsRes.data.length)
       
       // 过滤今日打卡记录
@@ -213,22 +198,40 @@ exports.main = async (event, context) => {
       }
     }
     
-    // 4. 确保tasks集合存在，然后获取用户任务统计
-    await ensureCollectionExists('tasks')
+    // 4. 获取用户任务统计
     let totalTasksCount = 0, completedTasksCount = 0
     try {
-      const totalTasks = await db.collection('tasks').where({
-        _openid: openid
-      }).count()
+      // 4.1 构建任务查询条件
+      const taskQuery = {}
+      if (familyId) {
+        // 如果指定了家庭ID，只统计该家庭的任务
+        taskQuery.familyId = familyId
+      } else {
+        // 未指定家庭时，统计用户关联的所有家庭的任务
+        const familiesRes = await db.collection('families').where(_.or([
+          { creatorOpenId: openid },
+          { 'members.openId': openid }
+        ])).get()
+        const familyIds = familiesRes.data.map(f => f._id)
+        console.log('✅ 查询到用户关联的家庭数:', familyIds.length, '家庭IDs:', familyIds)
+        
+        if (familyIds.length > 0) {
+          taskQuery.familyId = _.in(familyIds)
+        } else {
+          // 兜底：没有家庭时按用户openid查询
+          taskQuery._openid = openid
+        }
+      }
+      
+      // 统计总任务数（排除已删除）
+      const totalTasks = await db.collection('tasks').where({ ...taskQuery, status: _.neq('deleted') }).count()
       totalTasksCount = totalTasks.total || 0
       console.log('✅ 任务总数查询成功:', totalTasksCount)
       
-      const completedTasks = await db.collection('tasks').where({
-        _openid: openid,
-        status: 'completed'
-      }).count()
+      // 已完成任务数：按 tasks.status === 'completed' 统计，与任务管理页对齐
+      const completedTasks = await db.collection('tasks').where({ ...taskQuery, status: 'completed' }).count()
       completedTasksCount = completedTasks.total || 0
-      console.log('✅ 已完成任务数查询成功:', completedTasksCount)
+      console.log('✅ 已完成任务数查询成功(按status=completed):', completedTasksCount)
     } catch (error) {
       console.error('❌ 任务统计查询失败:', error)
     }
@@ -238,11 +241,9 @@ exports.main = async (event, context) => {
     try {
       await db.collection('users').doc(userInfo._id).update({
         data: {
-          statistics: {
-            streakDays: streakDays,
-            totalClockIns: totalClockIns,
-            updatedTime: db.serverDate()
-          }
+          'statistics.streakDays': streakDays,
+          'statistics.totalClockIns': totalClockIns,
+          'statistics.updatedTime': db.serverDate()
         }
       })
       console.log('✅ 用户统计数据已更新')

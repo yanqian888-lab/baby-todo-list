@@ -4,8 +4,15 @@ cloud.init()
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
-  const { openid } = wxContext
+  const openid = wxContext.OPENID || wxContext.openid
   const { taskId } = event
+  
+  if (!taskId) {
+    return {
+      success: false,
+      error: '缺少taskId参数'
+    }
+  }
   
   try {
     const db = cloud.database()

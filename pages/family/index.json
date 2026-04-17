@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "我的家庭",
+  "navigationBarBackgroundColor": "#FAFAF8",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#FAFAF8",
+  "enablePullDownRefresh": true
+}

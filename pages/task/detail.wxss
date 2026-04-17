@@ -1,0 +1,282 @@
+/* 任务详情页样式 */
+
+.container {
+  min-height: 100vh;
+  background-color: #FAFAF8;
+  padding-bottom: 40rpx;
+}
+
+/* 导航栏 */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 32rpx;
+  background-color: #FFFFFF;
+  border-bottom: 1rpx solid #EEEEEE;
+}
+
+.back-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-btn .icon {
+  font-size: 40rpx;
+  color: #8B7355;
+}
+
+.nav-title {
+  flex: 1;
+  text-align: center;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #2D2A26;
+  margin-right: 60rpx;
+}
+
+/* 加载中 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 100rpx 0;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #8A847A;
+}
+
+/* 任务信息卡片 */
+.task-info-card {
+  background-color: #FFFFFF;
+  margin: 32rpx;
+  padding: 40rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.task-header {
+  margin-bottom: 24rpx;
+}
+
+.task-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #2D2A26;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.task-tags {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 8rpx 20rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+}
+
+.type-tag {
+  background-color: rgba(139, 115, 85, 0.1);
+  color: #8B7355;
+}
+
+.weekday-tag {
+  background-color: rgba(90, 140, 90, 0.1);
+  color: #5A8C5A;
+}
+
+.task-description {
+  font-size: 28rpx;
+  color: #5A554D;
+  line-height: 1.6;
+  margin-bottom: 32rpx;
+  padding: 24rpx;
+  background-color: #FAFAF8;
+  border-radius: 12rpx;
+}
+
+.task-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+}
+
+.meta-label {
+  font-size: 26rpx;
+  color: #8A847A;
+  width: 140rpx;
+}
+
+.meta-value {
+  font-size: 26rpx;
+  color: #2D2A26;
+}
+
+/* 统计卡片 */
+.stats-card {
+  display: flex;
+  background-color: #FFFFFF;
+  margin: 0 32rpx 32rpx;
+  padding: 40rpx 0;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.stats-item {
+  flex: 1;
+  text-align: center;
+  border-right: 1rpx solid #EEEEEE;
+}
+
+.stats-item:last-child {
+  border-right: none;
+}
+
+.stats-value {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #8B7355;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.last-checkin-value {
+  font-size: 32rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.stats-label {
+  font-size: 26rpx;
+  color: #8A847A;
+}
+
+/* 打卡记录 */
+.records-section {
+  background-color: #FFFFFF;
+  margin: 0 32rpx;
+  padding: 40rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #2D2A26;
+}
+
+.section-count {
+  font-size: 26rpx;
+  color: #8A847A;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+  background-color: #FAFAF8;
+  border-radius: 12rpx;
+}
+
+.record-date {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.date-text {
+  font-size: 28rpx;
+  color: #2D2A26;
+  font-weight: 500;
+}
+
+.time-text {
+  font-size: 24rpx;
+  color: #8A847A;
+}
+
+.record-user {
+  font-size: 24rpx;
+  color: #8A847A;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.record-status {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.status-icon {
+  width: 36rpx;
+  height: 36rpx;
+  background-color: #5A8C5A;
+  color: #FFFFFF;
+  border-radius: 50%;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-text {
+  font-size: 26rpx;
+  color: #5A8C5A;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 0;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  font-size: 30rpx;
+  color: #5A554D;
+  margin-bottom: 12rpx;
+}
+
+.empty-hint {
+  font-size: 26rpx;
+  color: #8A847A;
+}

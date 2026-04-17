@@ -1,7 +1,7 @@
-/* 添加排敏记录页面样式 */
+/* 添加排敏记录页面样式 - MUJI风格 */
 .add-record {
   min-height: 100vh;
-  background-color: #f8f8f8;
+  background-color: #FAFAF8;
 }
 
 /* 页面标题 */
@@ -11,8 +11,8 @@
   justify-content: space-between;
   height: 48px;
   padding: 0 16px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e8e8e8;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #EEEEEE;
   position: fixed;
   top: 0;
   left: 0;
@@ -26,13 +26,13 @@
 
 .icon-back {
   font-size: 24px;
-  color: #333333;
+  color: #8A847A;
 }
 
 .header-title {
   font-size: 18px;
   font-weight: bold;
-  color: #333333;
+  color: #2D2A26;
 }
 
 /* 表单容器 */
@@ -42,20 +42,20 @@
 
 /* 表单章节 */
 .form-section {
-  background-color: #ffffff;
-  border-radius: 8px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(45, 42, 38, 0.04);
 }
 
 .section-title {
   font-size: 16px;
   font-weight: bold;
-  color: #333333;
+  color: #2D2A26;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #EEEEEE;
 }
 
 /* 食物信息项 */
@@ -72,13 +72,13 @@
 .label {
   width: 80px;
   font-weight: bold;
-  color: #666666;
+  color: #8A847A;
   font-size: 14px;
 }
 
 .value {
   flex: 1;
-  color: #333333;
+  color: #2D2A26;
   font-size: 14px;
 }
 
@@ -88,9 +88,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 0;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
-  background-color: #fafafa;
+  border: 1px solid #EEEEEE;
+  border-radius: 8px;
+  background-color: #FAFAF8;
   cursor: pointer;
 }
 
@@ -101,10 +101,11 @@
 
 .date-picker .value {
   flex: 1;
+  color: #8B7355;
 }
 
 .icon-right {
-  color: #999999;
+  color: #8A847A;
   font-size: 16px;
   margin-right: 8px;
 }
@@ -123,11 +124,12 @@
   align-items: center;
   justify-content: center;
   padding: 16px 8px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid #EEEEEE;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   margin: 0 4px;
+  background-color: #FFFFFF;
 }
 
 .status-option:first-child {
@@ -139,8 +141,8 @@
 }
 
 .status-option.active {
-  border-color: #07c160;
-  background-color: #f6ffed;
+  border-color: #8B7355;
+  background-color: #F5F0E8;
 }
 
 .status-icon {
@@ -156,23 +158,23 @@
 }
 
 .safe-icon {
-  background-color: #52c41a;
-  color: #ffffff;
+  background-color: #8B7355;
+  color: #FFFFFF;
 }
 
 .allergic-icon {
-  background-color: #ff4d4f;
-  color: #ffffff;
+  background-color: #D32F2F;
+  color: #FFFFFF;
 }
 
 .unknown-icon {
-  background-color: #faad14;
-  color: #ffffff;
+  background-color: #8A847A;
+  color: #FFFFFF;
 }
 
 .status-text {
   font-size: 14px;
-  color: #333333;
+  color: #2D2A26;
 }
 
 /* 文本输入框 */
@@ -180,16 +182,17 @@
   width: 100%;
   min-height: 100px;
   padding: 12px;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
+  border: 1px solid #EEEEEE;
+  border-radius: 8px;
   font-size: 14px;
-  color: #333333;
-  background-color: #fafafa;
+  color: #2D2A26;
+  background-color: #FAFAF8;
   resize: none;
+  box-sizing: border-box;
 }
 
 .symptoms-input::placeholder, .remark-input::placeholder {
-  color: #999999;
+  color: #8A847A;
 }
 
 /* 提交按钮 */
@@ -200,15 +203,15 @@
 .submit-btn {
   width: 100%;
   height: 48px;
-  background-color: #07c160;
-  color: #ffffff;
+  background-color: #8B7355;
+  color: #FFFFFF;
   border: none;
-  border-radius: 8px;
+  border-radius: 24px;
   font-size: 16px;
   font-weight: bold;
 }
 
 .submit-btn[disabled] {
-  background-color: #b7eb8f;
-  color: #ffffff;
+  background-color: #EEEEEE;
+  color: #8A847A;
 }

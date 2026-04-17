@@ -1,26 +1,60 @@
 // pages/index/index.js
+// 引入工具函数
+const dateUtils = require('../../utils/dateUtils');
+const taskUtils = require('../../utils/taskUtils');
+const { BatchUpdater } = require('../../utils/pagination');
+const familyService = require('../../services/familyService');
+const sensitivityService = require('../../services/sensitivityService');
+
 Page({
   /**
    * 页面的初始数据
    */
   data: {
-    todayTasks: [], // 今日待打卡任务
-    completedTasks: [], // 已完成任务
+    todayTasks: [], // 今日任务（可打卡）
+    upcomingTasks: [], // 待完成任务（暂不可打卡）
+    hasTasks: false, // 用户是否有任务（包含历史/未完成）
+    hasEverCreatedTask: false, // 用户是否曾经创建过任务（用于空状态判断）
     todayStats: {
-      total: 0,
-      completed: 0,
+      total: 0,        // 今日总任务数（包含已完成和未完成）
+      completed: 0,    // 今日已完成任务数
+      remaining: 0,    // 今日未完成任务数
       percentage: 0
     },
-    currentDate: '', // 当前日期，在onLoad或onShow中初始化
+    currentDate: '', // 当前日期
     userInfo: null, // 用户信息
     greeting: '', // 问候语
+    currentFamilyId: null,
+    currentFamilyName: '我的家庭',
+    families: [],
+    isFamilyCreator: false,
     userStats: {
-      streakDays: 0, // 连续打卡天数
-      totalDays: 0, // 总打卡天数
-      lastCheckin: '', // 最后打卡日期
-      today: { checked: false, time: '' } // 今日打卡状态
-    }
+      streakDays: 0,
+      totalDays: 0,
+      lastCheckin: '',
+      today: { checked: false, time: '' }
+    },
+    loading: true, // 加载状态，初始为true避免显示空状态
+    checkingIn: false, // 打卡中状态，防止重复点击
+    page: 1, // 当前页码
+    pageSize: 20, // 每页数量
+    hasMore: true, // 是否还有更多数据
+    showBabyInfoForm: false,
+    babyInfoForm: {
+      nickname: '',
+      birthday: '',
+      gender: 'boy'
+    },
+    startDate: '2014-01-01',
+    pickerEndDate: new Date().toISOString().split('T')[0],
+    showJoinFamilyModal: false,
+    inviteCode: ''
   },
+
+  /**
+   * 批量更新器
+   */
+  batchUpdater: null,
   
   /**
    * 获取全局用户信息
@@ -51,7 +85,7 @@ Page({
         // 使用默认信息
         const defaultUserInfo = {
           nickName: '妈妈',
-          avatarUrl: '/images/default-avatar.svg',
+          avatarUrl: '/images/logo.png',
           gender: 0
         };
         this.setData({
@@ -62,7 +96,137 @@ Page({
       }
     }
   },
-  
+
+  /**
+   * 加载家庭信息并设置当前家庭
+   */
+  loadFamilyInfo: async function() {
+    const app = getApp();
+    const currentUserInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+    const currentOpenId = currentUserInfo.openId || currentUserInfo._id || currentUserInfo.openid || currentUserInfo.openID || '';
+
+    try {
+      const result = await familyService.getMyFamilies();
+      const familiesRaw = result.families || [];
+      const createdFamilies = [];
+      const joinedFamilies = [];
+      const families = [];
+
+      familiesRaw.forEach(family => {
+        const rawBabyNickname = family.babyInfo?.nickname || family.babyNickname || '宝宝';
+        const sanitizedBabyNickname = /^(微信用户|家庭成员)/.test(rawBabyNickname) ? '宝宝' : rawBabyNickname;
+        const sanitizedFamilyName = family.familyName && !/^(微信用户|家庭成员)/.test(family.familyName) ? family.familyName : '';
+        const familyData = {
+          ...family,
+          babyNickname: sanitizedBabyNickname,
+          creatorOpenId: family.creatorOpenId || family.creator || family.ownerOpenId || '',
+          name: sanitizedFamilyName || `${sanitizedBabyNickname}的家`,
+          displayName: sanitizedFamilyName || `${sanitizedBabyNickname}的家`
+        };
+
+        families.push(familyData);
+        if (familyData.creatorOpenId && familyData.creatorOpenId === currentOpenId) {
+          createdFamilies.push(familyData);
+        } else {
+          joinedFamilies.push(familyData);
+        }
+      });
+
+      let currentFamilyId = wx.getStorageSync('currentFamilyId') || result.currentFamilyId || null;
+      let currentFamily = families.find(f => f._id === currentFamilyId);
+      if (!currentFamily) {
+        if (createdFamilies.length > 0) {
+          currentFamily = createdFamilies[0];
+        } else if (joinedFamilies.length > 0) {
+          currentFamily = joinedFamilies[0];
+        }
+      }
+
+      if (currentFamily) {
+        currentFamilyId = currentFamily._id;
+        wx.setStorageSync('currentFamilyId', currentFamilyId);
+        const currentFamilyName = currentFamily.familyName || `${currentFamily.babyNickname || '宝宝'}的家`;
+        const isFamilyCreator = (currentFamily.creatorOpenId || currentFamily.creator || currentFamily.ownerOpenId) === currentOpenId;
+        this.setData({
+          families,
+          currentFamilyId,
+          currentFamilyName,
+          isFamilyCreator
+        });
+      } else {
+        wx.removeStorageSync('currentFamilyId');
+        const app = getApp();
+        if (app && app.globalData) {
+          app.globalData.currentFamilyId = null;
+        }
+        this.setData({
+          families,
+          currentFamilyId: null,
+          currentFamilyName: '我的家庭',
+          todayTasks: [],
+          upcomingTasks: [],
+          isFamilyCreator: false
+        });
+      }
+    } catch (error) {
+      console.error('加载家庭信息失败:', error);
+    }
+  },
+
+  /**
+   * 打开家庭选择菜单
+   */
+  openFamilyPicker: function() {
+    const families = this.data.families || [];
+    if (families.length <= 1) {
+      return;
+    }
+
+    const itemList = families.map(family => family.name);
+    wx.showActionSheet({
+      itemList,
+      success: (res) => {
+        const selectedFamily = families[res.tapIndex];
+        if (selectedFamily) {
+          this.selectFamily(selectedFamily);
+        }
+      },
+      fail: (err) => {
+        console.log('家庭选择取消或失败:', err);
+      }
+    });
+  },
+
+  selectFamily: async function(family) {
+    if (!family || !family._id) {
+      return;
+    }
+
+    if (family._id === this.data.currentFamilyId) {
+      return;
+    }
+
+    try {
+      wx.showLoading({ title: '切换中...' });
+      await familyService.switchFamily(family._id);
+      const currentOpenId = this.data.userInfo?.openId || this.data.userInfo?._id || this.data.userInfo?.openid || this.data.userInfo?.openID || '';
+      const isFamilyCreator = (family.creatorOpenId || family.creator || family.ownerOpenId) === currentOpenId;
+      this.setData({
+        currentFamilyId: family._id,
+        currentFamilyName: family.name || `${family.babyNickname || '宝宝'}的家`,
+        isFamilyCreator
+      });
+      // 刷新所有家庭相关数据
+      await this.getTodoTasks(true);
+      this.getUserStatistics();
+    } catch (error) {
+      console.error('切换家庭失败:', error);
+      wx.showToast({ title: '切换家庭失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
   /**
    * 获取问候语
    */
@@ -80,367 +244,449 @@ Page({
   },
 
   /**
-   * 转换星期数字为中文文本
-   * @param {Array|string|number|object} days - 星期数字数组、逗号分隔字符串、单个数字、JSON字符串或对象
+   * 转换星期数字为中文文本（使用工具函数）
+   * @param {Array|string|number|object} days - 星期数字数据
    * @returns {string} 格式化后的星期文本
    */
   getWeekdayText: function(days) {
-    // 添加详细调试日志 - 增强版
-    console.log('🌟 getWeekdayText 被调用!');
-    console.log('  输入:', days, '类型:', typeof days);
-    console.log('  JSON格式:', JSON.stringify(days));
-    console.log('  是否数组:', Array.isArray(days));
-    console.log('  数组长度:', Array.isArray(days) ? days.length : 'N/A');
-    
-    // 定义星期数组，调整顺序为从周日开始对应getDay()返回值
-    const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    
-    // 安全检查，确保输入不为空或无效
-    if (days === undefined || days === null || days === '' || (Array.isArray(days) && days.length === 0)) {
-      console.log('⚠️ 输入为空或无效，返回默认文本');
-      return '每周'; // 返回默认文本，避免显示为空
-    }
-    
-    // 数据类型转换处理 - 优化版
-    let dayArray = [];
-    
-    // 处理数组类型
-    if (Array.isArray(days)) {
-      dayArray = days;
-    }
-    // 处理字符串类型 - 增强解析
-    else if (typeof days === 'string' && days.trim()) {
-      // 清理字符串，移除所有可能的特殊字符，只保留数字和逗号
-      const cleanedStr = days.replace(/[^0-9,]/g, '');
-      console.log('🧹 清理后的字符串:', cleanedStr);
-      
-      // 先尝试简单的逗号分割
-      dayArray = cleanedStr.split(',').filter(day => day.trim() !== '');
-      
-      // 如果清理后只剩一个数字
-      if (dayArray.length === 1 && /^\d+$/.test(dayArray[0])) {
-        const singleDay = Number(dayArray[0]);
-        if (!isNaN(singleDay)) {
-          dayArray = [singleDay];
-        }
-      }
-    }
-    // 处理数字类型
-    else if (typeof days === 'number') {
-      dayArray = [days];
-    }
-    // 处理对象类型
-    else if (typeof days === 'object') {
-      try {
-        // 尝试获取对象的所有值
-        const values = Object.values(days);
-        dayArray = values.flat(); // 扁平化处理
-      } catch (e) {
-        console.error('❌ 对象转换失败:', e);
-        return '每周';
-      }
-    }
-    
-    // 日志显示转换后的数组
-    console.log('🔄 转换后的数组:', dayArray, '长度:', dayArray.length);
-    
-    // 过滤有效数字并去重 - 更健壮的处理
-    const validDays = [];
-    const seen = new Set();
-    
-    for (let i = 0; i < dayArray.length; i++) {
-      let day = dayArray[i];
-      
-      // 确保是字符串或数字
-      if (day === null || day === undefined) continue;
-      
-      // 转换为数字
-      const num = Number(day);
-      
-      console.log(`🔍 处理第${i}个元素:`, day, '转换为数字:', num);
-      
-      // 严格验证数字范围 (0-6)
-      if (!isNaN(num) && Number.isInteger(num) && num >= 0 && num <= 6 && !seen.has(num)) {
-        validDays.push(num);
-        seen.add(num);
-        console.log(`✅ 添加有效星期数字: ${num}`);
-      } else {
-        console.log(`❌ 跳过无效值: ${day}`);
-      }
-    }
-    
-    // 排序，确保按照星期顺序排列
-    validDays.sort((a, b) => a - b);
-    
-    console.log('✅ 有效星期数字数组:', validDays);
-    
-    // 转换为中文星期文本
-    const weekdayTexts = validDays.map(day => {
-      // 确保day是有效的索引
-      if (day >= 0 && day < weekDays.length) {
-        const text = weekDays[day];
-        console.log(`🔤 转换星期 ${day} -> ${text}`);
-        return text;
-      }
-      return `未知(${day})`;
-    });
-    
-    console.log('📝 星期文本数组:', weekdayTexts);
-    
-    // 如果没有有效天数，返回默认文本
-    if (weekdayTexts.length === 0) {
-      console.log('📅 没有有效星期，返回默认文本');
-      return '每周';
-    }
-    
-    // 返回格式化的文本
-    const result = `每周 ${weekdayTexts.join('、')}`;
-    console.log('🎉 最终返回结果:', result);
-    return result;
+    return taskUtils.getWeekdayText(days);
   },
 
   /**
-   * 转换月份日期数字为中文文本
-   * @param {Array|string|number} days - 月份日期数组或逗号分隔字符串或单个数字或JSON字符串
-   * @returns {string} 格式化后的日期文本
-   */
-  /**
-   * 处理selectedDays或selectedMonthDays字段，支持各种格式
-   * @param {Array|string|number|object} days - 各种格式的天数数据
-   * @returns {Array} 标准化后的数字数组
-   */
-  /**
-   * 处理选择的日期数组
-   * @param {Array|string|number|object} days - 要处理的日期数据
-   * @param {string} type - 处理类型，'week'表示处理星期几(0-6)，'month'表示处理月份日期(1-31)
-   * @returns {Array} 处理后的日期数组
+   * 处理选择的日期数组（使用工具函数）
+   * @param {Array|string|number|object} days - 日期数据
+   * @param {string} type - 'week' 或 'month'
+   * @returns {Array} 处理后的数字数组
    */
   _processSelectedDays: function(days, type = 'week') {
-    console.log('🔄 _processSelectedDays 输入:', days, '类型:', typeof days, '处理类型:', type);
-    
-    // 安全检查，确保输入不为空或无效
-    if (days === undefined || days === null || days === '') {
-      console.log('⚠️ 输入为空或无效，返回空数组');
-      return [];
-    }
-    
-    let dayArray = [];
-    
-    // 处理数组类型
-    if (Array.isArray(days)) {
-      console.log('📋 处理数组类型');
-      dayArray = days;
-    }
-    // 处理字符串类型
-    else if (typeof days === 'string' && days.trim()) {
-      console.log('📝 处理字符串类型:', days);
-      // 清理字符串，只保留数字和逗号
-      const cleanedStr = days.replace(/[^0-9,]/g, '');
-      console.log('🧹 清理后的字符串:', cleanedStr);
-      
-      // 按逗号分割并过滤空值
-      dayArray = cleanedStr.split(',').filter(day => day.trim() !== '');
-    }
-    // 处理数字类型
-    else if (typeof days === 'number') {
-      console.log('🔢 处理数字类型:', days);
-      dayArray = [days];
-    }
-    // 处理其他类型
-    else {
-      try {
-        // 尝试将对象转换为数组（如果可能）
-        if (typeof days === 'object') {
-          dayArray = Object.values(days);
-        } else {
-          dayArray = [days];
-        }
-      } catch (e) {
-        console.error('❌ 转换失败:', e);
-        return [];
-      }
-    }
-    
-    // 将所有元素转换为数字并过滤无效值
-    const validDays = [];
-    const seen = new Set();
-    
-    // 根据类型设置不同的过滤范围
-    const min = type === 'month' ? 1 : 0;
-    const max = type === 'month' ? 31 : 6;
-    
-    for (let i = 0; i < dayArray.length; i++) {
-      const num = Number(dayArray[i]);
-      if (!isNaN(num) && Number.isInteger(num) && num >= min && num <= max && !seen.has(num)) {
-        validDays.push(num);
-        seen.add(num);
-        console.log(`✅ 添加有效数字: ${num}`);
-      } else {
-        console.log(`❌ 跳过无效值: ${dayArray[i]} (类型:${type}, 范围:${min}-${max})`);
-      }
-    }
-    
-    console.log('🎯 处理结果:', validDays);
-    return validDays;
+    return taskUtils.processSelectedDays(days, type);
   },
   
+  /**
+   * 转换月份日期数字为中文文本（使用工具函数）
+   * @param {Array|string|number} days - 月份日期数据
+   * @returns {string} 格式化后的日期文本
+   */
   getMonthdayText: function(days) {
-    // 添加详细调试日志
-    console.log('🌟 getMonthdayText 输入:', days, '类型:', typeof days, 'JSON:', JSON.stringify(days));
-    
-    // 安全检查，确保输入不为空或无效
-    if (days === undefined || days === null || days === '') {
-      console.log('⚠️ 输入为空或无效');
-      return '每月'; // 返回默认文本，避免显示为空
-    }
-    
-    // 数据类型转换处理
-    let dayArray = [];
-    
-    // 处理数组类型
-    if (Array.isArray(days)) {
-      dayArray = days;
-    }
-    // 处理字符串类型
-    else if (typeof days === 'string' && days.trim()) {
-      // 尝试解析JSON字符串
-      if ((days.startsWith('[') && days.endsWith(']')) || (days.startsWith('{') && days.endsWith('}'))) {
-        try {
-          const parsed = JSON.parse(days);
-          if (Array.isArray(parsed)) {
-            dayArray = parsed;
-            console.log('📋 成功解析JSON数组:', dayArray);
-          } else {
-            // 如果解析结果不是数组，尝试作为普通字符串处理
-            dayArray = days.split(',').map(day => day.trim());
-          }
-        } catch (e) {
-          console.log('📝 JSON解析失败，按普通字符串处理:', e.message);
-          // 普通字符串按逗号分割
-          dayArray = days.split(',').map(day => day.trim());
-        }
-      } else {
-        // 普通字符串按逗号分割
-        dayArray = days.split(',').map(day => day.trim());
-      }
-    }
-    // 处理数字类型
-    else if (typeof days === 'number') {
-      dayArray = [days];
-    }
-    // 处理其他类型
-    else {
-      try {
-        // 尝试将对象转换为数组（如果可能）
-        if (typeof days === 'object') {
-          dayArray = Object.values(days);
-        } else {
-          dayArray = [days];
-        }
-      } catch (e) {
-        console.error('❌ 转换失败:', e);
-        return '每月';
-      }
-    }
-    
-    // 日志显示转换后的数组
-    console.log('🔄 转换后的数组:', dayArray, '长度:', dayArray.length);
-    
-    // 过滤有效数字并去重
-    const validDays = [];
-    const seen = new Set();
-    
-    for (let i = 0; i < dayArray.length; i++) {
-      let day = dayArray[i];
-      
-      // 如果是字符串，先清理可能的引号和空白
-      if (typeof day === 'string') {
-        day = day.replace(/['"\[\]\s]/g, '');
-      }
-      
-      const num = Number(day);
-      
-      console.log(`🔍 处理第${i}个元素:`, day, '转换为数字:', num);
-      
-      if (!isNaN(num) && num >= 1 && num <= 31 && !seen.has(num)) {
-        validDays.push(num);
-        seen.add(num);
-      }
-    }
-    
-    // 排序
-    validDays.sort((a, b) => a - b);
-    
-    console.log('✅ 有效月份日期数字:', validDays);
-    
-    // 转换为中文日期文本
-    const dayTexts = validDays.map(day => {
-      const text = `${day}日`;
-      console.log(`🔤 转换日期 ${day} -> ${text}`);
-      return text;
-    });
-    
-    console.log('📝 日期文本数组:', dayTexts);
-    
-    // 如果没有有效天数，返回默认文本
-    if (dayTexts.length === 0) {
-      console.log('📅 没有有效日期，返回默认文本');
-      return '每月';
-    }
-    
-    // 返回格式化的文本
-    const result = `每月 ${dayTexts.join('、')}`;
-    console.log('🎉 最终返回:', result);
-    return result;
+    return taskUtils.getMonthdayText(days);
   },
 
   /**
-   * 生命周期函数--监听页面加载
+   * 计算下一次打卡日期文本
+   * @param {string} frequency - 任务频率：daily, weekly, monthly
+   * @param {Array} selectedDays - 选中的星期几（weekly）
+   * @param {Array} selectedMonthDays - 选中的月份日期（monthly）
+   * @returns {string} 下一次打卡日期文本
    */
-  onLoad(options) {
+  /**
+   * 判断循环任务今天是否可执行
+   * @param {string} frequency 频率类型
+   * @param {Array} selectedDays 周任务选中的星期（0=周日）
+   * @param {Array} selectedMonthDays 月任务选中的日期
+   * @returns {boolean} 今天是否可执行
+   */
+  _isTaskExecutableToday: function(frequency, selectedDays, selectedMonthDays) {
+    if (frequency === 'daily' || !frequency || frequency === 'none') {
+      return true;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (frequency === 'weekly') {
+      if (!selectedDays || selectedDays.length === 0) {
+        console.warn('⚠️ 周任务 selectedDays 为空，默认今天不可执行');
+        return false;
+      }
+      const todayDayOfWeek = today.getDay();
+      const executable = selectedDays.some(day => Number(day) === todayDayOfWeek);
+      console.log(`📅 周任务可执行检查: 今天星期${todayDayOfWeek}, selectedDays=[${selectedDays.join(',')}], 结果=${executable}`);
+      return executable;
+    }
+    if (frequency === 'monthly') {
+      if (!selectedMonthDays || selectedMonthDays.length === 0) {
+        console.warn('⚠️ 月任务 selectedMonthDays 为空，默认今天不可执行');
+        return false;
+      }
+      const todayDateOfMonth = today.getDate();
+      const executable = selectedMonthDays.some(day => Number(day) === todayDateOfMonth);
+      console.log(`📅 月任务可执行检查: 今天日期${todayDateOfMonth}, selectedMonthDays=[${selectedMonthDays.join(',')}], 结果=${executable}`);
+      return executable;
+    }
+    return true;
+  },
+
+  _getNextCheckInDateText: function(frequency, selectedDays, selectedMonthDays) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayDayOfWeek = today.getDay(); // 0-6, 0=周日
+    const todayDateOfMonth = today.getDate(); // 1-31
+    
+    // 获取明天的日期
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowDayOfWeek = tomorrow.getDay();
+    const tomorrowDateOfMonth = tomorrow.getDate();
+    
+    // 获取今天的日期字符串 MM-DD
+    const formatDate = (date) => {
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${month}-${day}`;
+    };
+    
+    // 获取星期几文本
+    const getWeekdayName = (dayIndex) => {
+      const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+      return weekdays[dayIndex];
+    };
+    
+    if (frequency === 'daily') {
+      // 每日任务：下次是明天
+      return '明天';
+    }
+    
+    if (frequency === 'weekly' && selectedDays && selectedDays.length > 0) {
+      // 周任务：找下一个选中的星期几
+      // selectedDays 已经是 JS 标准（0=周日, 1=周一...）
+      const sortedDays = [...selectedDays].sort((a, b) => a - b);
+      
+      // 找今天之后的下一个选中日期
+      let nextDay = sortedDays.find(day => day > todayDayOfWeek);
+      
+      if (nextDay !== undefined) {
+        // 本周内还有选中的日期
+        // 如果是明天，显示"明天"
+        if (nextDay === tomorrowDayOfWeek) {
+          return '明天';
+        }
+        return getWeekdayName(nextDay);
+      } else {
+        // 本周没有了，取下周第一个选中的日期
+        // 如果下周第一个是明天（跨周情况），显示"明天"
+        if (sortedDays[0] === tomorrowDayOfWeek) {
+          return '明天';
+        }
+        return getWeekdayName(sortedDays[0]);
+      }
+    }
+    
+    if (frequency === 'monthly' && selectedMonthDays && selectedMonthDays.length > 0) {
+      // 月任务：找下一个选中的日期
+      const sortedDays = [...selectedMonthDays].sort((a, b) => a - b);
+      
+      // 找今天之后的下一个选中日期
+      let nextDay = sortedDays.find(day => day > todayDateOfMonth);
+      
+      if (nextDay !== undefined) {
+        // 本月内还有选中的日期
+        // 如果是明天，显示"明天"
+        if (nextDay === tomorrowDateOfMonth) {
+          return '明天';
+        }
+        return `${nextDay}日`;
+      } else {
+        // 本月没有了，取下月第一个选中的日期
+        // 如果下月第一个是明天（跨月情况），显示"明天"
+        if (sortedDays[0] === tomorrowDateOfMonth) {
+          return '明天';
+        }
+        return `${sortedDays[0]}日`;
+      }
+    }
+    
+    return '今日已完成';
+  },
+
+  async onLoad(options) {
     console.log('页面加载，初始化数据...');
+    // 优先检查登录状态
+    if (!require('../../services/userService').checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+    this.setData({ hasLoaded: true });
     // 更新当前日期
     this.updateCurrentDate();
     // 获取用户信息
     this.getUserInfo();
+    // 加载家庭信息并设置当前家庭
+    await this.loadFamilyInfo();
     // 调用初始化数据函数
-    this.initData();
-    
-    // 执行测试函数，用于诊断月任务日期显示问题
-    console.log('🔍 执行月任务相关测试...');
-    this.testProcessSelectedDays();
-    this.testMonthdayText();
-    this.testMonthlyTaskProcessing();
+    await this.initData();
   },
   
   /**
-   * 检查用户登录状态
+   * 生命周期函数--监听页面显示
    */
-  checkLoginStatus: function() {
-    const userService = require('../../services/userService');
-    if (!userService.checkLoginStatus()) {
-      // 未登录则跳转到登录页面
-      wx.redirectTo({
-        url: '/pages/login/login'
+  async onShow() {
+    // 优先检查登录状态，未登录直接跳转
+    if (!require('../../services/userService').checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+    // 避免 onLoad 和 onShow 首次重复初始化
+    if (!this.data.hasLoaded) {
+      this.setData({ hasLoaded: true });
+    } else {
+      // 更新当前日期
+      this.updateCurrentDate();
+      // 获取用户信息
+      this.getUserInfo();
+      // 加载家庭信息并设置当前家庭
+      await this.loadFamilyInfo();
+      // 每次显示页面时刷新数据并处理可能的错误
+      await this.initData().catch(error => {
+        console.error('页面显示时初始化数据失败:', error);
+      });
+      // 检查宝宝信息是否完善
+      this.checkBabyInfoComplete();
+    }
+  },
+  
+  /**
+   * 检查宝宝信息是否完善
+   * 如果用户已加入或创建了家庭，则不强制显示完善宝宝信息表单
+   * 只有在未加入任何家庭且宝宝信息不完善时才显示
+   */
+  checkBabyInfoComplete: function() {
+    const families = this.data.families || [];
+    
+    // 如果用户已经加入了家庭或创建了家庭，不强制显示宝宝信息表单
+    if (families.length > 0) {
+      this.setData({
+        showBabyInfoForm: false
+      });
+      return;
+    }
+
+    // 用户未加入/创建家庭时，检查本地宝宝信息
+    const userBabyInfo = this.data.userInfo?.babyInfo || {};
+    const babyInfo = userBabyInfo;
+    const isBabyInfoComplete = babyInfo && babyInfo.nickname && babyInfo.birthday;
+
+    if (!isBabyInfoComplete) {
+      const initialNickname = babyInfo.nickname || '';
+      const initialGender = babyInfo.gender || 'boy';
+
+      this.setData({
+        showBabyInfoForm: true,
+        babyInfoForm: {
+          nickname: initialNickname,
+          birthday: babyInfo.birthday || '',
+          gender: initialGender
+        }
+      });
+    } else {
+      this.setData({
+        showBabyInfoForm: false
       });
     }
   },
 
   /**
-   * 生命周期函数--监听页面显示
+   * 显示加入家庭弹窗
    */
-  onShow() {
-    // 更新当前日期
-    this.updateCurrentDate();
-    // 获取用户信息
-    this.getUserInfo();
-    // 每次显示页面时刷新数据并处理可能的错误
-    this.initData().catch(error => {
-      console.error('页面显示时初始化数据失败:', error);
+  showJoinFamilyModal: function() {
+    this.setData({
+      showJoinFamilyModal: true,
+      inviteCode: ''
     });
-    
-    // 检查用户登录状态
-    this.checkLoginStatus();
+  },
+
+  /**
+   * 隐藏加入家庭弹窗
+   */
+  hideJoinFamilyModal: function() {
+    this.setData({
+      showJoinFamilyModal: false,
+      inviteCode: ''
+    });
+  },
+
+  /**
+   * 输入邀请码
+   */
+  onInviteCodeInput: function(e) {
+    this.setData({
+      inviteCode: e.detail.value.trim().toUpperCase()
+    });
+  },
+
+  /**
+   * 提交邀请码加入家庭
+   */
+  submitJoinFamily: async function() {
+    const inviteCode = this.data.inviteCode;
+    if (!inviteCode || inviteCode.length !== 6 || !/^[A-Z0-9]{6}$/i.test(inviteCode)) {
+      wx.showToast({ title: '请输入6位字母数字邀请码', icon: 'none' });
+      return;
+    }
+
+    try {
+      wx.showLoading({ title: '加入中...' });
+      const result = await wx.cloud.callFunction({
+        name: 'familyManager',
+        data: {
+          action: 'joinFamily',
+          inviteCode: inviteCode
+        }
+      });
+
+      if (result.result && result.result.success) {
+        wx.showToast({ title: '加入成功', icon: 'success' });
+        this.hideJoinFamilyModal();
+        // 立即写入缓存
+        const familyId = result.result.familyId;
+        if (familyId) {
+          wx.setStorageSync('currentFamilyId', familyId);
+          const app = getApp();
+          if (app && app.globalData) {
+            app.globalData.currentFamilyId = familyId;
+          }
+        }
+        // 刷新家庭信息和页面数据
+        await this.loadFamilyInfo();
+        this.setData({ showBabyInfoForm: false });
+        await this.initData();
+      } else {
+        wx.showToast({
+          title: result.result?.error || '加入失败',
+          icon: 'none'
+        });
+      }
+    } catch (error) {
+      console.error('加入家庭失败:', error);
+      wx.showToast({ title: '加入失败，请重试', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  onNicknameInput: function(e) {
+    this.setData({
+      'babyInfoForm.nickname': e.detail.value
+    });
+  },
+
+  onBirthdayChange: function(e) {
+    this.setData({
+      'babyInfoForm.birthday': e.detail.value
+    });
+  },
+
+  onGenderChange: function(e) {
+    const gender = e.currentTarget.dataset.gender;
+    this.setData({
+      'babyInfoForm.gender': gender
+    });
+  },
+
+  saveBabyInfo: async function() {
+    const { babyInfoForm } = this.data;
+    if (!babyInfoForm.nickname || !babyInfoForm.nickname.trim()) {
+      wx.showToast({ title: '请输入宝宝昵称', icon: 'none' });
+      return;
+    }
+
+    if (!babyInfoForm.birthday) {
+      wx.showToast({ title: '请选择宝宝生日', icon: 'none' });
+      return;
+    }
+
+    try {
+      const app = getApp();
+      const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+      const userId = userInfo.openId || userInfo.openid || userInfo.openID || '';
+      if (!userId) {
+        wx.showToast({ title: '请先登录', icon: 'none' });
+        return;
+      }
+
+      const babyData = {
+        userId: userId,
+        nickname: babyInfoForm.nickname.trim(),
+        birthday: babyInfoForm.birthday,
+        gender: babyInfoForm.gender,
+        safeFoodsList: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // 优先保存到云端 babyManager 获取真实 babyId
+      let realBabyId = null;
+      try {
+        const saveRes = await wx.cloud.callFunction({
+          name: 'babyManager',
+          data: {
+            action: 'saveBabyInfo',
+            babyInfo: babyData
+          }
+        });
+        if (saveRes.result && saveRes.result.success && saveRes.result.babyId) {
+          realBabyId = saveRes.result.babyId;
+          babyData._id = realBabyId;
+        }
+      } catch (bmErr) {
+        console.warn('调用 babyManager 失败，回退到本地保存:', bmErr);
+      }
+
+      // 如果 babyManager 失败，回退到 sensitivityService
+      if (!realBabyId) {
+        try {
+          await sensitivityService.saveBabyInfo(babyData);
+        } catch (svcErr) {
+          console.warn('sensitivityService 保存也失败，仅保留本地:', svcErr);
+        }
+      }
+
+      wx.setStorageSync('babyInfo', babyData);
+
+      app.globalData.userInfo = app.globalData.userInfo || {};
+      app.globalData.userInfo.babyInfo = babyData;
+      app.globalData.userInfo.babyName = babyData.nickname;
+
+      const storedUserInfo = wx.getStorageSync('userInfo') || {};
+      storedUserInfo.babyInfo = babyData;
+      storedUserInfo.babyName = babyData.nickname;
+      wx.setStorageSync('userInfo', storedUserInfo);
+
+      const families = this.data.families || [];
+      const familyIndex = families.findIndex(item => item._id === this.data.currentFamilyId);
+      if (familyIndex !== -1) {
+        families[familyIndex].babyInfo = babyData;
+      }
+
+      this.setData({
+        showBabyInfoForm: false,
+        families: families
+      });
+
+      // 自动创建家庭
+      try {
+        const familyResult = await familyService.getMyFamilies();
+        const hasFamily = familyResult.hasFamily || (familyResult.families && familyResult.families.length > 0);
+        
+        if (!hasFamily) {
+          await familyService.createFamily(
+            `${babyData.nickname}的家`,
+            {
+              nickname: babyData.nickname,
+              gender: babyData.gender,
+              birthday: babyData.birthday
+            }
+          );
+          console.log('🏠 首页保存宝宝信息后自动创建家庭成功');
+          // 刷新家庭信息
+          await this.loadFamilyInfo();
+        }
+      } catch (familyError) {
+        console.error('🏠 首页自动创建家庭失败:', familyError);
+      }
+
+      wx.showToast({ title: '保存成功', icon: 'success' });
+    } catch (error) {
+      console.error('保存宝宝信息失败:', error);
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' });
+    }
   },
 
   /**
@@ -454,7 +700,8 @@ Page({
     const weekday = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][now.getDay()];
     
     this.setData({
-      currentDate: `${year}年${month}月${day}日 ${weekday}`
+      currentDate: `${year}年${month}月${day}日 ${weekday}`,
+      pickerEndDate: `${year}-${month}-${day}`
     });
   },
 
@@ -468,17 +715,23 @@ Page({
   async getUserStatistics() {
     try {
       const result = await wx.cloud.callFunction({
-        name: 'getUserStatistics'
+        name: 'getUserStatistics',
+        data: {
+          familyId: this.data.currentFamilyId
+        }
       });
       
-      if (result.result.success && result.result.data) {
+      if (result.result && result.result.success && result.result.data) {
         console.log('✅ 获取用户统计信息成功:', result.result.data);
         this.setData({
           userStats: result.result.data
         });
+      } else if (result.result && !result.result.success) {
+        console.warn('⚠️ 获取用户统计信息返回失败:', result.result.error);
       }
     } catch (error) {
       console.error('❌ 获取用户统计信息失败:', error);
+      // 云函数失败时不阻断页面显示
     }
   },
 
@@ -496,7 +749,6 @@ Page({
       // 并行获取各类数据，使用Promise.allSettled确保即使某个方法失败，其他方法也能继续执行
       await Promise.allSettled([
         this.getTodoTasks(true), // 传递true跳过重复加载动画
-        this.getCompletedTasks(true),
         this.getUserStatistics()
       ]);
       
@@ -504,7 +756,7 @@ Page({
       this.calculateStats();
       
       // 确保页面有数据显示
-      if (this.data.todayTasks.length === 0 && this.data.completedTasks.length === 0) {
+      if (this.data.todayTasks.length === 0 && this.data.upcomingTasks.length === 0) {
         console.log('页面暂无任务数据');
       }
     } catch (error) {
@@ -512,10 +764,11 @@ Page({
       // 确保页面不会空白
       this.setData({
         todayTasks: [],
-        completedTasks: [],
+        upcomingTasks: [],
         todayStats: {
           total: 0,
           completed: 0,
+          remaining: 0,
           percentage: 0
         }
       });
@@ -523,6 +776,8 @@ Page({
       if (!skipLoading) {
         wx.hideLoading();
       }
+      // 无论成功失败，都设置loading为false
+      this.setData({ loading: false });
     }
   },
 
@@ -530,35 +785,77 @@ Page({
    * 获取待打卡任务列表
    * @param {boolean} skipLoading - 是否跳过加载提示，当由已显示loading的方法调用时使用
    */
+  /**
+   * 获取当前家庭ID
+   */
+  getCurrentFamilyId: function() {
+    if (this.data.currentFamilyId === null || this.data.currentFamilyId === undefined) return null;
+    if (this.data.currentFamilyId) return this.data.currentFamilyId;
+    
+    const familyId = wx.getStorageSync('currentFamilyId');
+    if (familyId) return familyId;
+    
+    const userInfo = wx.getStorageSync('userInfo');
+    if (userInfo && userInfo.currentFamilyId) return userInfo.currentFamilyId;
+    
+    return null;
+  },
+
   async getTodoTasks(skipLoading = false) {
     try {
       if (!skipLoading) {
         wx.showLoading({ title: '加载中' });
       }
-      // 添加当前时间信息，用于调试
-      const now = new Date();
-      console.log('开始获取待打卡任务...');
-      console.log('当前日期:', now.toLocaleDateString());
-      console.log('当前星期几(0-6):', now.getDay());
       
-      // 调用云函数获取任务列表，设置includeCompleted为false确保只获取待打卡任务
-      const result = await wx.cloud.callFunction({
-        name: 'getTasks',
-        data: {
-          status: 'pending',
-          includeCompleted: false
-        }
-      });
+      // 获取当前家庭ID
+      const familyId = this.getCurrentFamilyId();
       
-      console.log('获取待打卡任务结果:', JSON.stringify(result));
+      // 调用云函数获取任务列表
+      let result;
+      try {
+        result = await wx.cloud.callFunction({
+          name: 'getTasks',
+          data: {
+            status: 'pending',
+            includeCompleted: true,  // 包含已完成任务，让前端统一过滤
+            familyId, // 传递家庭ID过滤
+            size: 100  // 获取更多任务，避免大家庭漏显
+          }
+        });
+      } catch (cloudError) {
+        console.error('❌ getTasks 云函数调用失败:', cloudError);
+        // 云函数失败时显示提示
+        wx.showToast({
+          title: '任务加载失败',
+          icon: 'none'
+        });
+        this.setData({ todayTasks: [], loading: false });
+        return;
+      }
+      
       const resultData = result.result || {};
-      console.log('云函数返回状态:', resultData.success);
-      console.log('云函数返回任务总数:', resultData.total);
+      
+      console.log('📝 getTasks 云函数返回数据:', JSON.stringify(resultData));
+      console.log('📝 返回的任务数量:', resultData.tasks?.length || 0);
       
       if (resultData.success) {
+        // 如果家庭已切换，忽略过期请求
+        if (this.data.currentFamilyId !== familyId) {
+          console.warn('家庭已切换，忽略过期任务数据');
+          return;
+        }
+
         // 云函数已经过滤出今天需要执行的任务，直接使用
         const filteredTasks = resultData.tasks || [];
         console.log('待打卡任务列表:', JSON.stringify(filteredTasks));
+        
+        // 如果返回了任务，打印详细信息
+        if (filteredTasks.length > 0) {
+          console.log('⚠️ 警告: 云端返回了任务，但应该为空！');
+          filteredTasks.forEach((task, i) => {
+            console.log(`  任务${i+1}: ${task.title}, _openid: ${task._openid}, isTemplate: ${task.isTemplate}`);
+          });
+        }
         
         // 调试循环任务字段
         filteredTasks.forEach((task, index) => {
@@ -576,9 +873,29 @@ Page({
           this.queryRawTasksForDebug();
         }
         
+        // 批量获取今日打卡记录（避免 N+1 云函数调用）
+        let todayCounts = {};
+        if (filteredTasks.length > 0) {
+          try {
+            const taskIds = filteredTasks.map(t => t._id);
+            const batchResult = await wx.cloud.callFunction({
+              name: 'getTaskClockIns',
+              data: {
+                taskIds: taskIds,
+                todayOnly: true,
+                familyId: familyId || null
+              }
+            });
+            if (batchResult.result && batchResult.result.success && batchResult.result.data && batchResult.result.data.todayCounts) {
+              todayCounts = batchResult.result.data.todayCounts;
+            }
+          } catch (error) {
+            console.error('批量获取打卡记录失败:', error);
+          }
+        }
+
         // 处理任务数据，转换为前端需要的格式
-        // 并行处理所有任务，获取每个任务的打卡记录数
-        const todoTasksPromises = filteredTasks.map(async (task) => {
+        const todoTasksPromises = filteredTasks.map((task) => {
           console.log(`🔄 处理任务[${task.title}]:`);
           console.log(`  原始selectedDays:`, task.selectedDays, '类型:', typeof task.selectedDays);
           
@@ -598,34 +915,15 @@ Page({
           console.log(`  处理后selectedMonthDays:`, processedMonthDays);
           console.log(`  预先计算月日期文本:`, monthdayText);
           
-          // 获取今天的打卡记录数
-          let todayCheckins = 0;
-          try {
-            const checkinsResult = await wx.cloud.callFunction({
-              name: 'getTaskClockIns',
-              data: {
-                taskId: task._id,
-                todayOnly: true // 只查询今天的打卡记录
-              }
-            });
-            
-            console.log(`  云函数返回结果:`, JSON.stringify(checkinsResult));
-            
-            if (checkinsResult.result.success && checkinsResult.result.data) {
-              // 直接使用云函数返回的todayCount字段
-              todayCheckins = checkinsResult.result.data.todayCount || 0;
-              console.log(`  今天打卡记录数: ${todayCheckins}`);
-              
-              // 添加调试信息
-              if (checkinsResult.result.data.debugInfo) {
-                console.log(`  调试信息:`, JSON.stringify(checkinsResult.result.data.debugInfo));
-              }
-            } else {
-              console.error(`获取任务${task._id}打卡记录失败:`, checkinsResult.result.error);
-            }
-          } catch (error) {
-            console.error(`获取任务${task._id}打卡记录异常:`, error);
+          // 计算单次任务的日期显示文本
+          let dueDateText = '';
+          if (task.frequency === 'none' || !task.frequency) {
+            dueDateText = this._getDueDateText(task.dueDate || task.createTime);
           }
+          
+          // 从批量查询结果中获取今日打卡记录数
+          const todayCheckins = todayCounts[task._id] || 0;
+          console.log(`  今天打卡记录数: ${todayCheckins}`);
           
           // 每日任务默认只能完成1次
           const cycleTimes = 1;
@@ -633,58 +931,167 @@ Page({
           // 判断任务是否已经完成
           const isCompletedAllTimes = todayCheckins >= cycleTimes;
           
+          // 计算任务是否可点击（当天可完成）
+          let isClickable = true;
+          let disabledText = '';
+          
+          // 单次任务：检查是否今天或过期
+          if (task.frequency === 'none' || !task.frequency) {
+            const taskDate = new Date(task.dueDate || task.createTime);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            taskDate.setHours(0, 0, 0, 0);
+
+            const isToday = taskDate.getTime() === today.getTime();
+            const isExpired = taskDate.getTime() < today.getTime();
+
+            isClickable = isToday;
+            if (isExpired) {
+              disabledText = '已过期';
+            } else if (!isClickable) {
+              disabledText = dueDateText; // 显示日期
+            }
+
+            // 将过期状态写入任务对象，后续过滤使用
+            task.isExpired = isExpired;
+          } else {
+            // 循环任务：检查今天是否是执行日，以及今日是否已完成
+            const isTodayExecutable = this._isTaskExecutableToday(task.frequency, processedDays, processedMonthDays);
+            isClickable = isTodayExecutable && !isCompletedAllTimes;
+            if (!isClickable) {
+              if (!isTodayExecutable) {
+                // 今天不是执行日，显示下一次执行日期
+                disabledText = this._getNextCheckInDateText(task.frequency, processedDays, processedMonthDays);
+              } else {
+                // 今天已完成，计算下一次打卡日期
+                disabledText = this._getNextCheckInDateText(task.frequency, processedDays, processedMonthDays);
+              }
+            }
+            task.isExpired = false;
+          }
+          
+          // 获取用于排序的时间（单次任务用dueDate，循环任务用nextCheckInDate）
+          let sortTime = 0;
+          if (task.frequency === 'none' || !task.frequency) {
+            sortTime = new Date(task.dueDate || task.createTime).getTime();
+          } else {
+            // 循环任务：根据下次执行日期排序
+            sortTime = new Date().getTime(); // 今天
+          }
+          
+          const currentOpenId = this.data.userInfo?.openId || this.data.userInfo?.openid || '';
           // 只有未完成所有次数的任务才保留在待打卡列表中
           return {
             id: task._id,
             name: task.title,
-            subtitle: task.description || '待完成任务',
+            subtitle: task.description || '',
             time: task.reminderTime ? this._formatTime(task.reminderTime) : '',
             type: task.frequency || 'none',
-            completed: isCompletedAllTimes, // 标记是否已完成所有次数
+            // 单次任务：以 status 为准；循环任务：以今日打卡次数为准
+            completed: (task.frequency === 'none' || !task.frequency) ? (task.status === 'completed') : isCompletedAllTimes,
+            status: task.status || 'pending',
             category: task.category,
             priority: task.priority,
             // 添加循环任务相关字段
             frequency: task.frequency || 'none',
             cycleTimes: 1,
             todayCheckins: todayCheckins,
+            isExpired: !!task.isExpired,
             // 使用处理后的selectedDays
             selectedDays: processedDays,
             // 优先使用云函数处理后的processedMonthDays字段
             selectedMonthDays: processedMonthDays,
             // 预先计算好的星期文本和月文本，供WXML直接使用
             weekdayText: weekdayText,
-            monthdayText: monthdayText
+            monthdayText: monthdayText,
+            // 单次任务的日期显示文本
+            dueDateText: dueDateText,
+            // 是否可点击
+            isClickable: isClickable,
+            disabledText: disabledText,
+            // 排序时间
+            sortTime: sortTime,
+            // 任务创建人信息
+            creatorNickName: task.creatorNickName || '',
+            familyId: task.familyId || null,
+            // 任务创建人或家庭创建人可以编辑/删除
+            canEdit: task._openid === currentOpenId || (this.data.isFamilyCreator && task.familyId && task.familyId === this.data.currentFamilyId)
           };
         });
         
         // 等待所有任务处理完成
         const todoTasks = await Promise.all(todoTasksPromises);
         
-        // 过滤掉已完成所有次数的任务
-        const filteredTodoTasks = todoTasks.filter(task => !task.completed);
-        
-        // 最终数据验证
-        console.log('📱 最终设置到页面的数据:');
-        filteredTodoTasks.forEach((task, index) => {
-          console.log(`  任务${index+1} [${task.name}]:`);
-          console.log(`    frequency:`, task.frequency);
-          console.log(`    selectedDays:`, task.selectedDays);
-          console.log(`    预先计算的星期文本:`, task.weekdayText);
-          console.log(`    今日打卡次数: ${task.todayCheckins}`);
+        // 保留所有任务，通过 isClickable 区分今日任务和待完成任务
+        // 单次任务：今天可点击，未来日期不可点击
+        // 循环任务：今日未完成可点击，今日已完成或未来日期不可点击
+        const filteredTodoTasks = todoTasks.filter(task => {
+          // 过滤所有已完成任务（不管单次还是循环），只显示当前可执行/待完成任务
+          if (task.status === 'completed') {
+            return false;
+          }
+          // 兼容单次任务completed字段
+          if (task.type === 'none' && task.completed) {
+            return false;
+          }
+          return true;
         });
+        
+        // 拆分为今日任务和待完成任务（过期任务不显示在首页）
+        const todayTaskList = filteredTodoTasks.filter(task => task.isClickable && !task.isExpired);
+        const upcomingTaskList = filteredTodoTasks.filter(task => !task.isClickable && !task.isExpired);
+        
+        // 调试：记录被过滤掉的原因
+        todoTasks.forEach(task => {
+          const inToday = todayTaskList.some(t => t.id === task.id);
+          const inUpcoming = upcomingTaskList.some(t => t.id === task.id);
+          if (!inToday && !inUpcoming) {
+            console.log(`⚠️ 任务被过滤: ${task.name}, status=${task.status}, type=${task.type}, completed=${task.completed}, isExpired=${task.isExpired}, frequency=${task.frequency}, dueDate=${task.dueDate || 'null'}, createTime=${task.createTime || 'null'}`);
+          }
+        });
+        console.log('📱 今日任务:', todayTaskList.map(t => t.name));
+        console.log('📱 待完成任务:', upcomingTaskList.map(t => t.name));
+        
+        // 计算今天已完成任务数：当天有打卡记录的任务
+        const completedTodayCount = todoTasks.filter(task => task.todayCheckins > 0).length;
+        
+        // 按时间排序（由近及远）
+        todayTaskList.sort((a, b) => a.sortTime - b.sortTime);
+        upcomingTaskList.sort((a, b) => a.sortTime - b.sortTime);
+        
+        console.log('📱 今日任务:', todayTaskList.length);
+        console.log('📱 待完成任务:', upcomingTaskList.length);
+        console.log('✅ 今日已完成任务:', completedTodayCount);
+        
+        // 计算今日总任务数：今日完成 + 今日未完成
+        const totalTodayTasks = completedTodayCount + todayTaskList.length;
+        
+        // 判断用户是否曾经创建过任务（使用 totalTasksCount）
+        const totalTasksCount = resultData.totalTasksCount || 0;
         
         this.setData({
-          todayTasks: filteredTodoTasks,
+          hasTasks: filteredTasks.length > 0 || completedTodayCount > 0,
+          hasEverCreatedTask: totalTasksCount > 0, // 用户是否曾经创建过任务
+          todayTasks: todayTaskList,
+          upcomingTasks: upcomingTaskList,
+          'todayStats.total': totalTodayTasks,
+          'todayStats.completed': completedTodayCount,
           loading: false
         });
+        
+        // 计算并更新统计数据
+        this.calculateStats();
         
         console.log('✅ 数据已成功设置到页面，等待渲染...');
       } else {
         console.error('获取任务失败:', resultData.error || '未知错误');
-        // 失败时也尝试获取原始数据
-        this.queryRawTasksForDebug();
         this.setData({
           todayTasks: [],
+          upcomingTasks: [],
+          hasEverCreatedTask: false, // 获取失败时保守处理
+          'todayStats.total': 0,
+          'todayStats.completed': 0,
+          'todayStats.remaining': 0,
           loading: false
         });
       }
@@ -693,6 +1100,11 @@ Page({
       // 出错时显示空数组
       this.setData({
         todayTasks: [],
+        upcomingTasks: [],
+        hasEverCreatedTask: false, // 获取失败时保守处理
+        'todayStats.total': 0,
+        'todayStats.completed': 0,
+        'todayStats.remaining': 0,
         loading: false
       });
     } finally {
@@ -702,26 +1114,76 @@ Page({
     }
   },
   
+  /**
+   * 刷新任务列表
+   */
+  async refreshTasks() {
+    if (this.data.refreshing) return;
+    console.log('🔄 手动刷新任务列表');
+    this.setData({ refreshing: true });
+    wx.showLoading({ title: '刷新中...' });
+    
+    try {
+      // 然后重新加载任务列表
+      await this.initData(true);
+      
+      wx.showToast({
+        title: '刷新成功',
+        icon: 'success'
+      });
+    } catch (error) {
+      console.error('刷新失败:', error);
+      wx.showToast({
+        title: '刷新失败',
+        icon: 'none'
+      });
+    } finally {
+      wx.hideLoading();
+      this.setData({ refreshing: false });
+    }
+  },
+
+  onPullDownRefresh: async function() {
+    await this.refreshTasks();
+    wx.stopPullDownRefresh();
+  },
+
   // 调试函数：直接查询原始任务数据
   async queryRawTasksForDebug() {
     try {
-      console.log('开始查询原始任务数据用于调试...');
+      console.log('🔍 开始查询原始任务数据用于调试...');
+      const familyId = this.getCurrentFamilyId();
       const debugResult = await wx.cloud.callFunction({
         name: 'getTasks',
         data: {
           status: '', // 不指定状态，获取所有非删除任务
-          includeCompleted: true
+          includeCompleted: true,
+          familyId
         }
       });
       
-      console.log('调试查询结果:', JSON.stringify(debugResult));
       const debugTasks = debugResult.result && debugResult.result.tasks || [];
-      console.log('调试任务总数:', debugTasks.length);
-      debugTasks.forEach(task => {
-        console.log(`原始任务 - ID: ${task._id}, 标题: ${task.title}, 状态: ${task.status}, 频率: ${task.frequency}, selectedDays: ${JSON.stringify(task.selectedDays)}`);
-      });
+      console.log('📊 调试任务总数:', debugTasks.length);
+      
+      if (debugTasks.length === 0) {
+        console.log('⚠️ 数据库中没有找到任何任务！');
+      } else {
+        debugTasks.forEach((task, index) => {
+          console.log(`📋 原始任务${index + 1}:`, {
+            id: task._id,
+            title: task.title,
+            status: task.status,
+            frequency: task.frequency,
+            _openid: task._openid,
+            isTemplate: task.isTemplate,
+            selectedDays: task.selectedDays,
+            selectedMonthDays: task.selectedMonthDays,
+            createTime: task.createTime
+          });
+        });
+      }
     } catch (err) {
-      console.error('调试函数异常:', err);
+      console.error('❌ 调试函数异常:', err);
     }
   },
   
@@ -737,167 +1199,63 @@ Page({
   },
 
   /**
-   * 获取已完成任务列表
-   * @param {boolean} skipLoading - 是否跳过加载提示，当由已显示loading的方法调用时使用
+   * 获取单次任务的日期显示文本
+   * @param {string|Date} dueDate - 任务日期
+   * @returns {string} 日期显示文本（今天/明天/具体日期）
    */
-  async getCompletedTasks(skipLoading = false) {
-    try {
-      if (!skipLoading) {
-        wx.showLoading({ title: '加载中' });
-      }
-      // 从云数据库获取已完成的任务
-      const result = await wx.cloud.callFunction({
-        name: 'getTasks',
-        data: {
-          status: 'completed'
-        }
-      });
-      
-      if (result.result.success) {
-        // 处理已完成任务数据
-        const completedTasks = result.result.tasks.map(task => {
-          // 处理selectedDays数据
-          const processedDays = this._processSelectedDays(task.selectedDays);
-          // 优先使用云函数处理后的processedMonthDays字段
-          const monthDaysToUse = task.processedMonthDays || task.selectedMonthDays;
-          // 处理月任务日期时传入type='month'参数，以支持1-31范围的日期
-          const processedMonthDays = task.frequency === 'monthly' ? this._processSelectedDays(monthDaysToUse, 'month') : [];
-          
-          // 预先计算星期文本和月文本
-          const weekdayText = task.frequency === 'weekly' ? this.getWeekdayText(processedDays) : '';
-          const monthdayText = task.frequency === 'monthly' ? this.getMonthdayText(processedMonthDays) : '';
-          console.log(`已完成任务 ${task._id} 处理后selectedMonthDays:`, processedMonthDays);
-          console.log(`已完成任务 ${task._id} 月日期文本:`, monthdayText);
-          
-          // 获取可用于排序的原始时间戳
-          let sortTime = 0;
-          
-          // 优先使用云函数返回的completedDate字段（数据库中的时间戳）
-          if (task.completedDate) {
-            sortTime = new Date(task.completedDate).getTime();
-          } 
-          // 对于没有completedDate的任务，尝试使用completedTime字段
-          else if (task.completedTime) {
-            // 创建一个日期对象
-            const date = new Date();
-            
-            // 如果是昨天的任务，调整日期
-            if (task.completedTime.includes('昨天')) {
-              date.setDate(date.getDate() - 1);
-            } else if (task.completedTime.includes('今天')) {
-              // 今天的任务，保持当前日期
-            } else {
-              // 其他情况，尝试直接解析为日期
-              const parsedDate = new Date(task.completedTime);
-              if (!isNaN(parsedDate.getTime())) {
-                sortTime = parsedDate.getTime();
-              } else {
-                // 提取时间部分
-                const timeMatch = task.completedTime.match(/(\d{2}):(\d{2}):(\d{2})/);
-                if (timeMatch) {
-                  date.setHours(parseInt(timeMatch[1]));
-                  date.setMinutes(parseInt(timeMatch[2]));
-                  date.setSeconds(parseInt(timeMatch[3]));
-                  sortTime = date.getTime();
-                }
-              }
-            }
-          }
-          
-          // 每日任务默认只能完成1次
-          const cycleTimes = 1;
-          const todayCheckins = 1; // 已完成任务肯定是完成了所有打卡次数
-          
-          return {
-            id: task._id,
-            name: task.title,
-            subtitle: task.description || '已完成任务',
-            time: task.reminderTime ? this._formatTime(task.reminderTime) : '',
-            completedTime: task.completedTime ? this._formatCompletedTime(task.completedTime) : '未知时间',
-            category: task.category,
-            // 添加循环任务相关字段
-            frequency: task.frequency || 'none',
-            cycleTimes: 1,
-            todayCheckins: todayCheckins,
-            selectedDays: processedDays,
-            selectedMonthDays: processedMonthDays,
-            // 预先计算好的星期文本和月文本，供WXML直接使用
-            weekdayText: weekdayText,
-            monthdayText: monthdayText,
-            // 用于排序的时间戳
-            sortTime: sortTime
-          };
-        });
-        
-        // 按照完成时间排序，由近到远排列
-        completedTasks.sort((a, b) => {
-          // 降序排列（最新的在前）
-          return b.sortTime - a.sortTime;
-        });
-        
-        this.setData({
-          completedTasks: completedTasks
-        });
-      }
-    } catch (error) {
-      console.error('获取已完成任务失败:', error);
-      // 出错时显示空数组
-      this.setData({
-        completedTasks: []
-      });
-    } finally {
-      if (!skipLoading) {
-        wx.hideLoading();
-      }
+  _getDueDateText(dueDate) {
+    if (!dueDate) return '';
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const taskDate = new Date(dueDate);
+    taskDate.setHours(0, 0, 0, 0);
+    
+    // 计算日期差（天数）
+    const diffTime = taskDate.getTime() - today.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return '今天';
+    } else if (diffDays === 1) {
+      return '明天';
+    } else {
+      // 2天后显示具体日期，如 04-01
+      const month = (taskDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = taskDate.getDate().toString().padStart(2, '0');
+      return `${month}-${day}`;
     }
-  },
-  /**
-   * 格式化完成时间显示
-   */
-  _formatCompletedTime(date) {
-    if (!date) return '';
-    const d = new Date(date);
-    const now = new Date();
-    const isToday = d.toDateString() === now.toDateString();
-    const prefix = isToday ? '今天' : '昨天';
-    const hours = d.getHours().toString().padStart(2, '0');
-    const minutes = d.getMinutes().toString().padStart(2, '0');
-    const seconds = d.getSeconds().toString().padStart(2, '0');
-    return `${prefix} ${hours}:${minutes}:${seconds}`;
   },
 
   /**
    * 计算任务统计数据
    */
   calculateStats() {
-    // 总任务数 = 待打卡任务数 + 已完成任务数
-    const total = this.data.todayTasks.length + this.data.completedTasks.length;
-    
-    // 已完成任务数 = completedTasks数组长度 + todayTasks中已完成所有打卡次数的任务数
-    const completedInTodayTasks = this.data.todayTasks.filter(task => {
-      const todayCheckins = task.todayCheckins || 0;
-      return todayCheckins >= 1; // 每日任务默认只能完成1次
-    }).length;
-    
-    const completed = this.data.completedTasks.length + completedInTodayTasks;
-    
-    // 直接计算完成率百分比并存储
+    // 今日未完成任务数（仅今日任务，不包含待完成列表）
+    const remaining = this.data.todayTasks.length;
+
+    // 今日已完成任务数，从 todayStats.completed 读取
+    const completed = this.data.todayStats?.completed || 0;
+
+    // 今日任务总数：今日完成 + 今日未完成
+    const total = completed + remaining;
+
+    // 完成率
     const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
     
-    console.log('计算得到的统计数据:', {total, completed, percentage, completedInTodayTasks});
+    console.log('计算得到的统计数据:', {total, completed, remaining, percentage});
     
     this.setData({
       todayStats: {
         total,
         completed,
-        percentage // 添加计算好的百分比字段
+        remaining,
+        percentage
       }
     });
   },
 
-  /**
-   * 处理打卡操作
-   */
   /**
    * 处理任务打卡
    * @param {Object} e - 事件对象，包含任务ID
@@ -907,7 +1265,16 @@ Page({
     console.log('收到打卡请求，事件对象:', e);
     let loadingShown = false;
     
+    // 防抖检查：如果正在打卡中，直接返回
+    if (this.data.checkingIn) {
+      console.log('正在打卡中，忽略重复请求');
+      return;
+    }
+    
     try {
+      // 设置打卡中状态
+      this.setData({ checkingIn: true });
+      
       // 增强参数验证
       if (!e || typeof e !== 'object') {
         console.error('无效的事件对象:', e);
@@ -961,9 +1328,9 @@ Page({
       
       console.log('开始打卡操作，任务ID:', taskId);
       
-      // 找到被打卡的任务 - 支持id和_id两种格式，同时在今日任务和已完成任务中查找
+      // 找到被打卡的任务 - 支持id和_id两种格式，同时在今日任务和待完成任务中查找
       const taskToComplete = this.data.todayTasks.find(task => task.id === taskId || task._id === taskId) || 
-                            this.data.completedTasks.find(task => task.id === taskId || task._id === taskId);
+                            this.data.upcomingTasks.find(task => task.id === taskId || task._id === taskId);
       
       if (!taskToComplete) {
         console.error('未找到任务:', taskId);
@@ -1038,24 +1405,35 @@ Page({
           todayCheckins: nextCheckins
         };
         
+        const currentCompleted = this.data.todayStats?.completed || 0;
+        const currentRemaining = this.data.todayTasks.length;
+        
         if (isAllCompleted) {
-          // 完成所有次数，从todayTasks中移除该任务并添加到completedTasks
+          // 完成所有次数，从todayTasks中移除该任务
           const updatedTodayTasks = this.data.todayTasks.filter(task => task.id !== sanitizedTaskId && task._id !== sanitizedTaskId);
           
-          // 创建带有完成时间的任务对象
-          const completedTask = {
+          // 同时将该任务加入待完成列表（本地乐观更新）
+          const updatedUpcomingTasks = [...this.data.upcomingTasks];
+          const existingIndex = updatedUpcomingTasks.findIndex(task => task.id === sanitizedTaskId || task._id === sanitizedTaskId);
+          const movedTask = {
             ...updatedTask,
             completed: true,
-            completedTime: this._getCurrentTime() // 添加完成时间
+            isClickable: false,
+            disabledText: taskToComplete.frequency === 'daily' ? '明日' : this._getNextCheckInDateText(taskToComplete.frequency, taskToComplete.selectedDays || [], taskToComplete.selectedMonthDays || [])
           };
+          if (existingIndex >= 0) {
+            updatedUpcomingTasks[existingIndex] = movedTask;
+          } else {
+            updatedUpcomingTasks.push(movedTask);
+          }
           
-          // 将任务添加到completedTasks数组
-          const updatedCompletedTasks = [completedTask, ...this.data.completedTasks];
-          
-          // 更新页面数据
+          // 更新页面数据：同步更新 completed 和 total，防止数字跳动
           this.setData({
             todayTasks: updatedTodayTasks,
-            completedTasks: updatedCompletedTasks
+            upcomingTasks: updatedUpcomingTasks,
+            'todayStats.completed': currentCompleted + 1,
+            'todayStats.total': (currentCompleted + 1) + updatedTodayTasks.length,
+            'todayStats.remaining': updatedTodayTasks.length
           });
         } else {
           // 未完成所有次数，更新todayTasks中该任务的打卡次数
@@ -1072,7 +1450,10 @@ Page({
           });
         }
         
-        this.calculateStats();
+        // 乐观更新已同步 stats，无需再调用 calculateStats（后续 getTodoTasks 会覆盖为真实值）
+        if (!isAllCompleted) {
+          this.calculateStats();
+        }
         
         // 显示成功提示
         wx.showToast({
@@ -1124,6 +1505,8 @@ Page({
       if (loadingShown) {
         wx.hideLoading();
       }
+      // 重置打卡中状态
+      this.setData({ checkingIn: false });
       console.log('打卡操作流程完成');
     }
   },
@@ -1144,6 +1527,9 @@ Page({
    * 编辑任务
    */
   handleEditTask(e) {
+    // 关闭左滑菜单
+    this.closeAllSwipeMenus();
+    
     const taskId = e.currentTarget.dataset.id;
     wx.navigateTo({
       url: `/pages/task/create?id=${taskId}&mode=edit`
@@ -1155,11 +1541,15 @@ Page({
    * 调用deleteTask云函数执行软删除操作，与create.js保持一致
    */
   handleDeleteTask(e) {
+    // 关闭左滑菜单
+    this.closeAllSwipeMenus();
+    
     const taskId = e.currentTarget.dataset.id;
     
     wx.showModal({
       title: '确认删除',
-      content: '确定要删除这个任务吗？',
+      content: '确定要删除这个任务吗？删除后将无法恢复。',
+      confirmColor: '#E57373',
       success: async (res) => {
         if (res.confirm) {
           // 显示加载状态
@@ -1181,12 +1571,15 @@ Page({
             // 处理云函数返回结果
             if (result.result && result.result.success) {
               // 从本地数据中过滤掉已删除的任务
+              const deletedTask = this.data.todayTasks.find(task => task.id === taskId) || this.data.upcomingTasks.find(task => task.id === taskId);
+              const wasCompleted = deletedTask && (deletedTask.status === 'completed' || deletedTask.todayCheckins > 0);
               const todayTasks = this.data.todayTasks.filter(task => task.id !== taskId);
-              const completedTasks = this.data.completedTasks.filter(task => task.id !== taskId);
+              const upcomingTasks = this.data.upcomingTasks.filter(task => task.id !== taskId);
               
               this.setData({
                 todayTasks,
-                completedTasks
+                upcomingTasks,
+                'todayStats.completed': Math.max(0, (this.data.todayStats.completed || 0) - (wasCompleted ? 1 : 0))
               });
               
               // 重新计算统计数据
@@ -1215,11 +1608,11 @@ Page({
             
             // 即使云函数调用失败，也可以从前端移除任务，提供更好的用户体验
             const todayTasks = this.data.todayTasks.filter(task => task.id !== taskId);
-            const completedTasks = this.data.completedTasks.filter(task => task.id !== taskId);
+            const upcomingTasks = this.data.upcomingTasks.filter(task => task.id !== taskId);
             
             this.setData({
               todayTasks,
-              completedTasks
+              upcomingTasks
             });
             
             this.calculateStats();
@@ -1241,44 +1634,190 @@ Page({
   },
 
   /**
-   * 处理任务点击事件
-   * 对于循环任务，跳转到打卡统计页面
+   * 关闭所有左滑菜单
+   */
+  closeAllSwipeMenus() {
+    const todayTasks = this.data.todayTasks.map(item => {
+      item.swipeLeft = false;
+      return item;
+    });
+    const upcomingTasks = this.data.upcomingTasks.map(item => {
+      item.swipeLeft = false;
+      return item;
+    });
+    this.setData({ todayTasks, upcomingTasks });
+  },
+
+  /**
+   * 处理任务点击事件 - 点击整个cell直接打卡
    */
   handleTaskTap(e) {
     const taskId = e.currentTarget.dataset.id;
+    const isClickable = e.currentTarget.dataset.clickable;
+    
+    // 关闭其他左滑菜单
+    this.closeAllSwipeMenus();
+    
+    // 如果任务不可点击（置灰状态），显示提示
+    if (isClickable === false || isClickable === 'false') {
+      console.log('任务不可点击:', taskId);
+      wx.showToast({
+        title: '该任务暂时无法打卡',
+        icon: 'none'
+      });
+      return;
+    }
     
     // 查找任务对象
-    let task = this.data.todayTasks.find(t => t.id === taskId) || 
-               this.data.completedTasks.find(t => t.id === taskId);
+    let task = this.data.todayTasks.find(t => t.id === taskId || t._id === taskId);
     
     console.log('Task tap detected:', { taskId, task });
     
-    if (task) {
-      if (task.frequency && task.frequency !== 'none') {
-        console.log('Navigating to task stats page for cyclic task');
-        // 是循环任务，跳转到打卡统计页面
-        wx.navigateTo({
-          url: '/pages/clockin/task-stats?' + 
-               'taskId=' + encodeURIComponent(taskId) + 
-               '&taskName=' + encodeURIComponent(task.name),
-          fail: function(err) {
-            console.error('Navigation failed:', err);
-          }
-        });
-      } else {
-        console.log('Not a cyclic task, no navigation');
-      }
+    // 只有待打卡任务才能点击打卡
+    if (task && !task.completed) {
+      console.log('点击任务，执行打卡:', taskId);
+      // 直接调用打卡方法
+      this.handleCheckIn(e);
+    } else if (task && task.completed) {
+      console.log('任务已完成，无需打卡');
+      wx.showToast({
+        title: '任务已完成',
+        icon: 'none'
+      });
     } else {
       console.log('Task not found');
     }
   },
 
   /**
+   * 左滑相关手势处理 - 今日任务
+   */
+  touchStart(e) {
+    const index = e.currentTarget.dataset.index;
+    const task = this.data.todayTasks[index];
+    if (!task || !task.canEdit) {
+      return;
+    }
+
+    // 关闭待完成任务的左滑菜单
+    const upcomingTasks = this.data.upcomingTasks.map(item => {
+      item.swipeLeft = false;
+      return item;
+    });
+    
+    const touch = e.touches[0];
+    this.setData({
+      upcomingTasks,
+      [`todayTasks[${index}].startX`]: touch.clientX,
+      [`todayTasks[${index}].startY`]: touch.clientY
+    });
+  },
+
+  touchMove(e) {
+    const index = e.currentTarget.dataset.index;
+    const task = this.data.todayTasks[index];
+    if (!task || !task.canEdit) {
+      return;
+    }
+
+    const touch = e.touches[0];
+    const startX = task.startX || 0;
+    const startY = task.startY || 0;
+    
+    // 计算水平和垂直移动距离
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    
+    // 如果水平移动距离大于垂直移动距离，且向左滑动超过30px
+    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < -30) {
+      // 关闭其他已打开的项
+      const todayTasks = this.data.todayTasks.map((item, idx) => {
+        if (idx !== index) {
+          item.swipeLeft = false;
+        }
+        return item;
+      });
+      
+      todayTasks[index].swipeLeft = true;
+      this.setData({ todayTasks });
+    } else if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 30) {
+      // 向右滑动，关闭当前项
+      this.setData({
+        [`todayTasks[${index}].swipeLeft`]: false
+      });
+    }
+  },
+
+  touchEnd(e) {
+    // 可以在这里添加滑动结束的逻辑
+  },
+
+  /**
+   * 左滑相关手势处理 - 待完成任务
+   */
+  touchStartUpcoming(e) {
+    const index = e.currentTarget.dataset.index;
+    const task = this.data.upcomingTasks[index];
+    if (!task || !task.canEdit) {
+      return;
+    }
+
+    // 关闭今日任务的左滑菜单
+    const todayTasks = this.data.todayTasks.map(item => {
+      item.swipeLeft = false;
+      return item;
+    });
+    
+    const touch = e.touches[0];
+    this.setData({
+      todayTasks,
+      [`upcomingTasks[${index}].startX`]: touch.clientX,
+      [`upcomingTasks[${index}].startY`]: touch.clientY
+    });
+  },
+
+  touchMoveUpcoming(e) {
+    const index = e.currentTarget.dataset.index;
+    const task = this.data.upcomingTasks[index];
+    if (!task || !task.canEdit) {
+      return;
+    }
+
+    const touch = e.touches[0];
+    const startX = task.startX || 0;
+    const startY = task.startY || 0;
+    
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < -30) {
+      const upcomingTasks = this.data.upcomingTasks.map((item, idx) => {
+        if (idx !== index) {
+          item.swipeLeft = false;
+        }
+        return item;
+      });
+      
+      upcomingTasks[index].swipeLeft = true;
+      this.setData({ upcomingTasks });
+    } else if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 30) {
+      this.setData({
+        [`upcomingTasks[${index}].swipeLeft`]: false
+      });
+    }
+  },
+
+  touchEndUpcoming(e) {
+    // 滑动结束逻辑
+  },
+
+  /**
    * 打开事项建议页面
    */
   openSuggestPage() {
+    const familyIdParam = this.data.currentFamilyId ? `&familyId=${this.data.currentFamilyId}` : '';
     wx.navigateTo({
-      url: '/pages/suggest/list'
+      url: `/pages/task/create?showTemplates=true${familyIdParam}`
     });
   },
   
@@ -1286,8 +1825,9 @@ Page({
    * 打开创建任务页面
    */
   openCreateTask() {
+    const familyIdParam = this.data.currentFamilyId ? `&familyId=${this.data.currentFamilyId}` : '';
     wx.navigateTo({
-      url: '/pages/task/create'
+      url: `/pages/task/create?mode=create${familyIdParam}`
     });
   },
   
@@ -1524,7 +2064,7 @@ Page({
       
       // 5. 验证月任务数据
       console.log('\n✅ 验证月任务数据');
-      const monthlyTasks = [...this.data.todayTasks, ...this.data.completedTasks]
+      const monthlyTasks = [...this.data.todayTasks, ...this.data.upcomingTasks]
         .filter(task => task.frequency === 'monthly');
       
       console.log(`找到 ${monthlyTasks.length} 个月任务`);
@@ -1578,13 +2118,4 @@ Page({
     }
   },
 
-  /**
-   * 打开创建任务页面
-   * 点击+按钮直接跳转到编辑事项页面
-   */
-  openCreateTask() {
-    wx.navigateTo({
-      url: '/pages/task/create?mode=create'
-    });
-  }
 });

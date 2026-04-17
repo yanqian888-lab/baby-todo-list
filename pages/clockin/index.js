@@ -19,6 +19,7 @@ Page({
     records: [],
     loading: false,
     refreshing: false,
+    clockingIn: false,
     hasMore: true,
     pageNum: 0,
     pageSize: 10
@@ -28,6 +29,13 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function () {
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+    this.setData({ hasLoaded: true });
+
     // 初始化云环境
     if (!wx.cloud) {
       console.error('请使用 2.2.3 或以上的基础库以使用云能力');
@@ -48,10 +56,20 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
-    // 更新当前日期
-    this.updateCurrentDate();
-    // 每次进入页面都重新加载打卡状态
-    this.loadClockInStatus();
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+
+    if (this.data.hasLoaded) {
+      // 更新当前日期
+      this.updateCurrentDate();
+      // 每次进入页面都重新加载打卡状态
+      this.loadClockInStatus();
+    } else {
+      this.setData({ hasLoaded: true });
+    }
   },
   
   /**
@@ -104,12 +122,13 @@ Page({
       });
       
       if (res.result.success) {
+        const stats = res.result.data || res.result; // 兼容两种返回结构
         this.setData({
         clockInData: {
-          today: res.result.today || { checked: false, time: '' },
-          streakDays: res.result.streakDays || 0,
-          totalDays: res.result.totalDays || 0,
-          lastCheckin: res.result.lastCheckin || ''
+          today: stats.today || { checked: false, time: '' },
+          streakDays: stats.streakDays || 0,
+          totalDays: stats.totalDays || 0,
+          lastCheckin: stats.lastCheckin || ''
         }
       });
       
@@ -192,6 +211,9 @@ Page({
       return;
     }
 
+    if (this.data.clockingIn) return;
+    this.setData({ clockingIn: true });
+
     try {
       wx.showLoading({
         title: '打卡中...',
@@ -214,7 +236,7 @@ Page({
         this.loadClockInRecords(true);
       } else {
         wx.showToast({
-          title: res.result.message || '打卡失败',
+          title: res.result.error || res.result.message || '打卡失败',
           icon: 'none'
         });
       }
@@ -226,6 +248,7 @@ Page({
       });
     } finally {
       wx.hideLoading();
+      this.setData({ clockingIn: false });
     }
   },
 
@@ -233,7 +256,11 @@ Page({
    * 下拉刷新
    */
   onPullDownRefresh: function() {
-    this.loadClockInRecords(true);
+    this.loadClockInRecords(true).then(() => {
+      wx.stopPullDownRefresh();
+    }).catch(() => {
+      wx.stopPullDownRefresh();
+    });
   },
 
   /**

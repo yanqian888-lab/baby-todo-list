@@ -1,0 +1,81 @@
+<!-- 任务详情页 -->
+<view class="container">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 任务信息卡片 -->
+  <block wx:if="{{!loading && task}}">
+    <view class="task-info-card">
+      <view class="task-header">
+        <text class="task-title">{{task.title}}</text>
+        <view class="task-tags">
+          <view class="tag type-tag">{{task.frequencyText}}</view>
+          <view wx:if="{{task.weekdayText}}" class="tag weekday-tag">{{task.weekdayText}}</view>
+        </view>
+      </view>
+      
+      <view wx:if="{{task.description}}" class="task-description">
+        {{task.description}}
+      </view>
+      
+      <view class="task-meta">
+        <view class="meta-item" wx:if="{{task.categoryText}}">
+          <text class="meta-label">分类：</text>
+          <text class="meta-value">{{task.categoryText}}</text>
+        </view>
+        <view class="meta-item" wx:if="{{task.formattedDueDate}}">
+          <text class="meta-label">截止日期：</text>
+          <text class="meta-value">{{task.formattedDueDate}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 统计数据 -->
+    <view class="stats-card">
+      <view class="stats-item">
+        <text class="stats-value">{{stats.totalCheckIns}}</text>
+        <text class="stats-label">总打卡次数</text>
+      </view>
+      <view class="stats-item">
+        <text class="stats-value">{{stats.streakDays}}</text>
+        <text class="stats-label">连续打卡</text>
+      </view>
+      <view class="stats-item">
+        <text class="stats-value last-checkin-value">{{stats.lastCheckIn || '-'}}</text>
+        <text class="stats-label">最后打卡</text>
+      </view>
+    </view>
+
+    <!-- 打卡记录 -->
+    <view class="records-section">
+      <view class="section-header">
+        <text class="section-title">打卡记录</text>
+        <text class="section-count" wx:if="{{checkInRecords.length > 0}}">{{checkInRecords.length}}次</text>
+      </view>
+      
+      <block wx:if="{{checkInRecords.length > 0}}">
+        <view class="record-list">
+          <view wx:for="{{checkInRecords}}" wx:key="_id" class="record-item">
+            <view class="record-date">
+              <text class="date-text">{{item.dateStr}}</text>
+              <text class="time-text">{{item.timeStr}}</text>
+              <text class="record-user">打卡人：{{item.userName}}</text>
+            </view>
+            <view class="record-status">
+              <text class="status-icon">✓</text>
+              <text class="status-text">已打卡</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <view wx:else class="empty-state">
+        <text class="empty-icon">📝</text>
+        <text class="empty-text">暂无打卡记录</text>
+        <text class="empty-hint">快来完成第一次打卡吧！</text>
+      </view>
+    </view>
+  </block>
+</view>

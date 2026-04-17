@@ -1,0 +1,11 @@
+{
+  "name": "knowledge-base-builder",
+  "version": "1.0.0",
+  "description": "Build knowledge base for aiChat cloud function",
+  "dependencies": {
+    "glob": "^10.4.1",
+    "mammoth": "^1.8.0",
+    "pdf-parse": "^1.1.1",
+    "word-extractor": "^1.0.4"
+  }
+}

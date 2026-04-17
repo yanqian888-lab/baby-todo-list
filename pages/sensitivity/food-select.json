@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "选择已排敏食物"
+  "navigationBarTitleText": "选择排敏食物",
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#FAFAF8"
 }

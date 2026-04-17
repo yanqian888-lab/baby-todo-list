@@ -1,140 +1,197 @@
-/* pages/login/login.wxss */
-.login-container {
+/* pages/login/login.wxss - MUJI风格优化版 */
+
+.login-page {
+  min-height: 100vh;
+  padding: 16px 14px 12px;
+  background-color: #F6F3EE;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
-  background-color: #f8f8f8;
-  padding: 0 20px;
+  box-sizing: border-box;
 }
 
-/* 顶部logo和标题 */
-.header {
+.login-card {
   width: 100%;
-  text-align: center;
-  padding-top: 80px;
-  padding-bottom: 40px;
+  max-width: 420px;
+  background-color: #FFFFFF;
+  border-radius: 26px;
+  padding: 18px 18px 14px;
+  box-shadow: 0 12px 24px rgba(45, 42, 38, 0.08);
+  box-sizing: border-box;
 }
 
-.logo {
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 20px;
-  background-color: #fff;
-  border-radius: 20px;
+.logo-wrap {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 14px;
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.logo image {
-  width: 70px;
-  height: 70px;
+.logo {
+  width: 56px;
+  height: 56px;
 }
 
-.app-name {
-  margin-bottom: 10px;
+.title-block {
+  text-align: center;
+  margin-bottom: 14px;
 }
 
 .main-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #FF7A85;
-  margin-bottom: 8px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #2D2A26;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
   display: block;
 }
 
 .sub-title {
-  font-size: 14px;
-  color: #666;
-  display: block;
+  font-size: 13px;
+  color: #7F7A6D;
+  line-height: 1.6;
 }
 
-/* 功能介绍 */
-.features {
-  width: 100%;
-  margin-bottom: 40px;
+.feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
 }
 
-.feature-item {
+.feature-card {
   display: flex;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.feature-item:last-child {
-  border-bottom: none;
+  padding: 12px 14px;
+  background-color: #FBF8F3;
+  border-radius: 14px;
+  border: 1px solid rgba(216, 207, 193, 0.7);
 }
 
 .feature-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background-color: rgba(139, 115, 85, 0.12);
+  color: #8B7355;
+  font-size: 16px;
+  line-height: 30px;
+  text-align: center;
   margin-right: 12px;
 }
 
 .feature-text {
-  font-size: 16px;
-  color: #333;
+  font-size: 14px;
+  color: #4D473F;
+  font-weight: 500;
 }
 
-/* 登录按钮 */
-.login-btn-container {
+.login-action {
   width: 100%;
-  margin-bottom: 20px;
 }
 
 .login-btn {
-  background-color: #FF7A85;
-  color: #fff;
-  font-size: 18px;
-  line-height: 48px;
-  border-radius: 24px;
-  text-align: center;
+  width: 100%;
+  height: 46px;
+  line-height: 46px;
+  background-color: #8B7355;
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 22px;
+  border: none;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
 }
 
 .login-btn::after {
   border: none;
 }
 
-/* 用户协议 */
+.login-btn[disabled] {
+  background-color: #DDD3C9;
+  opacity: 0.95;
+}
+
+.login-btn:not([disabled]):active {
+  background-color: #735C40;
+}
+
 .agreement {
   display: flex;
   align-items: center;
-  padding: 10px 0;
-  margin-bottom: 20px;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.checkbox-wrap {
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
 }
 
 .checkbox {
-  margin-right: 8px;
-  transform: scale(0.8);
+  width: 22px;
+  height: 22px;
+  border: 2px solid #D4CFC7;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+}
+
+.checkbox.checked {
+  background-color: #8B7355;
+  border-color: #8B7355;
 }
 
 .agreement-text {
-  font-size: 12px;
-  color: #999;
+  font-size: 13px;
+  color: #7F7A6D;
+  line-height: 18px;
+  letter-spacing: 0.2px;
   flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .link {
-  color: #FF7A85;
+  color: #8B7355;
+  font-weight: 600;
 }
 
-/* 底部版权信息 */
-.footer {
-  margin-top: auto;
-  padding-bottom: 20px;
+.login-footer {
+  margin-top: 10px;
+}
+
+.footer-note {
+  font-size: 12px;
+  color: #A99E90;
+  text-align: center;
+}
+
+.link:active {
+  opacity: 0.75;
+}
+
+.login-footer {
+  margin-top: 18px;
+}
+
+.footer-note {
+  font-size: 13px;
+  color: #A99E90;
+  text-align: center;
 }
 
 .copyright {
   font-size: 12px;
-  color: #999;
-}
-
-/* 响应式调整 */
-@media screen and (min-width: 768px) {
-  .login-container {
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 0;
-  }
+  color: #B8B2A8;
+  letter-spacing: 1px;
 }

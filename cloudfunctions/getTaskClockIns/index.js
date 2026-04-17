@@ -2,14 +2,81 @@
 const cloud = require('wx-server-sdk')
 cloud.init()
 
+// 获取北京时间当天的起止时间（UTC Date）
+function getBeijingTodayRange() {
+  const now = new Date();
+  const beijingOffset = 8 * 60 * 60 * 1000;
+  const beijingNow = new Date(now.getTime() + beijingOffset);
+  const year = beijingNow.getUTCFullYear();
+  const month = beijingNow.getUTCMonth();
+  const date = beijingNow.getUTCDate();
+  // 北京时间 00:00:00 对应 UTC 当天 -8 小时
+  const start = new Date(Date.UTC(year, month, date, -8, 0, 0));
+  const end = new Date(Date.UTC(year, month, date + 1, -8, 0, 0));
+  return { start, end };
+}
+
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
-  const { openid } = wxContext
-  const { taskId, todayOnly } = event
+  const openid = wxContext.OPENID || wxContext.openid
+  const { taskId, taskIds, todayOnly } = event
   
   try {
     const db = cloud.database()
     const _ = db.command
+
+    // 批量查询模式
+    if (taskIds && Array.isArray(taskIds) && taskIds.length > 0) {
+      const sanitizedTaskIds = taskIds.map(id => id.trim());
+      const { start, end } = getBeijingTodayRange();
+
+      const whereCondition = {
+        taskId: _.in(sanitizedTaskIds)
+      };
+      
+      // 家庭场景：查询该家庭下所有成员的打卡记录；个人场景：仅查询自己的
+      const { familyId } = event;
+      if (familyId) {
+        whereCondition.familyId = familyId;
+        console.log('👨‍👩‍👧‍👦 批量查询家庭打卡记录:', familyId);
+      } else {
+        whereCondition._openid = openid;
+      }
+      
+      if (todayOnly) {
+        console.log('📅 批量查询今日打卡时间范围(北京时间):', start.toISOString(), '至', end.toISOString());
+        whereCondition.completedAt = _.gte(start).lt(end);
+      }
+
+      let clockIns = [];
+      try {
+        const result = await db.collection('task_completions').where(whereCondition).get();
+        clockIns = result.data || [];
+      } catch (e) {
+        if (e.errCode === -502005) {
+          clockIns = [];
+        } else {
+          throw e;
+        }
+      }
+
+      const counts = {};
+      sanitizedTaskIds.forEach(id => { counts[id] = 0; });
+      clockIns.forEach(record => {
+        const id = record.taskId;
+        if (counts[id] !== undefined) {
+          counts[id]++;
+        }
+      });
+
+      return {
+        success: true,
+        data: {
+          todayCounts: counts,
+          clockIns: clockIns
+        }
+      };
+    }
     
     // 参数验证
     if (!taskId) {
@@ -27,6 +94,31 @@ exports.main = async (event, context) => {
       taskId: sanitizedTaskId,
       todayOnly: todayOnly
     });
+
+    // 权限校验：验证调用者是否为任务创建者或家庭成员
+    let taskData;
+    try {
+      taskData = (await db.collection('tasks').doc(sanitizedTaskId).get()).data;
+    } catch (err) {
+      if (err.errMsg && err.errMsg.includes('document not found')) {
+        return { success: false, error: '任务不存在' };
+      }
+      throw err;
+    }
+    const taskFamilyId = taskData.familyId || null;
+    const taskOpenId = taskData._openid || '';
+    if (taskOpenId !== openid) {
+      if (taskFamilyId) {
+        const familyRes = await db.collection('families').doc(taskFamilyId).get().catch(() => null);
+        const family = familyRes ? familyRes.data : null;
+        const isMember = family && (family.members || []).some(m => m.openId === openid);
+        if (!isMember) {
+          return { success: false, error: '无权查看此任务的打卡记录' };
+        }
+      } else {
+        return { success: false, error: '无权查看此任务的打卡记录' };
+      }
+    }
     
     let clockInsResult;
     let clockIns = [];
@@ -35,24 +127,21 @@ exports.main = async (event, context) => {
     try {
       // 构建查询条件对象
       let whereCondition = {
-        taskId: sanitizedTaskId
+        taskId: sanitizedTaskId,
+        _openid: openid
       };
       
       // 如果只查询今日记录，添加时间范围条件到条件对象中
       if (todayOnly) {
-        // 使用服务器时间计算今日日期范围，避免时区问题
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        const { start, end } = getBeijingTodayRange();
         
-        console.log('查询今日打卡记录的时间范围:', {
-          today: today.toISOString(),
-          tomorrow: tomorrow.toISOString()
+        console.log('查询今日打卡记录的时间范围(北京时间):', {
+          start: start.toISOString(),
+          end: end.toISOString()
         });
         
         // 将时间范围条件添加到条件对象中
-        whereCondition.completedAt = _.gte(today).lt(tomorrow);
+        whereCondition.completedAt = _.gte(start).lt(end);
       }
       
       // 构建查询 - 先应用条件再排序
@@ -70,24 +159,7 @@ exports.main = async (event, context) => {
       todayCount = clockIns.length;
       console.log('今日打卡次数:', todayCount);
       
-      // 查询该任务的所有打卡记录，确保数据存在
-      const allClockInsResult = await db.collection('task_completions')
-        .where({ taskId: sanitizedTaskId })
-        .orderBy('completedAt', 'desc')
-        .limit(10)
-        .get();
-      console.log('该任务的所有打卡记录:', allClockInsResult.data);
-      
-      // 检查tasks集合中的checkins字段
-      try {
-        const taskResult = await db.collection('tasks').doc(sanitizedTaskId).get();
-        console.log('任务信息:', taskResult.data);
-        if (taskResult.data.checkins !== undefined) {
-          console.log('任务的checkins字段值:', taskResult.data.checkins);
-        }
-      } catch (taskError) {
-        console.error('获取任务信息失败:', taskError);
-      }
+      // 已移除调试用的全局打卡记录查询，避免数据泄露
     } catch (queryError) {
       console.error('查询打卡记录时出错:', queryError);
       
@@ -164,9 +236,10 @@ exports.main = async (event, context) => {
       };
     }
     
-    // 其他错误返回友好提示
+    // 其他错误返回失败
     return {
-      success: true,
+      success: false,
+      error: error.message,
       data: {
         clockIns: [],
         todayCount: 0,
