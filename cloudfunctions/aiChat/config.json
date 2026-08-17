@@ -1,9 +1,4 @@
 {
-  "environment": {
-    "variables": {
-      "TENCENTCLOUD_SECRETID": "***REMOVED***",
-      "TENCENTCLOUD_SECRETKEY": "***REMOVED***"
-    }
-  },
-  "timeout": 20
+  "timeout": 30,
+  "memorySize": 256
 }

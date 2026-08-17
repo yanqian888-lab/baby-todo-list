@@ -6,32 +6,45 @@
     </view>
 
     <view class="title-block">
-      <text class="main-title">萌宝贝排敏生活记</text>
+      <text class="main-title">乖贝贝排敏生活全家记</text>
       <text class="sub-title">记录宝宝成长的每一天</text>
     </view>
 
     <view class="feature-list">
       <view class="feature-card">
-        <view class="feature-icon">✓</view>
-        <text class="feature-text">科学育儿全家共同守护</text>
+        <view class="feature-icon">👨‍👩‍👧</view>
+        <text class="feature-text">【全家共记】宝宝的事，全家人一起打卡记录</text>
       </view>
       <view class="feature-card">
-        <view class="feature-icon">✓</view>
-        <text class="feature-text">宝宝日常管理便捷高效</text>
+        <view class="feature-icon">🥕</view>
+        <text class="feature-text">【智能排敏】辅食排敏推荐跟踪，宝宝安全妈妈安心</text>
       </view>
       <view class="feature-card">
-        <view class="feature-icon">✓</view>
-        <text class="feature-text">辅食排敏精准记录建议</text>
+        <view class="feature-icon">🤱</view>
+        <text class="feature-text">【AI育儿大师】深夜树洞倾诉，专业育儿答疑不孤单</text>
       </view>
     </view>
 
     <view class="login-action">
+      <view class="profile-form">
+        <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+          <image class="avatar-preview" src="{{avatarUrl || '/images/touxiang_moren.png'}}" mode="aspectFill"/>
+          <text class="avatar-tip">点击选择头像</text>
+        </button>
+        <input class="nickname-input"
+               type="nickname"
+               placeholder="请输入昵称（选填）"
+               value="{{nickName}}"
+               bindinput="onNicknameInput"
+               bindblur="onNicknameInput"/>
+      </view>
+
       <button class="login-btn" 
-              bindtap="getUserProfile"
+              bindtap="handleConfirmLogin"
               loading="{{isLoading}}"
               disabled="{{isLoading || !isAgreed}}"
               style="background-color: #8B7355;">
-        微信一键登录
+        确认并登录
       </button>
 
       <view class="agreement">

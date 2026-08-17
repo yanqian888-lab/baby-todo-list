@@ -1,10 +1,10 @@
 {
   "name": "aiChat",
-  "version": "1.0.0",
-  "description": "AI育儿大师对话云函数",
+  "version": "2.0.0",
+  "description": "AI育儿大师对话云函数（TokenHub版）",
   "main": "index.js",
   "dependencies": {
-    "tencentcloud-sdk-nodejs-hunyuan": "^4.1.0",
-    "wx-server-sdk": "~3.0.1"
+    "wx-server-sdk": "~3.0.1",
+    "openai": "^4.0.0"
   }
 }

@@ -119,6 +119,20 @@ page {
   flex-direction: column;
 }
 
+/* AI生成标注 */
+.ai-badge {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  padding-left: 2px;
+}
+
+.ai-badge-text {
+  font-size: 11px;
+  color: #B8B2A8;
+  letter-spacing: 0.5px;
+}
+
 .message-bubble {
   padding: 12px 16px;
   border-radius: 16px;

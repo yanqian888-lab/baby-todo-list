@@ -4,6 +4,6 @@
   "description": "初始化并同步 sensitivity_foods 云端数据",
   "main": "index.js",
   "dependencies": {
-    "wx-server-sdk": "latest"
+    "wx-server-sdk": "~2.6.3"
   }
 }

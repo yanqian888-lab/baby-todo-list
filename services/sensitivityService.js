@@ -1,7 +1,6 @@
 // services/sensitivityService.js
 // 排敏功能服务层 - 优化版
 
-const db = wx.cloud.database();
 const { stores } = require('../utils/dataStore');
 const { safeDateFormat, getUserId, getBabyId } = require('../utils/helpers');
 
@@ -101,11 +100,14 @@ class SensitivityService {
         }
         return familyBabyInfo;
       }
-      // 2. 尝试从 families 集合云端读取
+      // 2. 尝试从 families 集合云端读取（走云函数，避免非创建者无读取权限）
       try {
-        const familyRes = await db.collection('families').doc(familyId).get();
-        if (familyRes.data && familyRes.data.babyInfo) {
-          let cloudBabyInfo = familyRes.data.babyInfo;
+        const familyRes = await wx.cloud.callFunction({
+          name: 'sensitivityManager',
+          data: { action: 'getFamilyBabyInfo', familyId }
+        });
+        if (familyRes.result && familyRes.result.success && familyRes.result.data && familyRes.result.data.babyInfo) {
+          let cloudBabyInfo = familyRes.result.data.babyInfo;
           // 如果云端缺少 safeFoodsList，尝试从全局缓存合并补充
           if (!cloudBabyInfo.safeFoodsList) {
             const globalBabyInfo = wx.getStorageSync('babyInfo') || {};
@@ -451,9 +453,15 @@ class SensitivityService {
         return localInfo;
       }
 
-      // 从云端获取
-      const result = await db.collection('baby_info').where({ userId }).get();
-      return result.data[0] || null;
+      // 从云端获取（走 babyManager 云函数，userId 以云端 openid 为准）
+      const result = await wx.cloud.callFunction({
+        name: 'babyManager',
+        data: { action: 'getBabyInfo' }
+      });
+      if (result.result && result.result.success) {
+        return result.result.data || null;
+      }
+      return null;
     } catch (error) {
       handleDatabaseError(error, '获取宝宝信息', 'baby_info');
     }
@@ -473,21 +481,16 @@ class SensitivityService {
     // 保存到本地
     stores.babyInfo.setLocal(data);
 
-    // 保存到云端
+    // 保存到云端（走 babyManager 云函数，存在则更新、不存在则新增）
     try {
-      // 准备云端数据，删除 _id 字段（云端会自动生成）
-      const cloudData = { ...data };
-      delete cloudData._id;
-      
-      const existing = await this.getBabyInfo(babyInfo.userId);
-      if (existing && existing._id) {
-        await db.collection('baby_info').doc(existing._id).update({ data: cloudData });
-        return existing._id;
-      } else {
-        cloudData.createdAt = new Date();
-        const result = await db.collection('baby_info').add({ data: cloudData });
-        return result._id;
+      const result = await wx.cloud.callFunction({
+        name: 'babyManager',
+        data: { action: 'saveBabyInfo', babyInfo: data }
+      });
+      if (result.result && result.result.success) {
+        return result.result.babyId;
       }
+      throw new Error((result.result && result.result.error) || '保存宝宝信息失败');
     } catch (error) {
       handleDatabaseError(error, '保存宝宝信息', 'baby_info');
     }
@@ -651,19 +654,23 @@ class SensitivityService {
    * @private
    */
   static async _getCloudRecords(userId, babyId, familyId = null) {
-    const query = {};
+    // 走云函数读取：家庭模式下共享记录对非创建者不可直连读取（仅创建者可读写权限）
+    const params = { action: 'getRecords' };
     if (familyId) {
       // 家庭模式下共享可见：只按家庭ID查询，不限定用户
-      query.familyId = familyId;
-    } else {
-      query.userId = userId;
-      if (babyId && babyId !== 'local-baby-id') {
-        query.babyId = babyId;
-      }
+      params.familyId = familyId;
+    } else if (babyId && babyId !== 'local-baby-id') {
+      params.babyId = babyId;
     }
 
-    const result = await db.collection('sensitivity_records').where(query).get();
-    return result.data || [];
+    const result = await wx.cloud.callFunction({
+      name: 'sensitivityManager',
+      data: params
+    });
+    if (result.result && result.result.success) {
+      return result.result.data || [];
+    }
+    throw new Error((result.result && result.result.error) || '获取云端排敏记录失败');
   }
 
   /**
@@ -821,30 +828,15 @@ class SensitivityService {
    * @private
    */
   static async _syncToCloud(record) {
-    const todayStr = safeDateFormat(record.date);
-    
-    // 基础查询条件
-    const baseQuery = {};
-    if (record.familyId) {
-      baseQuery.familyId = record.familyId;
-    } else {
-      baseQuery.userId = record.userId;
-      baseQuery.babyId = record.babyId;
+    // 走云函数同步：云端删除同一天旧记录后写入新记录，openid/userId 以云端 context 为准
+    const result = await wx.cloud.callFunction({
+      name: 'sensitivityManager',
+      data: { action: 'syncRecord', record }
+    });
+    if (!result.result || !result.result.success) {
+      throw new Error((result.result && result.result.error) || '同步排敏记录到云端失败');
     }
-    
-    // 获取该用户/家庭的所有记录，再在服务端过滤同一天
-    const existing = await db.collection('sensitivity_records').where(baseQuery).get();
-    const sameDayRecords = existing.data.filter(r => safeDateFormat(r.date) === todayStr);
-
-    if (sameDayRecords.length > 0) {
-      // 删除旧记录
-      for (const old of sameDayRecords) {
-        await db.collection('sensitivity_records').doc(old._id).remove();
-      }
-    }
-
-    // 添加新记录
-    await db.collection('sensitivity_records').add({ data: record });
+    return result.result.data;
   }
 
   /**

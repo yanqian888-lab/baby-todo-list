@@ -216,7 +216,7 @@ const familyService = {
     return {
       title: '邀请您加入家庭',
       path: `/pages/family/join?inviteCode=${inviteCode}&familyId=${familyId}`,
-      imageUrl: '/images/share-family.png'
+      imageUrl: '/images/logo.png'
     };
   }
 };

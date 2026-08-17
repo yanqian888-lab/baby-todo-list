@@ -451,20 +451,6 @@ const sensitivityFoodsData = {
           "allergyLevel": 2,
           "sortOrder": 57,
           "sensitivityOrder": 11
-        },
-        {
-          "_id": "58",
-          "name": "三文鱼",
-          "allergyLevel": 2,
-          "sortOrder": 58,
-          "sensitivityOrder": 11
-        },
-        {
-          "_id": "59",
-          "name": "鳕鱼",
-          "allergyLevel": 2,
-          "sortOrder": 59,
-          "sensitivityOrder": 11
         }
       ]
     },
@@ -570,24 +556,30 @@ const sensitivityFoodsData = {
 };
 
 exports.main = async (event, context) => {
+  // 仅允许管理员调用，openid 取云端上下文，不信任前端传参
+  const { OPENID } = cloud.getWXContext();
+  const adminOpenids = (process.env.ADMIN_OPENIDS || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!OPENID || adminOpenids.indexOf(OPENID) === -1) {
+    return { success: false, error: '无权限执行此操作' };
+  }
+
   try {
-    // 1. 清空 sensitivity_foods 集合
-    const oldFoods = await db.collection('sensitivity_foods').get();
-    const deleteFoodPromises = oldFoods.data.map(item => {
-      return db.collection('sensitivity_foods').doc(item._id).remove();
-    });
-    await Promise.all(deleteFoodPromises);
-    console.log(`已删除 sensitivity_foods ${deleteFoodPromises.length} 条旧数据`);
+    // 1. 清空 sensitivity_foods 集合（.get() 单次最多返回100条，需循环分页删除直至清空）
+    let deletedFoods = 0;
+    while (true) {
+      const oldFoods = await db.collection('sensitivity_foods').limit(100).get();
+      if (!oldFoods.data || oldFoods.data.length === 0) {
+        break;
+      }
+      const deleteFoodPromises = oldFoods.data.map(item => {
+        return db.collection('sensitivity_foods').doc(item._id).remove();
+      });
+      await Promise.all(deleteFoodPromises);
+      deletedFoods += deleteFoodPromises.length;
+    }
+    console.log(`已删除 sensitivity_foods ${deletedFoods} 条旧数据`);
 
-    // 2. 清空 sensitivity_records 集合（预发布测试环境，清理所有历史记录）
-    const oldRecords = await db.collection('sensitivity_records').get();
-    const deleteRecordPromises = oldRecords.data.map(item => {
-      return db.collection('sensitivity_records').doc(item._id).remove();
-    });
-    await Promise.all(deleteRecordPromises);
-    console.log(`已删除 sensitivity_records ${deleteRecordPromises.length} 条旧记录`);
-
-    // 3. 批量插入新数据
+    // 2. 批量插入新数据
     const addPromises = [];
     sensitivityFoodsData.categories.forEach(category => {
       category.foods.forEach(food => {
@@ -608,10 +600,9 @@ exports.main = async (event, context) => {
 
     return {
       success: true,
-      deletedFoods: deleteFoodPromises.length,
-      deletedRecords: deleteRecordPromises.length,
+      deletedFoods: deletedFoods,
       inserted: addPromises.length,
-      message: `已清空旧数据并导入 ${addPromises.length} 条最新食材，清理 ${deleteRecordPromises.length} 条历史记录`
+      message: `已重导食材字典，删除旧数据 ${deletedFoods} 条，导入 ${addPromises.length} 条最新食材`
     };
   } catch (err) {
     console.error('初始化食材数据失败:', err);

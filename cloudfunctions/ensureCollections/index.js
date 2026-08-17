@@ -10,10 +10,29 @@ const db = cloud.database()
 
 /**
  * 确保必要的数据库集合存在，如果不存在则创建
- * 目前需要确保存在的集合：task_completions, task_clock_ins, users, clockIns, tasks
+ * 包含项目中所有实际使用的集合
  */
 async function ensureCollectionsExist() {
-  const collectionsToCheck = ['task_completions', 'task_clock_ins', 'users', 'clockIns', 'tasks', 'sensitivity_foods', 'baby_info', 'sensitivity_records']
+  const collectionsToCheck = [
+    // 用户与家庭
+    'users',
+    'families',
+    'family_members',
+    'family_invitations',
+    // 宝宝信息
+    'baby_info',
+    // 任务与打卡
+    'tasks',
+    'task_completions',
+    'task_clock_ins',
+    'clockIns',
+    'task_templates',
+    // 排敏
+    'sensitivity_foods',
+    'sensitivity_records',
+    // 记录
+    'check_records'
+  ]
   const results = {}
   
   for (const collectionName of collectionsToCheck) {

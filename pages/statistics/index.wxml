@@ -101,7 +101,6 @@
 
   <!-- 空状态 -->
   <view wx:else class="empty-state">
-    <image src="/images/empty-stats.svg" class="empty-image"></image>
     <text class="empty-text">暂无统计数据</text>
     <text class="empty-hint">开始记录任务和打卡，查看你的数据报告</text>
   </view>

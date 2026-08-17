@@ -43,10 +43,26 @@
   margin-right: 30rpx;
 }
 
+.avatar-btn {
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  line-height: normal;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
 .avatar {
   width: 120rpx;
   height: 120rpx;
   border-radius: 60rpx;
+}
+
+.nickname-input {
+  border-bottom: 1rpx solid #eee;
+  padding-bottom: 6rpx;
 }
 
 .user-info {

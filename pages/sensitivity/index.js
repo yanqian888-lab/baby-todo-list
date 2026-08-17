@@ -4,6 +4,7 @@ const app = getApp();
 const sensitivityService = require('../../services/sensitivityService');
 const familyService = require('../../services/familyService');
 const { safeDateFormat } = require('../../utils/helpers');
+const { formatDate } = require('../../utils/dateUtils');
 
 Page({
   /**
@@ -19,7 +20,7 @@ Page({
     allergyStatusText: '',
     showBabyInfoModal: false,
     recommendationTitle: '今日推荐排敏食物',
-    selectedDate: new Date().toISOString().split('T')[0],
+    selectedDate: formatDate(new Date()),
     showDatePicker: false,
     selectedFood: null,
     // 宝宝信息表单
@@ -29,7 +30,7 @@ Page({
       gender: 'boy'
     },
     showBabyInfoForm: false,
-    currentDate: new Date().toISOString().split('T')[0],
+    currentDate: formatDate(new Date()),
     startDate: '2014-01-01',
     families: [],
     currentFamilyId: null,
@@ -521,7 +522,7 @@ Page({
     const selectedDate = this.data.selectedDate || todayStr;
     const todayRecord = this.data.todaySensitivityRecord;
     
-    let url = `/pages/sensitivity/food-select?selectedDate=${selectedDate}`;
+    let url = `/subpackages/sensitivity/pages/food-select?selectedDate=${selectedDate}`;
     
     if (todayRecord) {
       url += `&modify=true&record=${encodeURIComponent(JSON.stringify(todayRecord))}`;
@@ -542,7 +543,7 @@ Page({
       const recordDate = safeDateFormat(todayRecord.date);
       // 跳转到排敏食物选择页面，并传递今日排敏记录和记录日期
       wx.navigateTo({
-        url: `/pages/sensitivity/food-select?modify=true&record=${encodeURIComponent(JSON.stringify(todayRecord))}&selectedDate=${recordDate}`
+        url: `/subpackages/sensitivity/pages/food-select?modify=true&record=${encodeURIComponent(JSON.stringify(todayRecord))}&selectedDate=${recordDate}`
       });
     } else {
       // 没有今日排敏记录，直接跳转到排敏食物选择页面
@@ -610,24 +611,16 @@ Page({
       });
       wx.setStorageSync('sensitivity_records', filteredRecords);
 
-      // 尝试从云端删除
+      // 尝试从云端删除（走云函数，避免家庭成员无权限删除他人创建的记录）
       try {
-        const db = wx.cloud.database();
-        const _ = db.command;
-        const cloudQuery = {
-          date: todayStr
-        };
-        if (currentFamilyId) {
-          cloudQuery.familyId = currentFamilyId;
-        } else {
-          cloudQuery._openid = userId;
-          cloudQuery.familyId = _.exists(false);
-        }
-        const { data: cloudRecords } = await db.collection('sensitivity_records').where(cloudQuery).get();
-
-        for (const record of cloudRecords) {
-          await db.collection('sensitivity_records').doc(record._id).remove();
-        }
+        await wx.cloud.callFunction({
+          name: 'sensitivityManager',
+          data: {
+            action: 'deleteRecord',
+            date: todayStr,
+            familyId: currentFamilyId
+          }
+        });
       } catch (cloudError) {
         console.warn('从云端删除记录失败:', cloudError);
       }
@@ -658,7 +651,7 @@ Page({
    */
   openBabyInfoPage: function () {
     wx.navigateTo({
-      url: '/pages/profile/baby-info'
+      url: '/subpackages/profile/pages/baby-info'
     });
   },
 

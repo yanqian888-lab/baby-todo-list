@@ -167,11 +167,17 @@ exports.main = async (event, context) => {
           } catch (cleanupErr) {
             console.warn('清理关联打卡记录失败:', cleanupErr);
           }
-          // 递减用户总任务数
+          // 递减用户总任务数（仅在 totalTasks > 0 时递减，避免减成负数）
           try {
-            await db.collection('users').where({ openid }).update({
-              data: { 'statistics.totalTasks': db.command.gt(0).inc(-1) }
-            });
+            const userStats = await db.collection('users').where({
+              openid,
+              'statistics.totalTasks': _.gt(0)
+            }).get();
+            if (userStats.data.length > 0) {
+              await db.collection('users').where({ openid }).update({
+                data: { 'statistics.totalTasks': _.inc(-1) }
+              });
+            }
           } catch (statsErr) {
             console.warn('更新用户统计失败:', statsErr);
           }
@@ -232,8 +238,7 @@ exports.main = async (event, context) => {
     console.error('删除任务云函数发生未捕获异常:', error);
     return {
       success: false,
-      error: '系统错误，请稍后重试',
-      debugInfo: error.message
+      error: '系统错误，请稍后重试'
     };
   } finally {
     console.log('=== 云函数deleteTask执行结束 ===');

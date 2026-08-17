@@ -5,6 +5,17 @@
   box-sizing: border-box;
 }
 
+.page-container > view,
+.page-container scroll-view {
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.page-container.fade-in > view,
+.page-container.fade-in scroll-view {
+  opacity: 1;
+}
+
 .page-header {
   padding: 18px 16px;
   background-color: #FFFFFF;
@@ -19,11 +30,13 @@
 }
 
 .page-content {
-  min-height: calc(100vh - 120px);
+  height: calc(100vh - 120px);
   background-color: #FFFFFF;
   border-radius: 22px;
   padding: 16px;
   box-sizing: border-box;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .section {

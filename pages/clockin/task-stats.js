@@ -3,15 +3,6 @@
 // 启用mock数据，方便测试
 const USE_MOCK_DATA = false;
 
-// 验证打卡次数修复是否有效
-function verifyClockInFix() {
-  console.log('=== 验证打卡次数修复 ===');
-  console.log('- 修复要点1: 当数据库查询失败时添加默认记录');
-  console.log('- 修复要点2: 确保从已打卡列表进入时至少显示1次打卡');
-  console.log('- 修复要点3: 增强错误处理和数据一致性检查');
-  console.log('=== 验证完成 ===');
-}
-
 Page({
   data: {
     taskId: '',
@@ -38,12 +29,6 @@ Page({
       taskName: decodeURIComponent(taskName)
     });
     
-    // 调用验证函数，确保修复正常工作
-    verifyClockInFix();
-    
-    // 临时：添加一些测试数据到数据库，用于验证功能
-    // 注意：这个方法可能会影响日历显示，暂时保留但后续应该移除
-    // this.addTestClockInRecords();
     this.init();
   },
   
@@ -61,62 +46,6 @@ Page({
     this.loadClockInRecords();
   },
   
-  /**
-   * 添加测试打卡记录（用于调试）
-   */
-  async addTestClockInRecords() {
-    try {
-      // 创建测试打卡记录
-      const db = wx.cloud.database();
-      const testDates = [
-        new Date(2025, 10, 10), // 11月10日
-        new Date(2025, 10, 15), // 11月15日
-        new Date(2025, 10, 20), // 11月20日
-        new Date(2025, 10, 25), // 11月25日
-        new Date(2025, 10, 30)  // 11月30日
-      ];
-      
-      console.log('开始添加测试打卡记录...');
-      
-      // 先清空现有的默认记录，避免重复
-      if (Object.keys(this.data.clockInRecords).length === 1) {
-        console.log('发现默认记录，将被测试记录替换');
-      }
-      
-      // 先确保集合存在，创建一些测试记录
-      for (const date of testDates) {
-        try {
-          await db.collection('task_completions').add({
-            data: {
-              openid: 'test_openid',
-              taskId: this.data.taskId,
-              completeTime: date,
-              createTime: db.serverDate(),
-              remark: '测试打卡记录'
-            }
-          });
-          console.log(`已添加测试记录: ${this.formatDate(date)}`);
-        } catch (addError) {
-          console.warn(`添加测试记录失败: ${this.formatDate(date)}`, addError);
-          // 继续添加其他记录，不中断循环
-        }
-      }
-      
-      console.log('测试打卡记录添加完成！');
-      
-      // 重新加载打卡记录
-      await this.loadClockInRecords();
-      this.generateCalendar();
-      
-    } catch (error) {
-      console.error('添加测试打卡记录失败:', error);
-      wx.showToast({
-        title: '测试数据创建失败',
-        icon: 'none'
-      });
-    }
-  },
-
   /**
    * 初始化页面数据
    */

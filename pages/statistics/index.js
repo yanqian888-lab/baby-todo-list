@@ -117,7 +117,7 @@ Page({
    * 跳转到任务管理页面
    */
   goToTasks: function () {
-    wx.switchTab({
+    wx.navigateTo({
       url: '/pages/task/index'
     })
   },
@@ -126,7 +126,7 @@ Page({
    * 跳转到打卡页面
    */
   goToClockIn: function () {
-    wx.switchTab({
+    wx.navigateTo({
       url: '/pages/clockin/index'
     })
   },

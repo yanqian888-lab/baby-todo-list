@@ -25,40 +25,60 @@
   },
   "cloudfunctionRoot": "cloudfunctions/",
   "cloud": {
-    "env": "cloud1-9g2wikx47c9ba4ec"
+    "env": "cloud1-d6gvk59pc73976058"
   },
   "compileType": "miniprogram",
   "simulatorPluginLibVersion": {},
   "packOptions": {
     "ignore": [
       {
-        "type": "regexp",
-        "value": "^cloudfunctions/"
+        "value": "^backup/",
+        "type": "regexp"
       },
       {
-        "type": "regexp",
-        "value": "^scripts/"
+        "value": "^scripts/",
+        "type": "regexp"
       },
       {
-        "type": "regexp",
-        "value": "^docs/"
+        "value": "^docs/",
+        "type": "regexp"
       },
       {
-        "type": "regexp",
-        "value": "^\\.git/"
+        "value": "^\\.git/",
+        "type": "regexp"
       },
       {
-        "type": "regexp",
-        "value": "^miniprogram_npm/"
+        "value": "^miniprogram_npm/",
+        "type": "regexp"
       },
       {
-        "type": "regexp",
-        "value": "test_.*\\.js$"
+        "value": "test_.*\\.js$",
+        "type": "regexp"
+      },
+      {
+        "value": "^.*\\.md$",
+        "type": "regexp"
+      },
+      {
+        "value": "^.*\\.xlsx$",
+        "type": "regexp"
+      },
+      {
+        "value": "^.*\\.txt$",
+        "type": "regexp"
+      },
+      {
+        "value": "^.*ssh-keygen.*$",
+        "type": "regexp"
+      },
+      {
+        "value": "^Sheet1\\.json$",
+        "type": "regexp"
       }
     ],
     "include": []
   },
-  "appid": "wx07137a5c4479d119",
+  "appid": "wxd75feff71d1575ec",
   "editorSetting": {},
   "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
   "libVersion": "3.11.2"

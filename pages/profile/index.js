@@ -39,10 +39,22 @@ Page({
         icon: '📋',
         title: '排敏记录',
         showArrow: true
+      },
+      {
+        id: 'privacy-policy',
+        icon: '📖',
+        title: '隐私政策',
+        showArrow: true
+      },
+      {
+        id: 'user-agreement',
+        icon: '📄',
+        title: '用户协议',
+        showArrow: true
       }
     ],
     hasUserInfo: false,
-    canIUse: wx.canIUse('button.open-type.getUserInfo')
+    isNavigating: false
   },
 
   /**
@@ -69,11 +81,13 @@ Page({
       return;
     }
     if (this.data.hasLoaded) {
-      // 每次显示页面时刷新数据
+      // 从其他页面返回时刷新数据
       this.initData();
     } else {
       this.setData({ hasLoaded: true });
     }
+    // 重置导航状态
+    this.setData({ isNavigating: false });
   },
 
   /**
@@ -163,62 +177,30 @@ Page({
   },
 
   /**
-   * 获取用户信息
+   * 选择头像（头像昵称填写能力，wx.getUserProfile/wx.getUserInfo 已废弃）
    */
-  getUserInfo: function (e) {
-    if (e.detail && e.detail.userInfo) {
-      this.processUserLogin(e.detail.userInfo);
-    } else {
-      // 用户拒绝授权
-      wx.showToast({
-        title: '登录被取消',
-        icon: 'none'
-      });
-    }
+  onChooseAvatar: function (e) {
+    const { avatarUrl } = e.detail;
+    if (!avatarUrl) return;
+
+    // 立即更新本地展示（临时路径），并走原有 updateUserInfo 云函数链路持久化
+    this.setData({
+      userInfo: { ...this.data.userInfo, avatarUrl: avatarUrl }
+    });
+    this.updateUserProfile({ avatarUrl: avatarUrl });
   },
 
-  handleUserCardTap: function () {
-    if (wx.getUserProfile) {
-      wx.getUserProfile({
-        desc: '用于完善用户信息',
-        success: (res) => {
-          if (res.userInfo) {
-            if (this.data.hasUserInfo) {
-              // 已登录，更新头像昵称
-              this.updateUserProfile(res.userInfo);
-            } else {
-              // 未登录，走登录流程
-              this.processUserLogin(res.userInfo);
-            }
-          }
-        },
-        fail: () => {
-          wx.showToast({
-            title: '授权失败',
-            icon: 'none'
-          });
-        }
-      });
-    } else {
-      wx.getUserInfo({
-        lang: 'zh_CN',
-        success: (res) => {
-          if (res.userInfo) {
-            if (this.data.hasUserInfo) {
-              this.updateUserProfile(res.userInfo);
-            } else {
-              this.processUserLogin(res.userInfo);
-            }
-          }
-        },
-        fail: () => {
-          wx.showToast({
-            title: '授权失败',
-            icon: 'none'
-          });
-        }
-      });
-    }
+  /**
+   * 修改昵称（头像昵称填写能力）
+   */
+  onNicknameChange: function (e) {
+    const nickName = (e.detail.value || '').trim();
+    if (!nickName || nickName === this.data.userInfo.nickName) return;
+
+    this.setData({
+      userInfo: { ...this.data.userInfo, nickName: nickName }
+    });
+    this.updateUserProfile({ nickName: nickName });
   },
 
   /**
@@ -364,48 +346,33 @@ Page({
   },
 
   onMenuItemTap: function (e) {
+    if (this.data.isNavigating) return;
+    this.setData({ isNavigating: true });
+
     const id = e.currentTarget.dataset.id;
-    
-    switch (id) {
-      case 'family':
-        wx.navigateTo({
-          url: '/pages/family/index'
-        });
-        break;
-      case 'baby-info':
-        wx.navigateTo({
-          url: '/pages/profile/baby-info'
-        });
-        break;
-      case 'sensitivity-records':
-        wx.navigateTo({
-          url: '/pages/sensitivity/records'
-        });
-        break;
-      case 'growth-records':
-        // 成长记录页面暂时未实现，显示提示
-        wx.showToast({
-          title: '成长记录功能开发中',
-          icon: 'none'
-        });
-        break;
-      case 'settings':
-        wx.navigateTo({
-          url: '/pages/settings/index'
-        });
-        break;
-      case 'help':
-        wx.navigateTo({
-          url: '/pages/profile/help'
-        });
-        break;
-      case 'about':
-        wx.navigateTo({
-          url: '/pages/profile/about'
-        });
-        break;
-      default:
-        break;
+    const urlMap = {
+      'family': '/pages/family/index',
+      'baby-info': '/subpackages/profile/pages/baby-info',
+      'sensitivity-records': '/subpackages/sensitivity/pages/records',
+      'privacy-policy': '/pages/privacy-policy/index',
+      'user-agreement': '/pages/user-agreement/index',
+      'settings': '/pages/settings/index',
+      'help': '/subpackages/profile/pages/help',
+      'about': '/subpackages/profile/pages/about'
+    };
+
+    if (urlMap[id]) {
+      wx.navigateTo({
+        url: urlMap[id],
+        fail: () => {
+          this.setData({ isNavigating: false });
+        }
+      });
+    } else if (id === 'growth-records') {
+      wx.showToast({ title: '成长记录功能开发中', icon: 'none' });
+      this.setData({ isNavigating: false });
+    } else {
+      this.setData({ isNavigating: false });
     }
   },
 

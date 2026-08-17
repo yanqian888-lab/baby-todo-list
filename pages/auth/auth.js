@@ -10,17 +10,11 @@ Page({
   data: {
     isLoading: false,
     userInfo: null,
-    canIUseGetUserProfile: false
+    avatarUrl: '',
+    nickName: ''
   },
 
   onLoad: function() {
-    // 检查是否支持 getUserProfile API
-    if (wx.getUserProfile) {
-      this.setData({
-        canIUseGetUserProfile: true
-      });
-    }
-    
     // 获取上一页传递的参数
     const options = this.options || {};
     this.setData({
@@ -30,34 +24,44 @@ Page({
   },
 
   /**
-   * 获取用户信息
+   * 选择头像（头像昵称填写能力）
    */
-  getUserProfile: function() {
+  onChooseAvatar: function(e) {
+    const { avatarUrl } = e.detail;
+    if (avatarUrl) {
+      this.setData({ avatarUrl: avatarUrl });
+    }
+  },
+
+  /**
+   * 输入昵称（头像昵称填写能力）
+   */
+  onNicknameInput: function(e) {
+    this.setData({ nickName: (e.detail.value || '').trim() });
+  },
+
+  /**
+   * 确认用户信息，完成登录流程
+   */
+  confirmUserInfo: function() {
     const that = this;
-    
+
     if (that.data.isLoading) return;
-    
+
     that.setData({
       isLoading: true
     });
-    
-    wx.getUserProfile({
-      desc: '用于完善用户资料',
-      success: (res) => {
-        console.log('获取用户信息成功', res.userInfo);
-        that.handleUserInfo(res.userInfo);
-      },
-      fail: (err) => {
-        console.error('获取用户信息失败', err);
-        that.setData({
-          isLoading: false
-        });
-        wx.showToast({
-          title: '授权失败，请重试',
-          icon: 'none'
-        });
-      }
-    });
+
+    // 未填昵称时传 undefined，由云函数生成随机昵称兜底
+    // 未选头像时使用默认头像兜底
+    const userInfo = {
+      nickName: that.data.nickName || undefined,
+      avatarUrl: that.data.avatarUrl || '/images/touxiang_moren.png',
+      gender: 0
+    };
+
+    that.setData({ userInfo: userInfo });
+    that.handleUserInfo(userInfo);
   },
 
   /**
@@ -148,7 +152,7 @@ Page({
     return {
       title: '母婴打卡，记录宝宝成长的每一天',
       path: '/pages/index/index',
-      imageUrl: '/assets/images/share.jpg'
+      imageUrl: '/images/logo.png'
     };
   }
 });

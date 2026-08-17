@@ -112,28 +112,13 @@ const authService = {
   },
 
   /**
-   * 获取用户信息授权
-   * @returns {Promise} 授权结果
+   * 获取用户信息授权（已废弃）
+   * wx.getUserProfile 已被微信官方废弃，头像昵称请使用
+   * <button open-type="chooseAvatar"> + <input type="nickname"> 能力收集
+   * @returns {Promise} 始终 reject 明确的不支持错误
    */
   getUserProfile: function() {
-    return new Promise((resolve, reject) => {
-      wx.getUserProfile({
-        desc: '用于完善用户资料',
-        success: (res) => {
-          // 更新授权信息
-          const authInfo = wx.getStorageSync('authInfo') || { authorizedScopes: [] };
-          if (!authInfo.authorizedScopes.includes('scope.userInfo')) {
-            authInfo.authorizedScopes.push('scope.userInfo');
-            authInfo.timestamp = Date.now();
-            wx.setStorageSync('authInfo', authInfo);
-          }
-          resolve(res);
-        },
-        fail: (error) => {
-          reject(error);
-        }
-      });
-    });
+    return Promise.reject(new Error('wx.getUserProfile 已废弃，不再支持，请使用头像昵称填写能力（chooseAvatar + nickname input）'));
   },
 
   /**

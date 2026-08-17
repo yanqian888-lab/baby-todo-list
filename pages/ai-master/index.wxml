@@ -29,6 +29,10 @@
         mode="aspectFill"
       ></image>
       <view class="message-content">
+        <!-- AI生成标注 -->
+        <view class="ai-badge" wx:if="{{item.role === 'bot'}}">
+          <text class="ai-badge-text">AI生成</text>
+        </view>
         <!-- 文本消息 -->
         <view class="message-bubble" wx:if="{{item.type === 'text' || !item.type}}">
           <text class="message-text">{{item.content}}</text>

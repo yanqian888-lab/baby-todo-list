@@ -7,27 +7,8 @@ const _ = db.command
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
   const { openid } = wxContext
-  const { status = 'pending', category, page = 1, size = 20, includeCompleted = false, action } = event
-  
-  // 测试功能：检查数据库中的数据
-  if (action === 'test') {
-    console.log('🔍 开始测试数据库数据...');
-    
-    // 测试1: 检查已完成任务
-    const completedTasks = await db.collection('tasks').where({ status: 'completed' }).get();
-    console.log(`✅ 已完成任务数量: ${completedTasks.data.length}`);
-    
-    // 测试2: 检查打卡记录
-    const checkins = await db.collection('task_completions').get();
-    console.log(`✅ 打卡记录数量: ${checkins.data.length}`);
-    
-    return {
-      success: true,
-      completedTasks: completedTasks.data,
-      checkins: checkins.data
-    };
-  }
-  
+  const { status = 'pending', category, page = 1, size = 20, includeCompleted = false } = event
+
   try {
     console.log('🔍 getTasks云函数调用开始');
     console.log('🔍 当前用户openid:', openid);
@@ -41,6 +22,13 @@ exports.main = async (event, context) => {
     
     // 优先按家庭查询，否则按个人_openid查询
     if (familyId) {
+      // 校验调用者是否为该家庭成员
+      const familyRes = await db.collection('families').doc(familyId).get().catch(() => null);
+      const family = familyRes ? familyRes.data : null;
+      const isMember = family && (family.creatorOpenId === openid || (family.members || []).some(m => m.openId === openid));
+      if (!isMember) {
+        return { success: false, error: '无权访问该家庭数据' };
+      }
       query.familyId = familyId;
       console.log('👨‍👩‍👧‍👦 按家庭查询任务:', familyId);
     } else {
@@ -233,8 +221,7 @@ exports.main = async (event, context) => {
     console.error('❌ 获取任务失败:', error);
     return {
       success: false,
-      error: error.message,
-      stack: error.stack
+      error: error.message
     }
   }
 }

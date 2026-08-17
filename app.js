@@ -149,7 +149,8 @@ App({
   },
   
   /**
-   * 初始化排敏食材数据：清空旧本地/云端数据，重新导入最新75条
+   * 初始化排敏食材数据：版本变更时触发云端食材字典重导（仅管理员可成功执行），
+   * 只清理本地食材字典缓存，不触碰用户的排敏记录
    */
   initSensitivityData: function() {
     const CURRENT_VERSION = '1.3.72';
@@ -160,12 +161,10 @@ App({
       return;
     }
     
-    console.log('🔄 检测到排敏食材数据需要更新，开始清理旧数据...');
+    console.log('🔄 检测到排敏食材数据需要更新，开始清理旧字典缓存...');
     
-    // 1. 清空本地旧缓存
+    // 1. 清空本地食材字典缓存（不清 stores.sensitivityRecords，那是用户的排敏记录）
     try {
-      const { stores } = require('./utils/dataStore');
-      stores.sensitivityRecords.clear();
       wx.removeStorageSync('sensitivity_foods');
       wx.removeStorageSync('sensitivityFoodsCache');
       // 清理默认 babyInfo 中的 safeFoodsList
@@ -187,23 +186,26 @@ App({
           }
         }
       });
-      console.log('✅ 本地旧排敏数据已清理');
+      console.log('✅ 本地食材字典缓存已清理');
     } catch (e) {
       console.error('清理本地旧数据失败:', e);
     }
     
-    // 2. 调用云函数清空云端并重新导入
+    // 2. 调用云函数重导食材字典
+    // 无论成功失败（含无权限）都记录版本号，避免每次启动都重复调用
     wx.cloud.callFunction({
       name: 'initSensitivityFoods',
       data: {}
     }).then(res => {
       console.log('✅ 云端排敏食材初始化结果:', res.result);
-      if (res.result && res.result.success) {
-        wx.setStorageSync('sensitivityDataVersion', CURRENT_VERSION);
-        console.log('✅ 排敏食材数据版本已更新为', CURRENT_VERSION);
+      wx.setStorageSync('sensitivityDataVersion', CURRENT_VERSION);
+      console.log('✅ 排敏食材数据版本已更新为', CURRENT_VERSION);
+      if (!res.result || !res.result.success) {
+        console.error('❌ 食材字典重导未成功（需管理员在云函数环境变量 ADMIN_OPENIDS 中配置管理员 openid 后才会执行重导），本次跳过');
       }
     }).catch(err => {
       console.error('❌ 云端排敏食材初始化失败:', err);
+      wx.setStorageSync('sensitivityDataVersion', CURRENT_VERSION);
     });
   },
   

@@ -8,7 +8,7 @@
   <!-- 用户信息区域 -->
   <view class="user-info-section">
     <view class="avatar">
-      <image src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill"></image>
+      <image src="{{userInfo.avatarUrl || '/images/touxiang_moren.png'}}" mode="aspectFill"></image>
     </view>
     <view class="user-details">
       <text class="nickname">{{userInfo.nickName || '用户'}}</text>

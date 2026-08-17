@@ -1,0 +1,55 @@
+<!-- 排敏推荐页面 -->
+<view class="sensitivity-recommend">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <view class="header-left" bindtap="navigateBack">
+      <text class="icon-back">←</text>
+    </view>
+    <view class="header-title">排敏推荐</view>
+    <view class="header-right"></view>
+  </view>
+
+  <!-- 宝宝信息卡片 -->
+  <view class="baby-info-card" wx:if="{{babyInfo}}">
+    <view class="baby-avatar">
+      <image src="{{babyInfo.avatar || '/images/logo.png'}}" mode="aspectFill"></image>
+    </view>
+    <view class="baby-details">
+      <view class="baby-name">{{babyInfo.name}}</view>
+      <view class="baby-age">{{babyInfo.ageMonths}}个月</view>
+    </view>
+    <view class="edit-btn" bindtap="editBabyInfo">
+      <text>编辑</text>
+    </view>
+  </view>
+
+  <!-- 推荐食物列表 -->
+  <view class="recommend-list" wx:if="{{recommendedFoods.length > 0}}">
+    <view class="section-title">
+      <text>根据宝宝月龄推荐的排敏食物</text>
+    </view>
+    
+    <view class="food-grid">
+      <view class="food-card" wx:for="{{recommendedFoods}}" wx:key="id" bindtap="viewFoodDetail" data-id="{{item.id}}">
+        <view class="food-icon">{{item.name.charAt(0)}}</view>
+        <view class="food-name">{{item.name}}</view>
+        <view class="food-type">{{item.type}}</view>
+        <view class="food-reason">
+          <text class="reason-label">推荐理由：</text>
+          <text class="reason-content">{{item.reason}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{recommendedFoods.length === 0 && !loading}}">
+    <text>暂无推荐的排敏食物</text>
+    <button class="refresh-btn" bindtap="getRecommendations">重新获取</button>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+</view>

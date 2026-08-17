@@ -18,6 +18,24 @@
   align-items: center;
 }
 
+.avatar-btn {
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  line-height: normal;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.nickname-input {
+  width: 100%;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+}
+
 .avatar-wrap {
   width: 64px;
   height: 64px;

@@ -32,6 +32,13 @@ exports.main = async (event, context) => {
     
     // 如果指定了家庭ID，按家庭过滤；否则查询用户关联的所有家庭任务
     if (familyId) {
+      // 校验调用者是否为该家庭成员
+      const familyRes = await db.collection('families').doc(familyId).get().catch(() => null)
+      const family = familyRes ? familyRes.data : null
+      const isMember = family && (family.creatorOpenId === openid || (family.members || []).some(m => m.openId === openid))
+      if (!isMember) {
+        return { success: false, error: '无权访问该家庭数据' }
+      }
       baseQuery.familyId = familyId
     } else {
       const familiesRes = await db.collection('families').where(_.or([

@@ -9,15 +9,24 @@
   <!-- 用户信息预览区域 -->
   <view class="user-preview">
     <view class="avatar-container">
-      <image 
-        class="avatar" 
-        src="{{userInfo ? userInfo.avatarUrl : '/assets/images/default-avatar.png'}}"
-        mode="aspectFill"
-      ></image>
+      <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+        <image 
+          class="avatar" 
+          src="{{avatarUrl || '/images/touxiang_moren.png'}}"
+          mode="aspectFill"
+        ></image>
+      </button>
     </view>
     <view class="user-info">
-      <text class="nickname">{{userInfo ? userInfo.nickName : '点击授权获取昵称'}}</text>
-      <text class="desc">使用微信昵称和头像，方便记录宝宝成长</text>
+      <input 
+        class="nickname nickname-input"
+        type="nickname"
+        placeholder="点击输入昵称（选填）"
+        value="{{nickName}}"
+        bindinput="onNicknameInput"
+        bindblur="onNicknameInput"
+      />
+      <text class="desc">选择头像并填写昵称，方便记录宝宝成长</text>
     </view>
   </view>
 
@@ -42,11 +51,11 @@
     <button 
       class="auth-btn primary" 
       type="primary" 
-      bindtap="getUserProfile"
+      bindtap="confirmUserInfo"
       loading="{{isLoading}}"
       disabled="{{isLoading}}"
     >
-      授权并继续
+      确认并继续
     </button>
     
     <button 
@@ -62,7 +71,7 @@
   <!-- 隐私说明 -->
   <view class="privacy-info">
     <text class="privacy-text">
-      点击授权即表示您同意
+      点击确认即表示您同意
       <text class="link" bindtap="navigateToAgreement">《用户协议》</text>
       和
       <text class="link" bindtap="navigateToPrivacy">《隐私政策》</text>

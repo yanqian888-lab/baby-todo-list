@@ -203,7 +203,7 @@ Page({
    */
   aboutUs: function () {
     wx.navigateTo({
-      url: '/pages/profile/about'
+      url: '/subpackages/profile/pages/about'
     });
   },
 

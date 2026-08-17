@@ -1,12 +1,12 @@
 <!-- pages/user-agreement/index.wxml -->
-<view class="page-container">
+<view class="page-container {{pageReady ? 'fade-in' : ''}}">
   <view class="page-header">
     <text class="page-title">用户协议</text>
   </view>
-  <scroll-view class="page-content" scroll-y="true">
+  <scroll-view class="page-content" scroll-y="true" enhanced show-scrollbar="{{false}}">
     <view class="section">
       <text class="section-title">用户协议</text>
-      <text class="section-text">本《用户协议》（以下简称"本协议"）是您（以下简称"用户"）与本微信小程序，名称：萌宝贝排敏生活记（以下简称"小程序"）运营方（以下简称"我们"）之间就使用该小程序所订立的权利义务关系的协议。请您在使用本小程序前，仔细阅读并充分理解本协议全部条款，尤其是免除或限制我们责任的条款、管辖与法律适用条款等。您点击"同意"或使用本小程序服务，即视为您已阅读并同意本协议全部内容，自愿接受本协议约束。若您不同意本协议任何条款，请勿使用本小程序。</text>
+      <text class="section-text">本《用户协议》（以下简称"本协议"）是您（以下简称"用户"）与本微信小程序「乖贝贝排敏生活全家记」（以下简称"小程序"）的运营主体北京绵言科技发展中心（个体工商户）（以下简称"我们"）之间就使用该小程序所订立的权利义务关系的协议。请您在使用本小程序前，仔细阅读并充分理解本协议全部条款，尤其是免除或限制我们责任的条款、管辖与法律适用条款等。您点击"同意"或使用本小程序服务，即视为您已阅读并同意本协议全部内容，自愿接受本协议约束。若您不同意本协议任何条款，请勿使用本小程序。</text>
     </view>
     <view class="section">
       <text class="section-title">一、服务内容</text>

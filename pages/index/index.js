@@ -46,7 +46,7 @@ Page({
       gender: 'boy'
     },
     startDate: '2014-01-01',
-    pickerEndDate: new Date().toISOString().split('T')[0],
+    pickerEndDate: dateUtils.formatDate(new Date()),
     showJoinFamilyModal: false,
     inviteCode: ''
   },
@@ -55,6 +55,11 @@ Page({
    * 批量更新器
    */
   batchUpdater: null,
+
+  /**
+   * 初始化进行中标志（避免 onLoad 与 onShow 重复初始化）
+   */
+  _loading: false,
   
   /**
    * 获取全局用户信息
@@ -403,15 +408,21 @@ Page({
       wx.redirectTo({ url: '/pages/login/login' });
       return;
     }
-    this.setData({ hasLoaded: true });
-    // 更新当前日期
-    this.updateCurrentDate();
-    // 获取用户信息
-    this.getUserInfo();
-    // 加载家庭信息并设置当前家庭
-    await this.loadFamilyInfo();
-    // 调用初始化数据函数
-    await this.initData();
+    // 初始化进行中标志，onShow 在此期间跳过，避免重复初始化
+    this._loading = true;
+    try {
+      // 更新当前日期
+      this.updateCurrentDate();
+      // 获取用户信息
+      this.getUserInfo();
+      // 加载家庭信息并设置当前家庭
+      await this.loadFamilyInfo();
+      // 调用初始化数据函数
+      await this.initData();
+    } finally {
+      this._loading = false;
+      this.setData({ hasLoaded: true });
+    }
   },
   
   /**
@@ -421,6 +432,10 @@ Page({
     // 优先检查登录状态，未登录直接跳转
     if (!require('../../services/userService').checkLoginStatus()) {
       wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+    // onLoad 初始化尚未完成，跳过本次刷新
+    if (this._loading) {
       return;
     }
     // 避免 onLoad 和 onShow 首次重复初始化
@@ -1830,292 +1845,4 @@ Page({
       url: `/pages/task/create?mode=create${familyIdParam}`
     });
   },
-  
-
-  
-  // 测试月任务日期格式化函数
-  testMonthdayText() {
-    console.log('🔍 开始测试月任务日期格式化...');
-    
-    // 测试不同格式的输入数据
-    const testCases = [
-      { name: '数字数组格式', input: [1, 5, 10], expected: '每月 1日、5日、10日' },
-      { name: '字符串数组格式', input: ['1', '5', '10'], expected: '每月 1日、5日、10日' },
-      { name: '单个数字', input: 15, expected: '每月 15日' },
-      { name: '单个字符串', input: '20', expected: '每月 20日' },
-      { name: '空数组', input: [], expected: '每月' },
-      { name: '包含无效值的数组', input: [1, 'invalid', 30, 32], expected: '每月 1日、30日' },
-      { name: '对象格式', input: { "1": true, "5": true, "10": true }, expected: '每月 1日、5日、10日' },
-      { name: 'JSON字符串', input: '[2,4,6,8]', expected: '每月 2日、4日、6日、8日' }
-    ];
-    
-    // 执行测试
-    testCases.forEach(test => {
-      try {
-        console.log(`📋 测试用例: ${test.name}`);
-        console.log(`🔢 输入:`, test.input);
-        
-        const result = this.getMonthdayText(test.input);
-        console.log(`✅ 输出: "${result}"`);
-        console.log(`🎯 预期: "${test.expected}"`);
-        console.log(`🔍 测试${result === test.expected ? '通过' : '失败'}`);
-      } catch (error) {
-        console.error(`❌ 测试用例${test.name}执行出错:`, error);
-      }
-      console.log('------------------------------');
-    });
-    
-    console.log('🔍 月任务日期格式化测试完成');
-  },
-  
-  // 测试月任务日期显示功能完整流程
-  testCompleteMonthlyTaskFlow() {
-    console.log('\n======= 开始月任务日期显示功能完整测试 =======');
-    
-    // 测试1: 完整月任务处理流程
-    console.log('\n测试1: 完整月任务处理流程');
-    const mockTask = {
-      selectedDays: [5, 15, 25],
-      type: 'month'
-    };
-    
-    // 步骤1: 处理选中日期
-    const processedDays = this._processSelectedDays(mockTask.selectedDays, 'month');
-    console.log('处理后的日期:', processedDays);
-    
-    // 步骤2: 生成日期文本
-    const displayText = this.getMonthdayText(processedDays);
-    console.log('显示文本:', displayText);
-    console.log('测试结果:', displayText === '每月 5日、15日、25日' ? '通过' : '失败');
-    
-    // 测试2: 边界条件 - 无效日期处理
-    console.log('\n测试2: 边界条件 - 无效日期处理');
-    const mockTaskInvalid = {
-      selectedDays: [0, 32, 10, -5],
-      type: 'month'
-    };
-    
-    const processedDaysInvalid = this._processSelectedDays(mockTaskInvalid.selectedDays, 'month');
-    const displayTextInvalid = this.getMonthdayText(processedDaysInvalid);
-    console.log('处理后的有效日期:', processedDaysInvalid);
-    console.log('显示文本:', displayTextInvalid);
-    console.log('测试结果:', displayTextInvalid === '每月 10日' ? '通过' : '失败');
-    
-    // 测试3: 边界条件 - 空输入
-    console.log('\n测试3: 边界条件 - 空输入');
-    const mockTaskEmpty = {
-      selectedDays: [],
-      type: 'month'
-    };
-    
-    const processedDaysEmpty = this._processSelectedDays(mockTaskEmpty.selectedDays, 'month');
-    const displayTextEmpty = this.getMonthdayText(processedDaysEmpty);
-    console.log('处理后的日期:', processedDaysEmpty);
-    console.log('显示文本:', displayTextEmpty);
-    console.log('测试结果:', displayTextEmpty === '每月' ? '通过' : '失败');
-    
-    console.log('\n======= 月任务日期显示功能完整测试结束 =======');
-  },
-    
-    // 测试周任务索引转换功能
-    testWeeklyTaskIndexConversion() {
-    console.log('====== 测试周任务索引转换功能 ======');
-    
-    // 模拟创建页面的索引值(0=周一,1=周二,...,6=周日)
-    const pageIndices1 = ['0', '2', '4']; // 周一,周三,周五
-    const pageIndices2 = ['6']; // 周日
-    const pageIndices3 = ['0', '1', '2', '3', '4', '5', '6']; // 所有天
-    const pageIndices4 = []; // 空
-    
-    // 模拟创建页面转换逻辑
-    const convertToJavaScriptIndex = (pageIndexStr) => {
-      const pageIndex = parseInt(pageIndexStr);
-      return pageIndex === 6 ? 0 : pageIndex + 1;
-    };
-    
-    // 转换并显示结果
-    const result1 = pageIndices1.map(convertToJavaScriptIndex);
-    console.log('页面索引 [周一,周三,周五] -> JS索引:', result1); // 应输出 [1,3,5]
-    
-    const result2 = pageIndices2.map(convertToJavaScriptIndex);
-    console.log('页面索引 [周日] -> JS索引:', result2); // 应输出 [0]
-    
-    const result3 = pageIndices3.map(convertToJavaScriptIndex);
-    console.log('页面索引 [所有天] -> JS索引:', result3); // 应输出 [1,2,3,4,5,6,0]
-    
-    const result4 = pageIndices4.map(convertToJavaScriptIndex);
-    console.log('页面索引 [空] -> JS索引:', result4); // 应输出 []
-    
-    // 测试getWeekdayText函数对转换后索引的处理
-    console.log('\ngetWeekdayText对转换后索引的处理:');
-    console.log('周一,周三,周五 -> 文本:', this.getWeekdayText(result1)); // 应输出 "每周 周一、周三、周五"
-    console.log('周日 -> 文本:', this.getWeekdayText(result2)); // 应输出 "每周 周日"
-    console.log('所有天 -> 文本:', this.getWeekdayText(result3)); // 应输出 "每周 周日、周一、周二、周三、周四、周五、周六"
-    console.log('空 -> 文本:', this.getWeekdayText(result4)); // 应输出 "每周"
-    
-    // 测试日期匹配逻辑
-    const todayDay = new Date().getDay();
-    console.log('\n今日星期索引:', todayDay, '(0=周日,1=周一,...6=周六)');
-    
-    // 模拟任务的selectedDays和今日是否匹配
-    console.log('测试任务是否应显示:');
-    console.log('任务在[周一,周三,周五] - 今日是否匹配:', result1.includes(todayDay));
-    console.log('任务在[周日] - 今日是否匹配:', result2.includes(todayDay));
-    console.log('任务在[所有天] - 今日是否匹配:', result3.includes(todayDay));
-    
-    console.log('====== 周任务测试完成 ======');
-    return {
-      conversionTest: true,
-      todayMatchTest: result1.includes(todayDay),
-      testResults: {
-        pageIndices1,
-        converted1: result1,
-        pageIndices2,
-        converted2: result2,
-        todayDay
-      }
-    };
-  },
-  
-  // 测试_processSelectedDays函数
-  testProcessSelectedDays() {
-    console.log('🔍 开始测试_processSelectedDays函数...');
-    
-    // 测试week类型（默认，0-6范围）
-    console.log('📅 测试week类型（0-6范围）:');
-    const weekTestCases = [
-      { name: '数字数组', input: [1, 3, 5], expected: [1, 3, 5] },
-      { name: '超出范围的值(week)', input: [1, 7, 8], expected: [1] }, // 7和8超出week范围(0-6)
-      { name: '字符串数组', input: ['1', '3', '5'], expected: [1, 3, 5] },
-      { name: '单个数字', input: 2, expected: [2] },
-      { name: '对象格式', input: { "1": true, "3": true, "5": true }, expected: [1, 3, 5] },
-      { name: 'null值', input: null, expected: [] }
-    ];
-    
-    weekTestCases.forEach(test => {
-      try {
-        console.log(`📋 测试用例: ${test.name}`);
-        console.log(`🔢 输入:`, test.input);
-        
-        const result = this._processSelectedDays(test.input, 'week');
-        console.log(`✅ 输出:`, result);
-        console.log(`🎯 预期:`, test.expected);
-        
-        const isEqual = JSON.stringify(result) === JSON.stringify(test.expected);
-        console.log(`🔍 week类型测试${isEqual ? '通过' : '失败'}`);
-      } catch (error) {
-        console.error(`❌ 测试用例${test.name}执行出错:`, error);
-      }
-      console.log('------------------------------');
-    });
-    
-    // 测试month类型（1-31范围）
-    console.log('📅 测试month类型（1-31范围）:');
-    const monthTestCases = [
-      { name: '数字数组', input: [1, 15, 30], expected: [1, 15, 30] },
-      { name: '超出范围的值(month)', input: [1, 32, 35], expected: [1] }, // 32和35超出month范围(1-31)
-      { name: '字符串数组', input: ['1', '15', '30'], expected: [1, 15, 30] },
-      { name: '单个数字', input: 25, expected: [25] },
-      { name: '对象格式', input: { "1": true, "15": true, "30": true }, expected: [1, 15, 30] },
-      { name: 'JSON字符串', input: '[2,10,20,30]', expected: [2,10,20,30] },
-      { name: 'null值', input: null, expected: [] }
-    ];
-    
-    monthTestCases.forEach(test => {
-      try {
-        console.log(`📋 测试用例: ${test.name}`);
-        console.log(`🔢 输入:`, test.input);
-        
-        const result = this._processSelectedDays(test.input, 'month');
-        console.log(`✅ 输出:`, result);
-        console.log(`🎯 预期:`, test.expected);
-        
-        const isEqual = JSON.stringify(result) === JSON.stringify(test.expected);
-        console.log(`🔍 month类型测试${isEqual ? '通过' : '失败'}`);
-      } catch (error) {
-        console.error(`❌ 测试用例${test.name}执行出错:`, error);
-      }
-      console.log('------------------------------');
-    });
-    
-    console.log('🔍 _processSelectedDays函数测试完成');
-  },
-  
-  // 测试完整的月任务处理流程
-  async testMonthlyTaskProcessing() {
-    console.log('🔍 开始测试完整的月任务处理流程...');
-    
-    try {
-      // 1. 测试_processSelectedDays函数的month类型
-      console.log('✅ 执行_processSelectedDays函数测试');
-      this.testProcessSelectedDays();
-      
-      // 2. 测试getMonthdayText函数
-      console.log('\n✅ 执行getMonthdayText函数测试');
-      this.testMonthdayText();
-      
-      // 3. 创建测试月任务
-      console.log('\n✅ 创建测试月任务');
-      await this.createTestTask();
-      
-      // 4. 重新加载数据验证显示
-      console.log('\n✅ 重新加载任务数据验证显示');
-      await this.initData();
-      
-      // 5. 验证月任务数据
-      console.log('\n✅ 验证月任务数据');
-      const monthlyTasks = [...this.data.todayTasks, ...this.data.upcomingTasks]
-        .filter(task => task.frequency === 'monthly');
-      
-      console.log(`找到 ${monthlyTasks.length} 个月任务`);
-      monthlyTasks.forEach(task => {
-        console.log(`\n月任务: ${task.name}`);
-        console.log(`类型: ${task.frequency}`);
-        console.log(`处理后日期:`, task.selectedMonthDays);
-        console.log(`显示文本: ${task.monthdayText}`);
-        console.log(`是否有正确的月日期文本: ${task.monthdayText && task.monthdayText.includes('每月')}`);
-      });
-      
-      console.log('\n🎉 月任务处理流程测试完成！请检查页面上的月任务是否正确显示日期信息。');
-    } catch (error) {
-      console.error('❌ 月任务测试过程中出错:', error);
-    }
-  },
-  
-  // 创建测试任务用于验证
-  async createTestTask() {
-    // 模拟创建月任务
-    console.log('🔧 准备创建测试月任务...');
-    
-    try {
-      // 生成测试任务数据
-      const testTask = {
-        title: '测试月任务 - ' + new Date().getTime(),
-        description: '这是一个用于测试的月任务',
-        frequency: 'monthly',
-        selectedMonthDays: [1, 15, 25]
-      };
-      
-      // 模拟云函数调用
-      console.log('🚀 模拟创建任务...');
-      
-      // 这里可以根据需要添加真实的云函数调用
-      // const result = await wx.cloud.callFunction({
-      //   name: 'addTask',
-      //   data: testTask
-      // });
-      
-      // 返回模拟结果
-      console.log('✅ 测试任务创建成功');
-      return {
-        ...testTask,
-        id: 'test-' + new Date().getTime(),
-        createTime: new Date().getTime()
-      };
-    } catch (error) {
-      console.error('❌ 创建测试任务失败:', error);
-      throw error;
-    }
-  },
-
 });

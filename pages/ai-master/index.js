@@ -53,14 +53,16 @@ Page({
    */
   loadBabyInfo: async function () {
     try {
+      // 方法1: 从家庭数据中获取
       const result = await familyService.getMyFamilies();
       const families = result.families || [];
       const currentFamilyId = wx.getStorageSync('currentFamilyId') || result.currentFamilyId;
       const currentFamily = families.find(f => f._id === currentFamilyId) || families[0];
       
-      if (currentFamily && currentFamily.babyInfo) {
+      if (currentFamily && currentFamily.babyInfo && currentFamily.babyInfo.nickname) {
         const babyInfo = currentFamily.babyInfo;
         const ageInMonths = this.calculateAgeInMonths(babyInfo.birthday);
+        console.log('[ai-master] 从家庭数据获取宝宝信息:', babyInfo.nickname, ageInMonths + '个月');
         this.setData({
           babyInfo: {
             nickname: babyInfo.nickname || '宝宝',
@@ -69,9 +71,48 @@ Page({
             ageInMonths: ageInMonths
           }
         });
+        return;
       }
+      
+      // 方法2: 从本地存储的 userInfo 中获取
+      const userInfo = wx.getStorageSync('userInfo') || {};
+      if (userInfo.babyInfo && userInfo.babyInfo.nickname) {
+        const babyInfo = userInfo.babyInfo;
+        const ageInMonths = this.calculateAgeInMonths(babyInfo.birthday);
+        console.log('[ai-master] 从本地存储获取宝宝信息:', babyInfo.nickname, ageInMonths + '个月');
+        this.setData({
+          babyInfo: {
+            nickname: babyInfo.nickname || '宝宝',
+            gender: babyInfo.gender || 'unknown',
+            birthday: babyInfo.birthday || '',
+            ageInMonths: ageInMonths
+          }
+        });
+        return;
+      }
+      
+      // 方法3: 从全局 app.globalData 中获取
+      const app = getApp();
+      if (app.globalData && app.globalData.userInfo && app.globalData.userInfo.babyInfo) {
+        const babyInfo = app.globalData.userInfo.babyInfo;
+        if (babyInfo.nickname) {
+          const ageInMonths = this.calculateAgeInMonths(babyInfo.birthday);
+          console.log('[ai-master] 从全局数据获取宝宝信息:', babyInfo.nickname, ageInMonths + '个月');
+          this.setData({
+            babyInfo: {
+              nickname: babyInfo.nickname || '宝宝',
+              gender: babyInfo.gender || 'unknown',
+              birthday: babyInfo.birthday || '',
+              ageInMonths: ageInMonths
+            }
+          });
+          return;
+        }
+      }
+      
+      console.log('[ai-master] 未找到宝宝信息，将使用默认值');
     } catch (err) {
-      console.error('加载宝宝信息失败:', err);
+      console.error('[ai-master] 加载宝宝信息失败:', err);
     }
   },
 
@@ -124,15 +165,20 @@ Page({
    * 发送文本消息
    */
   sendTextMessage: async function () {
-    const { inputValue, loading } = this.data;
+    const { inputValue, loading, babyInfo } = this.data;
     let text = inputValue.trim();
     if (!text || loading) return;
 
+    console.log('[ai-master] sendTextMessage babyInfo:', JSON.stringify(babyInfo));
+    
     // 如果知道月龄且问题里没提，自动拼到问题前（双重保险）
-    if (this.data.babyInfo && this.data.babyInfo.ageInMonths !== null && this.data.babyInfo.ageInMonths !== undefined) {
+    if (babyInfo && babyInfo.ageInMonths !== null && babyInfo.ageInMonths !== undefined) {
       if (!text.match(/\d+[\s-]*(?:个月|月龄|月)/)) {
-        text = `我家宝宝现在${this.data.babyInfo.ageInMonths}个月，${text}`;
+        text = `我家宝宝现在${babyInfo.ageInMonths}个月，${text}`;
+        console.log('[ai-master] 已添加月龄信息到消息:', text);
       }
+    } else {
+      console.warn('[ai-master] babyInfo.ageInMonths 为空，无法添加月龄信息');
     }
 
     // 添加用户消息（显示原文，不传拼接后的，避免用户看到奇怪的前缀）
@@ -198,13 +244,14 @@ Page({
 
       const fileID = uploadRes.fileID;
 
-      // 更新消息中的 fileID 和显示内容
-      const msgIndex = messages.findIndex(m => m.id === userMsgId);
-      if (msgIndex !== -1) {
-        messages[msgIndex].fileID = fileID;
-        messages[msgIndex].content = fileID;
-      }
-      this.setData({ messages: [...messages] });
+      // 基于最新的消息列表更新目标消息，避免覆盖上传期间新增的消息
+      const messages = this.data.messages.map(m => {
+        if (m.id === userMsgId) {
+          return { ...m, fileID: fileID, content: fileID };
+        }
+        return m;
+      });
+      this.setData({ messages });
 
       // 构建历史记录
       const history = this.buildHistory(messages.slice(0, -1));
@@ -262,6 +309,14 @@ Page({
 
       const fullText = result.content || '';
 
+      // 空内容兜底，避免渲染空白 AI 消息
+      if (!fullText) {
+        this.updateBotMessage(botMsgId, '未获取到回复，请稍后重试~', false);
+        this.setData({ loading: false });
+        this.scrollToBottom();
+        return;
+      }
+
       // 停止 loading 动画，开始打字机效果
       this.setData({ loading: false });
       this.typeWriter(botMsgId, fullText);
@@ -283,15 +338,33 @@ Page({
     const step = 2; // 每次显示 2 个字符
     const interval = 30; // 每 30ms 一次
 
+    // 清理上一次未完成的打字机定时器
+    if (this.typeWriterTimer) {
+      clearInterval(this.typeWriterTimer);
+      this.typeWriterTimer = null;
+    }
+
     const timer = setInterval(() => {
       if (displayed.length >= content.length) {
         clearInterval(timer);
+        this.typeWriterTimer = null;
         this.updateBotMessage(msgId, content, false);
         return;
       }
       displayed = content.slice(0, displayed.length + step);
       this.updateBotMessage(msgId, displayed, true);
     }, interval);
+    this.typeWriterTimer = timer;
+  },
+
+  /**
+   * 生命周期函数--监听页面卸载
+   */
+  onUnload: function () {
+    if (this.typeWriterTimer) {
+      clearInterval(this.typeWriterTimer);
+      this.typeWriterTimer = null;
+    }
   },
 
   /**

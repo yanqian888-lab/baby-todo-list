@@ -2,36 +2,105 @@
   "pages": [
     "pages/index/index",
     "pages/ai-master/index",
-    "pages/suggest/list",
-    "pages/task/create",
-    "pages/profile/index",
-    "pages/profile/baby-info",
-    "pages/settings/index",
-    "pages/login/login",
-    "pages/user-agreement/index",
-    "pages/privacy-policy/index",
-    "pages/auth/auth",
-    "pages/clockin/index",
-    "pages/clockin/calendar",
-    "pages/clockin/task-stats",
-    "pages/template/index",
-    "pages/statistics/index",
-    "pages/task/index",
-    "pages/task/detail",
     "pages/sensitivity/index",
-    "pages/sensitivity/records",
-    "pages/sensitivity/recommend",
-    "pages/sensitivity/detail",
-    "pages/sensitivity/add-record",
-    "pages/sensitivity/food-select",
-    "pages/family/index",
-    "pages/family/join",
-    "pages/family/baby-info"
+    "pages/profile/index"
+  ],
+  "subPackages": [
+    {
+      "root": "pages/task",
+      "pages": [
+        "index",
+        "create",
+        "detail"
+      ]
+    },
+    {
+      "root": "pages/clockin",
+      "pages": [
+        "index",
+        "calendar",
+        "task-stats"
+      ]
+    },
+    {
+      "root": "pages/suggest",
+      "pages": [
+        "list"
+      ]
+    },
+    {
+      "root": "pages/template",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "pages/statistics",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "subpackages/sensitivity",
+      "pages": [
+        "pages/records",
+        "pages/recommend",
+        "pages/detail",
+        "pages/add-record",
+        "pages/food-select"
+      ]
+    },
+    {
+      "root": "subpackages/profile",
+      "pages": [
+        "pages/baby-info",
+        "pages/help",
+        "pages/about"
+      ]
+    },
+    {
+      "root": "pages/settings",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "pages/login",
+      "pages": [
+        "login"
+      ]
+    },
+    {
+      "root": "pages/auth",
+      "pages": [
+        "auth"
+      ]
+    },
+    {
+      "root": "pages/user-agreement",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "pages/privacy-policy",
+      "pages": [
+        "index"
+      ]
+    },
+    {
+      "root": "pages/family",
+      "pages": [
+        "index",
+        "join",
+        "baby-info"
+      ]
+    }
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#FFFFFF",
-    "navigationBarTitleText": "萌宝贝排敏生活记",
+    "navigationBarTitleText": "乖贝贝排敏生活全家记",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#FAFAF8",
     "navigationStyle": "default"
@@ -69,5 +138,6 @@
     ]
   },
   "lazyCodeLoading": "requiredComponents",
+  "__usePrivacyCheck__": true,
   "sitemapLocation": "sitemap.json"
 }

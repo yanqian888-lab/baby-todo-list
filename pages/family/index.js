@@ -349,7 +349,7 @@ Page({
     return {
       title: '加入我的家庭，一起记录宝宝成长',
       path: `/pages/family/join?inviteCode=${this.data.inviteCode}&familyId=${this.data.currentFamilyId}`,
-      imageUrl: '/images/share-family.png'
+      imageUrl: '/images/logo.png'
     };
   }
 });

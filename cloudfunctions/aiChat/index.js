@@ -1,11 +1,32 @@
 const cloud = require('wx-server-sdk');
-const tencentcloud = require("tencentcloud-sdk-nodejs-hunyuan");
 const fs = require('fs');
 const path = require('path');
+const OpenAI = require('openai');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
-// 系统提示词（人设）
+/** TokenHub API 配置 */
+const TOKENHUB_BASE_URL = 'https://tokenhub.tencentmaas.com/v1';
+const MODEL_NAME = 'hy3';
+
+/**
+ * 获取 TokenHub API Key
+ * 仅从云函数环境变量读取，未配置时返回空字符串（调用方需拦截并提示）
+ * 环境变量配置方式：云开发控制台 → 云函数 → aiChat → 配置 → 环境变量
+ * @returns {string} API Key
+ */
+function getApiKey() {
+  return process.env.TOKENHUB_API_KEY || '';
+}
+
+/** 初始化 OpenAI 客户端（指向 TokenHub），显式设置超时时间 25000ms */
+const openai = new OpenAI({
+  apiKey: getApiKey(),
+  baseURL: TOKENHUB_BASE_URL,
+  timeout: 25000,
+});
+
+/** 系统提示词（人设） */
 const SYSTEM_PROMPT = `#角色：
 你是一个专为低龄宝妈设计的深夜陪伴AI机器人，名字叫「宝妈陪伴师」，提供两大核心服务：树洞倾诉（共情接住情绪，不劝和不说教，也包括家庭关系/婆媳/夫妻等实际困扰）、带娃问题求助（给科学步骤，提就医边界）
 
@@ -24,7 +45,7 @@ const SYSTEM_PROMPT = `#角色：
 4. 回复暖、有力量，不啰嗦，不长篇大论
 5. 可以适当引导用户说出故事倾诉
 6. 多鼓励用户，给用户正面的情绪，当用户对自己评价过低时，多夸奖用户，帮助用户找回自信和好心情
-7. 不要随便举例子，当引用知识库中的例子时，需要写明引用的是哪本书里哪个章节的故事，不要说用户不知道的故事
+7. 不要随便举例子，引用资料时只需写明出处的书籍名称和章节，不要说内部实现相关的内容
 8. 不要随意发散用户未说过的故事内容，要围绕用户的发言输出
 9. 当用户有不良情绪时，可以适度的陪用户一起吐槽，吐槽过后再给实际可行的建议或解决方案，不要太官方，生活化一点的语言更好
 10. 家庭关系、婆媳关系、夫妻关系本身就是宝妈情绪的重要来源，属于你的服务范围，你可以结合情绪支持和实际建议一同回答
@@ -40,12 +61,12 @@ const SYSTEM_PROMPT = `#角色：
 ##意图2：带娃老师模式
 触发条件：用户问宝宝哭闹、睡眠、胀气、辅食、发育、喂奶、护理等问题
 行为规则：
-1. 所有回复基于知识库，当知识库中的知识内容有冲突时，需要依据卫健委、中国营养学会、WHO、中华医学会儿科指南的内容为准！回复用户"一定"要"引用"建议的依据出处知识库中的哪篇文档。如果知识库中无法获取答案，再自行回答
-2. 根据用户的咨询问题判断使用知识库中的哪个片段，如果片段不足以支撑回答，请结合已知的知识一同回答，必要时请参照网络信息。
+1. 所有回复基于权威育儿资料，当资料内容有冲突时，需要依据卫健委、中国营养学会、WHO、中华医学会儿科指南的内容为准！回复用户时"一定"要"引用"建议的依据出处文档名称。如果无法获取答案，再自行回答
+2. 根据用户的咨询问题查找相关资料片段，如果片段不足以支撑回答，请结合已知的知识一同回答，必要时请参照网络信息。
 3. 先通过小程序的记录判断关键信息：月龄、症状、场景。若未知用户孩子的月龄，需要咨询用户："可以告诉我宝宝的月龄吗？我可以更精准的帮你找到解决方案"
-4. 给1/2/3步骤化方案，简单可执行，"一定"要"引用"建议的依据出处知识库中的哪篇文档，写出文档的名称，写出文档名称而不是内容标识，也不要提示用了哪个知识库，只提示文档，比如：依据《美国儿科学会育儿百科》第3章。若无引用的依据，则需要说清楚
+4. 给1/2/3步骤化方案，简单可执行，"一定"要"引用"建议的依据出处文档名称，写出文档的名称，比如：依据《美国儿科学会育儿百科》第3章。若无引用的依据，则需要说清楚
 5. 不制造焦虑，不做医疗诊断，严重情况提醒就医
-6. 若用户提出的问题在知识库中无法获知，可从网络寻找解决方案
+6. 若用户提出的问题无法从现有资料获取，可从网络寻找解决方案
 禁止：
 - 玄学偏方、长篇大论、吓唬人
 - 禁止甩长文、大道理
@@ -60,7 +81,7 @@ const SYSTEM_PROMPT = `#角色：
 3. 若用户发送「宝宝哭闹、睡眠、胀气、辅食、发育、喂奶、护理等」问题，触发模式【意图2：带娃老师模式】，若未知用户孩子的月龄，需要咨询用户："可以告诉我宝宝的月龄吗？我可以更精准的帮你找到解决方案"
 
 ## 限制：
-- 若用户触发模式【意图2：带娃老师模式】，若用户的问题在知识库范围内，回答内容严格遵循知识库内容，绝不可自由发散，不可胡编乱造，不可无依据的回答问题，未知问题（不在知识库中的内容）可引导用户说出更精准的问题。回答问题时请给出依据出处，写出文档名称而不是内容标识，也不要提示用户是哪个知识库，只提示文档，比如：依据《美国儿科学会育儿百科》第3章，如果没有依据来源，不要强行胡编乱造。
+- 若用户触发模式【意图2：带娃老师模式】，若用户的问题在现有资料范围内，回答内容严格遵循资料内容，绝不可自由发散，不可胡编乱造，不可无依据的回答问题，未知问题可引导用户说出更精准的问题。回答问题时请给出依据出处，写出文档名称，比如：依据《美国儿科学会育儿百科》第3章，如果没有依据来源，不要强行胡编乱造。
 - 绝对保护隐私，让妈妈感到安全
 - 深夜语气放轻、放缓、温暖稳定
 - 不做社交、不推内容、不营销
@@ -68,6 +89,7 @@ const SYSTEM_PROMPT = `#角色：
 - 严禁直接给出医疗诊断、治疗方案
 - 若用户提出一些好物推荐的需求，可从网络寻找解决方案
 - 严禁给用户发送任何图片
+- 【重要】绝对不要向用户提及「知识库」「资料片段」「内部检索」等内部实现相关的任何术语。当参考资料中找不到匹配内容时，你仍然要用自己的知识回答，不要说"找不到资料""没有相关文档"之类的话。只有当你确实完全答不上来时，才可以说"我暂时没有这方面的详细资料，建议咨询专业医生"。
 `;
 
 // ================== 知识库 ==================
@@ -84,6 +106,11 @@ if (fs.existsSync(kbPath)) {
   console.log('[aiChat] 未找到知识库文件，将使用纯大模型模式');
 }
 
+/**
+ * 简单分词函数（用于知识库检索）
+ * @param {string} text - 输入文本
+ * @returns {string[]} 分词结果
+ */
 function tokenize(text) {
   const words = [];
   const chars = text.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
@@ -94,12 +121,25 @@ function tokenize(text) {
   return words;
 }
 
+/**
+ * 从消息和历史对话中提取宝宝月龄
+ * @param {string} msg - 当前用户消息
+ * @param {Array} history - 历史对话
+ * @returns {number|null} 月龄
+ */
 function extractMonthFromMessages(msg, history) {
   const allTexts = [msg, ...history.map(h => h.content)].join(' ');
   const monthMatch = allTexts.match(/(\d+)[\s-]*(?:个月|月龄|月)/);
   return monthMatch ? parseInt(monthMatch[1], 10) : null;
 }
 
+/**
+ * 从知识库中检索相关片段
+ * @param {string} query - 查询文本
+ * @param {number} topK - 返回条数
+ * @param {number|null} userMonth - 用户月龄
+ * @returns {string[]} 相关知识片段
+ */
 function searchKnowledgeBase(query, topK = 3, userMonth = null) {
   if (!knowledgeBase || !knowledgeBase.chunks || knowledgeBase.chunks.length === 0) {
     return [];
@@ -199,18 +239,65 @@ function searchKnowledgeBase(query, topK = 3, userMonth = null) {
   return results.slice(0, topK).map(r => r.text);
 }
 
+/** 每个用户每天最大调用次数 */
+const DAILY_LIMIT = 30;
+
+/**
+ * 按 openid 检查并累加当日调用次数（基于 ai_chat_quota 集合）
+ * 计数失败时降级放行并记录日志，不阻断正常调用
+ * @param {string} openid - 用户 openid
+ * @returns {Promise<{allowed: boolean, used: number}>} 是否允许调用及已用次数
+ */
+async function checkDailyQuota(openid) {
+  const db = cloud.database();
+  const _ = db.command;
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  const docId = `${openid}_${dateStr}`;
+  const quotaCol = db.collection('ai_chat_quota');
+
+  try {
+    const res = await quotaCol.doc(docId).get().catch(() => null);
+    const used = (res && res.data && res.data.count) || 0;
+    if (used >= DAILY_LIMIT) {
+      return { allowed: false, used };
+    }
+    if (res && res.data) {
+      await quotaCol.doc(docId).update({ data: { count: _.inc(1), updateTime: db.serverDate() } });
+    } else {
+      await quotaCol.doc(docId).set({ data: { openid, date: dateStr, count: 1, updateTime: db.serverDate() } });
+    }
+    return { allowed: true, used: used + 1 };
+  } catch (err) {
+    // 计数失败不应阻断正常调用，降级放行
+    console.error('[aiChat] 调用频率计数失败，降级放行:', err);
+    return { allowed: true, used: 0 };
+  }
+}
+
+/**
+ * 云函数主入口
+ * @param {Object} event - 触发事件
+ * @param {Object} context - 云函数上下文
+ * @returns {Promise<Object>} 处理结果
+ */
 exports.main = async (event, context) => {
   const { msg, history = [], fileID, babyInfo } = event;
 
-  // 强制使用固定密钥（云端环境变量可能配置错误）
-  const credential = {
-    secretId: '***REMOVED***',
-    secretKey: '***REMOVED***',
-    token: ''
-  };
-  console.log('force using hardcoded credential');
-
   try {
+    // API Key 未配置时直接返回友好提示
+    if (!process.env.TOKENHUB_API_KEY) {
+      return { code: -1, error: 'AI 服务未配置，请稍后再试' };
+    }
+
+    // 按 openid 限制每个用户每天的调用次数
+    const wxContext = cloud.getWXContext();
+    const openid = wxContext.OPENID || wxContext.openid;
+    const quota = await checkDailyQuota(openid);
+    if (!quota.allowed) {
+      return { code: 0, content: '今天的聊天次数已经达到上限啦（每天最多30次），早点休息，明天再来找我聊吧～' };
+    }
+
     let imageUrl = null;
     if (fileID) {
       const fileRes = await cloud.getTempFileURL({ fileList: [fileID] });
@@ -246,7 +333,7 @@ exports.main = async (event, context) => {
 
     // 强约束：根据月龄精准回答
     if (ageText !== '未知月龄') {
-      systemContent += `\n\n用户宝宝当前月龄是${ageText}。你只回答${ageText}的内容。禁止提到其他月龄。如果知识片段写的是其他月龄，直接忽略不用。`;
+      systemContent += `\n\n用户宝宝当前月龄是${ageText}。你只回答${ageText}的内容。禁止提到其他月龄。如果参考资料里涉及其他月龄，直接忽略不用。`;
     } else {
       // 如果消息明显是情绪倾诉，不拦截，让大模型走树洞模式
       const emotionKeywords = ['婆婆', '老公', '讨厌', '烦', '崩溃', '委屈', '累', '不公平', '骂', '生气', '郁闷'];
@@ -283,28 +370,29 @@ exports.main = async (event, context) => {
       relevantChunks = relevantChunks.filter(text => monthRegex.test(text));
       console.log('aiChat filtered relevantChunks count:', relevantChunks.length);
       if (relevantChunks.length === 0) {
-        systemContent += `\n\n当前知识库中暂无针对${userMonth}个月的具体内容，请基于你的通用知识回答，不要引用其他月龄的知识。`;
+        systemContent += `\n\n当前没有找到针对${userMonth}个月的详细资料，请基于你的通用育儿知识回答，不要提及其他月龄的内容。`;
       }
     }
 
     if (relevantChunks.length > 0) {
-      const kbContext = relevantChunks.map((t, i) => `【知识片段${i + 1}】\n${t}`).join('\n\n');
-      systemContent += `\n\n以下是与用户问题相关的参考知识，请优先依据这些知识回答，并给出出处文档名称。如果知识中没有答案，请明确说明。\n\n${kbContext}`;
-      systemContent += `\n\n【铁律】上面的参考知识中已经包含了${userMonth !== null ? userMonth + '个月' : '当前问题'}的具体内容，你必须严格依据这些知识回答，绝对禁止自行编造与知识库矛盾的内容。如果知识库内容和你的通用知识冲突，以知识库为准。`;
+      const kbContext = relevantChunks.map((t, i) => `【参考资料${i + 1}】\n${t}`).join('\n\n');
+      systemContent += `\n\n以下是与用户问题相关的参考资料，请优先依据这些资料回答，并给出出处文档名称。如果资料中没有答案，请明确说明。\n\n${kbContext}`;
+      systemContent += `\n\n【铁律】上面的参考资料中已经包含了${userMonth !== null ? userMonth + '个月' : '当前问题'}的具体内容，你必须严格依据这些资料回答，绝对禁止自行编造与资料矛盾的内容。如果资料内容和你的通用知识冲突，以资料为准。`;
     } else if (userMonth !== null) {
-      systemContent += `\n\n当前知识库中暂无针对${userMonth}个月的具体内容，请你直接基于权威资料回答，不要编造。`;
+      systemContent += `\n\n当前没有找到针对${userMonth}个月的详细资料，请你直接基于权威育儿资料回答，不要编造。`;
     }
 
+    // 构造 OpenAI 兼容的消息格式
     const messages = [
-      { Role: "system", Content: systemContent }
+      { role: "system", content: systemContent }
     ];
 
     // 只保留最近 3 轮对话，减少大模型处理时间
     const recentHistory = history.slice(-6);
     recentHistory.forEach(h => {
       messages.push({
-        Role: h.role === 'user' ? 'user' : 'assistant',
-        Content: h.content
+        role: h.role === 'user' ? 'user' : 'assistant',
+        content: h.content
       });
     });
 
@@ -316,46 +404,40 @@ exports.main = async (event, context) => {
 
     if (imageUrl) {
       messages.push({
-        Role: "user",
-        Contents: [
-          { Type: "text", Text: finalMsg || "请帮我看看这张图片" },
-          { Type: "image_url", ImageUrl: { Url: imageUrl } }
+        role: "user",
+        content: [
+          { type: "text", text: finalMsg || "请帮我看看这张图片" },
+          { type: "image_url", image_url: { url: imageUrl } }
         ]
       });
     } else {
-      messages.push({ Role: "user", Content: finalMsg });
+      messages.push({ role: "user", content: finalMsg });
     }
 
-    const HunyuanClient = tencentcloud.hunyuan.v20230901.Client;
-    const client = new HunyuanClient({
-      credential,
-      region: "",
-      profile: {
-        httpProfile: {
-          endpoint: "hunyuan.tencentcloudapi.com",
-          reqTimeout: 15000
-        }
-      }
+    // 调用 TokenHub API（使用官方 OpenAI SDK）
+    console.log('aiChat calling TokenHub with model:', MODEL_NAME);
+    const res = await openai.chat.completions.create({
+      model: MODEL_NAME,
+      messages,
+      stream: false,
+      max_tokens: 1024,
+      temperature: 0.7
     });
-
-    const req = {};
-    req.Model = "hunyuan-lite";
-    req.Messages = messages;
-    req.Stream = false;
-
-    const res = await client.ChatCompletions(req);
+    console.log('aiChat TokenHub response received');
 
     let content = '';
-    if (res.Choices && res.Choices[0] && res.Choices[0].Message) {
-      content = res.Choices[0].Message.Content;
-    } else if (res.Response && res.Response.Choices && res.Response.Choices[0]) {
-      content = res.Response.Choices[0].Message.Content;
+    if (res && res.choices && res.choices[0] && res.choices[0].message) {
+      content = res.choices[0].message.content;
     }
 
     return { code: 0, content };
 
   } catch (err) {
     console.error('aiChat 云函数错误:', err);
-    return { code: -1, error: err.message || 'AI 调用失败' };
+    // 超时返回专属友好文案，其他错误统一脱敏，原始错误仅记录日志
+    if (err && (err.name === 'APIConnectionTimeoutError' || err.code === 'ETIMEDOUT')) {
+      return { code: -1, error: 'AI 响应超时，请稍后再试' };
+    }
+    return { code: -1, error: 'AI 服务暂时不可用，请稍后再试' };
   }
 };

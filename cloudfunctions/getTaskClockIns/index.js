@@ -37,6 +37,13 @@ exports.main = async (event, context) => {
       // 家庭场景：查询该家庭下所有成员的打卡记录；个人场景：仅查询自己的
       const { familyId } = event;
       if (familyId) {
+        // 校验调用者是否为该家庭成员
+        const familyRes = await db.collection('families').doc(familyId).get().catch(() => null);
+        const family = familyRes ? familyRes.data : null;
+        const isMember = family && (family.creatorOpenId === openid || (family.members || []).some(m => m.openId === openid));
+        if (!isMember) {
+          return { success: false, error: '无权访问该家庭数据' };
+        }
         whereCondition.familyId = familyId;
         console.log('👨‍👩‍👧‍👦 批量查询家庭打卡记录:', familyId);
       } else {
@@ -197,16 +204,7 @@ exports.main = async (event, context) => {
       success: true,
       data: {
         clockIns: clockIns,
-        todayCount: todayCount,
-        debugInfo: {
-          openid: openid,
-          taskId: sanitizedTaskId,
-          todayOnly: todayOnly,
-          todayCount: todayCount,
-          clockInsLength: clockIns.length,
-          hasClockIns: clockIns.length > 0,
-          firstRecordCompletedAt: clockIns.length > 0 ? clockIns[0].completedAt : null
-        }
+        todayCount: todayCount
       }
     };
   } catch (error) {
@@ -242,14 +240,7 @@ exports.main = async (event, context) => {
       error: error.message,
       data: {
         clockIns: [],
-        todayCount: 0,
-        debugInfo: {
-          openid: openid,
-          taskId: taskId,
-          todayOnly: todayOnly,
-          error: error.message,
-          errCode: error.errCode
-        }
+        todayCount: 0
       }
     };
   }

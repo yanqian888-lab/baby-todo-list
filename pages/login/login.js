@@ -12,7 +12,9 @@ Page({
     loginAttempts: 0,
     maxAttempts: 3,
     networkAvailable: true,
-    userInfo: null
+    userInfo: null,
+    avatarUrl: '',
+    nickName: ''
   },
 
   /**
@@ -233,67 +235,47 @@ Page({
     }
   },
   
-  // 使用微信原生能力获取用户信息（getUserProfile）
-  getUserProfile: async function () {
-    // 防止重复点击导致 wx.getUserProfile 调用过于频繁
-    if (this._isGettingProfile) {
-      console.log('getUserProfile 正在处理中，忽略重复点击');
+  // 头像昵称填写能力：选择头像（wx.getUserProfile 已废弃）
+  onChooseAvatar: function (e) {
+    const { avatarUrl } = e.detail;
+    if (avatarUrl) {
+      // 临时路径，可直接展示并随登录链路传给云函数
+      this.setData({ avatarUrl: avatarUrl });
+    }
+  },
+
+  // 头像昵称填写能力：输入昵称
+  onNicknameInput: function (e) {
+    this.setData({ nickName: (e.detail.value || '').trim() });
+  },
+
+  // 确认并登录：使用用户选择的头像和昵称，未填写时走随机昵称/默认头像兜底
+  handleConfirmLogin: async function () {
+    // 防止重复点击
+    if (this._isLoggingIn) {
+      console.log('登录正在处理中，忽略重复点击');
       return;
     }
-    this._isGettingProfile = true;
-    
-    // 检查是否同意协议
-    if (!this.data.isAgreed) {
-      wx.showToast({
-        title: '请先阅读并同意用户协议和隐私政策',
-        icon: 'none'
-      });
-      this._isGettingProfile = false;
-      return;
-    }
-    
+    this._isLoggingIn = true;
+
     try {
-      // 使用 wx.getUserProfile 获取用户信息
-      const res = await wx.getUserProfile({
-        desc: '用于完善会员资料' // 必填，说明获取用户信息的用途
-      });
-      
-      console.log('getUserProfile 成功:', res);
-      
-      // 用户同意授权
-      // 过滤微信默认信息，避免覆盖系统生成的随机昵称和自定义头像
-      const isWechatDefaultNickName = (name) => name === '微信用户';
-      const isWechatDefaultAvatar = (url) => typeof url === 'string' && (url.includes('thirdwx.qlogo.cn') || url.includes('mmopen'));
+      // 未填昵称时传 undefined，由云函数生成唯一随机昵称（保留原有兜底逻辑）
+      // 未选头像时使用默认头像兜底
       const userInfo = {
-        nickName: isWechatDefaultNickName(res.userInfo.nickName) ? undefined : res.userInfo.nickName,
-        avatarUrl: isWechatDefaultAvatar(res.userInfo.avatarUrl) ? undefined : res.userInfo.avatarUrl,
-        gender: res.userInfo.gender
-      };
-      
-      console.log('获取到用户信息:', userInfo);
-      
-      // 保存用户信息到data
-      this.setData({ userInfo: userInfo });
-      
-      // 执行登录流程
-      await this.wxLogin(userInfo);
-      
-    } catch (err) {
-      console.log('用户拒绝授权或获取失败:', err);
-      
-      // 用户拒绝授权，由云函数生成随机昵称
-      const userInfo = {
-        avatarUrl: '/images/logo.png',
+        nickName: this.data.nickName || undefined,
+        avatarUrl: this.data.avatarUrl || '/images/touxiang_moren.png',
         gender: 0
       };
-      
+
+      console.log('确认登录，用户信息:', userInfo);
+
       // 保存用户信息到data
       this.setData({ userInfo: userInfo });
-      
-      // 执行登录流程（云函数会生成唯一随机昵称）
+
+      // 执行登录流程
       await this.wxLogin(userInfo);
     } finally {
-      this._isGettingProfile = false;
+      this._isLoggingIn = false;
     }
   },
 
