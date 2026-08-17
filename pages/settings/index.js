@@ -104,16 +104,20 @@ Page({
 
   /**
    * 处理通知设置
+   * 消息提醒功能尚未上线（订阅消息模板待申请），开启时提示并回退开关
    */
   handleNotificationSetting: function (enabled) {
     if (enabled) {
-      // 请求通知权限
-      wx.requestSubscribeMessage({
-        tmplIds: ['your-template-id'],
-        success: (res) => {
-          console.log('通知权限请求结果:', res);
-        }
+      wx.showToast({
+        title: '消息提醒功能即将上线',
+        icon: 'none'
       });
+      const newSettings = {
+        ...this.data.settings,
+        notifications: false
+      };
+      this.setData({ settings: newSettings });
+      this.saveSettings(newSettings);
     }
   },
 

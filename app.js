@@ -5,7 +5,10 @@ App({
    */
   onLaunch: function() {
     console.log('小程序启动');
-    
+
+    // 注册隐私授权弹窗（app.json 已开启 __usePrivacyCheck__）
+    this.initPrivacyHandler();
+
     try {
       // 初始化云开发环境
       wx.cloud.init({
@@ -30,6 +33,35 @@ App({
     }
   },
   
+  /**
+   * 隐私协议授权适配
+   * 涉及隐私接口（头像昵称、相册、订阅消息等）前由微信触发，
+   * 用户同意后接口调用才会放行
+   */
+  initPrivacyHandler: function() {
+    if (!wx.onNeedPrivacyAuthorization) return;
+    wx.onNeedPrivacyAuthorization((resolve) => {
+      wx.showModal({
+        title: '用户隐私保护提示',
+        content: '在使用相关功能前，请阅读并同意《用户隐私保护指引》。',
+        confirmText: '同意',
+        cancelText: '查看协议',
+        success: (res) => {
+          if (res.confirm) {
+            resolve({ buttonId: 'agree-btn', event: 'agree' });
+          } else {
+            // 查看协议不等于同意，本次接口调用按未同意处理，下次触发会再次询问
+            wx.navigateTo({ url: '/pages/privacy-policy/index' });
+            resolve({ buttonId: 'disagree-btn', event: 'disagree' });
+          }
+        },
+        fail: () => {
+          resolve({ buttonId: 'disagree-btn', event: 'disagree' });
+        }
+      });
+    });
+  },
+
   /**
    * 检查云开发状态
    */
