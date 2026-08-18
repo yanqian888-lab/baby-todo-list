@@ -12,9 +12,7 @@ Page({
     loginAttempts: 0,
     maxAttempts: 3,
     networkAvailable: true,
-    userInfo: null,
-    avatarUrl: '',
-    nickName: ''
+    userInfo: null
   },
 
   /**
@@ -235,21 +233,7 @@ Page({
     }
   },
   
-  // 头像昵称填写能力：选择头像（wx.getUserProfile 已废弃）
-  onChooseAvatar: function (e) {
-    const { avatarUrl } = e.detail;
-    if (avatarUrl) {
-      // 临时路径，可直接展示并随登录链路传给云函数
-      this.setData({ avatarUrl: avatarUrl });
-    }
-  },
-
-  // 头像昵称填写能力：输入昵称
-  onNicknameInput: function (e) {
-    this.setData({ nickName: (e.detail.value || '').trim() });
-  },
-
-  // 确认并登录：使用用户选择的头像和昵称，未填写时走随机昵称/默认头像兜底
+  // 确认并登录：默认头像 + 云函数随机昵称，头像昵称可在「我的」页随时修改
   handleConfirmLogin: async function () {
     // 防止重复点击
     if (this._isLoggingIn) {
@@ -259,11 +243,10 @@ Page({
     this._isLoggingIn = true;
 
     try {
-      // 未填昵称时传 undefined，由云函数生成唯一随机昵称（保留原有兜底逻辑）
-      // 未选头像时使用默认头像兜底
+      // 昵称传 undefined，由云函数生成唯一随机昵称（保留原有兜底逻辑）
       const userInfo = {
-        nickName: this.data.nickName || undefined,
-        avatarUrl: this.data.avatarUrl || '/images/touxiang_moren.png',
+        nickName: undefined,
+        avatarUrl: '/images/touxiang_moren.png',
         gender: 0
       };
 

@@ -26,19 +26,6 @@
     </view>
 
     <view class="login-action">
-      <view class="profile-form">
-        <button class="avatar-btn" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-          <image class="avatar-preview" src="{{avatarUrl || '/images/touxiang_moren.png'}}" mode="aspectFill"/>
-          <text class="avatar-tip">点击选择头像</text>
-        </button>
-        <input class="nickname-input"
-               type="nickname"
-               placeholder="请输入昵称（选填）"
-               value="{{nickName}}"
-               bindinput="onNicknameInput"
-               bindblur="onNicknameInput"/>
-      </view>
-
       <button class="login-btn" 
               bindtap="handleConfirmLogin"
               loading="{{isLoading}}"
