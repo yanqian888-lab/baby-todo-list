@@ -4,24 +4,12 @@ cloud.init()
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
-  const openid = wxContext.openid || wxContext.OPENID || ''
+  const openid = wxContext.OPENID || wxContext.openid || ''
   
   // 仅输出脱敏后的调试信息
   console.log('createTask 调用, title长度:', (event.title || '').length)
   console.log('openid前缀:', (openid || '').slice(0, 4) + '****')
 
-  // 幂等性校验：若存在相同 requestId 的任务，直接返回已有任务
-  const requestId = event.requestId || null;
-  if (requestId) {
-    const existingTask = await cloud.database().collection('tasks')
-      .where({ _openid: openid, requestId })
-      .limit(1)
-      .get();
-    if (existingTask.data.length > 0) {
-      return { success: true, taskId: existingTask.data[0]._id, message: '任务已存在' };
-    }
-  }
-  
   // 检查openid是否存在
   if (!openid || openid === '') {
     console.error('严重错误：未能获取到openid！wxContext中可能不包含有效的openid字段')
@@ -68,84 +56,53 @@ exports.main = async (event, context) => {
   }
   
   try {
-    // 使用北京时间（UTC+8）- 使用 toLocaleString 正确获取北京时间
-    const now = new Date();
-    const beijingDateStr = now.toLocaleString('en-US', { 
-      timeZone: 'Asia/Shanghai',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
-    const beijingParts = beijingDateStr.match(/(\d+)\/(\d+)\/(\d+),?\s*(\d+):(\d+):(\d+)/);
-    if (!beijingParts) {
-      console.error('日期解析失败，原始字符串:', beijingDateStr);
-      return { success: false, error: '服务器时间解析失败' };
-    }
-    const beijingYear = parseInt(beijingParts[3]);
-    const beijingMonth = parseInt(beijingParts[1]) - 1;
-    const beijingDay = parseInt(beijingParts[2]);
-    const beijingHour = parseInt(beijingParts[4]);
-    const beijingMinute = parseInt(beijingParts[5]);
-    const beijingSecond = parseInt(beijingParts[6]);
-    
-    const beijingNow = new Date(beijingYear, beijingMonth, beijingDay, beijingHour, beijingMinute, beijingSecond);
-    
-    // 优先使用客户端传递的家庭ID，并校验归属权
+    const db = cloud.database();
+    const requestId = event.requestId || null;
     let familyId = event.familyId || null;
+
+    // 并行执行三个相互独立的查询：幂等检查、家庭归属校验、用户信息（昵称+当前家庭）
+    // 原来串行 4-5 次数据库往返是保存慢的主要原因
+    const [existingTaskRes, familyRes, userRes] = await Promise.all([
+      requestId
+        ? db.collection('tasks').where({ _openid: openid, requestId }).limit(1).get().catch(() => null)
+        : Promise.resolve(null),
+      familyId
+        ? db.collection('families').doc(familyId).get().catch(() => null)
+        : Promise.resolve(null),
+      db.collection('users').where({ openid }).get().catch(() => null)
+    ]);
+
+    // 幂等性校验：若存在相同 requestId 的任务，直接返回已有任务
+    if (existingTaskRes && existingTaskRes.data.length > 0) {
+      return { success: true, taskId: existingTaskRes.data[0]._id, message: '任务已存在' };
+    }
+
+    // 校验客户端传递的家庭ID归属权
+    const checkMember = (family) => family && (family.creatorOpenId === openid || (family.members || []).some(m => m.openId === openid || m.openid === openid));
     if (familyId) {
-      try {
-        const familyRes = await cloud.database().collection('families').doc(familyId).get();
-        const family = familyRes.data;
-        const isMember = family && (family.creatorOpenId === openid || (family.members || []).some(m => m.openId === openid));
-        if (!isMember) {
-          console.error('非法 familyId，用户不属于该家庭:', familyId);
-          familyId = null;
-        } else {
-          console.log('👨‍👩‍👧‍👦 使用客户端传递的家庭ID:', familyId);
-        }
-      } catch (e) {
-        console.warn('校验家庭ID失败:', e);
+      if (!checkMember(familyRes && familyRes.data)) {
+        console.error('非法 familyId，用户不属于该家庭:', familyId);
         familyId = null;
+      } else {
+        console.log('👨‍👩‍👧‍👦 使用客户端传递的家庭ID:', familyId);
       }
     }
-    if (!familyId) {
+    // 兜底：从用户记录获取当前家庭（用户信息已在上面并行查出）
+    const userDoc = userRes && userRes.data && userRes.data[0];
+    if (!familyId && userDoc && userDoc.currentFamilyId) {
       try {
-        const userResult = await cloud.database().collection('users').where({
-          openid: openid
-        }).get();
-        if (userResult.data.length > 0 && userResult.data[0].currentFamilyId) {
-          const candidateFamilyId = userResult.data[0].currentFamilyId;
-          try {
-            const familyRes = await cloud.database().collection('families').doc(candidateFamilyId).get();
-            const family = familyRes.data;
-            const isMember = family && (family.creatorOpenId === openid || (family.members || []).some(m => m.openId === openid));
-            if (isMember) {
-              familyId = candidateFamilyId;
-              console.log('👨‍👩‍👧‍👦 从用户记录获取到当前家庭ID:', familyId);
-            }
-          } catch (e2) {
-            console.warn('校验用户当前家庭ID失败:', e2);
-          }
+        const candidateRes = await db.collection('families').doc(userDoc.currentFamilyId).get();
+        if (checkMember(candidateRes.data)) {
+          familyId = userDoc.currentFamilyId;
+          console.log('👨‍👩‍👧‍👦 从用户记录获取到当前家庭ID:', familyId);
         }
-      } catch (e) {
-        console.warn('获取用户家庭信息失败:', e);
+      } catch (e2) {
+        console.warn('校验用户当前家庭ID失败:', e2);
       }
     }
-    
+
     // 获取用户昵称用于标注创建人
-    let creatorNickName = '';
-    try {
-      const userResult = await cloud.database().collection('users').where({ openid }).get();
-      if (userResult.data.length > 0) {
-        creatorNickName = userResult.data[0].nickName || '';
-      }
-    } catch (e) {
-      console.warn('获取用户昵称失败:', e);
-    }
+    const creatorNickName = userDoc ? (userDoc.nickName || '') : '';
 
     // dueDate 有效性校验
     let taskDueDate = null;
@@ -156,6 +113,10 @@ exports.main = async (event, context) => {
       }
       taskDueDate = d;
     }
+
+    // 使用北京时间（UTC+8）
+    const now = new Date();
+    const beijingNow = new Date(now.getTime() + (8 * 60 + now.getTimezoneOffset()) * 60000);
 
     // 创建任务
     const taskData = {

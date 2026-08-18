@@ -1323,8 +1323,9 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
         
         if (result.result.success) {
           this.createRequestId = null;
+          // toast 是全局的，返回上一页后仍会显示，只需短暂停留
           wx.showToast({ title: '创建成功', icon: 'success', duration: 1500 });
-          await new Promise(r => setTimeout(r, 1500));
+          await new Promise(r => setTimeout(r, 500));
           wx.navigateBack();
         } else {
           throw new Error(result.result.error || '创建失败');
@@ -1366,7 +1367,7 @@ selectedDays: {}, // 用于每周模式，使用对象存储选中状态，键�
 
         if (result.result && result.result.success) {
           wx.showToast({ title: '更新成功', icon: 'success', duration: 1500 });
-          await new Promise(r => setTimeout(r, 1500));
+          await new Promise(r => setTimeout(r, 500));
           wx.navigateBack();
         } else {
           throw new Error(result.result ? result.result.error : '更新失败');
