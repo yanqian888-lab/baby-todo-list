@@ -17,20 +17,38 @@ async function getMyFamilies(event, context) {
     
     // 获取用户当前家庭ID
     let currentFamilyId = null;
+    let userDocId = null;
     try {
       const userResult = await db.collection('users').where({
         openid: OPENID
       }).get();
       if (userResult.data.length > 0) {
         currentFamilyId = userResult.data[0].currentFamilyId || null;
+        userDocId = userResult.data[0]._id;
       }
     } catch (e) {
       console.warn('获取用户当前家庭ID失败:', e);
     }
-    
-    return { 
-      success: true, 
-      families: familiesResult.data,
+
+    // 自愈：currentFamilyId 指向不存在或已退出的家庭时，自动纠正为第一个家庭（或 null）
+    const families = familiesResult.data || [];
+    if (currentFamilyId && !families.some(f => f._id === currentFamilyId)) {
+      console.warn('currentFamilyId 已失效，自动纠正:', currentFamilyId);
+      currentFamilyId = families.length > 0 ? families[0]._id : null;
+      if (userDocId) {
+        try {
+          await db.collection('users').doc(userDocId).update({
+            data: { currentFamilyId: currentFamilyId, updateTime: new Date() }
+          });
+        } catch (e) {
+          console.warn('纠正 currentFamilyId 失败:', e);
+        }
+      }
+    }
+
+    return {
+      success: true,
+      families: families,
       currentFamilyId: currentFamilyId
     };
   } catch (error) {
@@ -120,7 +138,7 @@ async function verifyFamilyMember(familyId, openId) {
     const familyDoc = await db.collection('families').doc(familyId).get();
     const family = familyDoc.data;
     if (!family) return { valid: false, error: '家庭不存在' };
-    const isMember = family.creatorOpenId === openId || (family.members || []).some(m => m.openId === openId);
+    const isMember = family.creatorOpenId === openId || (family.members || []).some(m => m.openId === openId || m.openid === openId);
     if (!isMember) return { valid: false, error: '您不属于该家庭' };
     return { valid: true, family };
   } catch (error) {

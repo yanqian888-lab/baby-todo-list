@@ -24,7 +24,7 @@ async function verifyFamilyMember(familyId, openId) {
     const familyDoc = await db.collection('families').doc(familyId).get();
     const family = familyDoc.data;
     if (!family) return { valid: false, error: '家庭不存在' };
-    const isMember = family.creatorOpenId === openId || (family.members || []).some(m => m.openId === openId);
+    const isMember = family.creatorOpenId === openId || (family.members || []).some(m => m.openId === openId || m.openid === openId);
     if (!isMember) return { valid: false, error: '您不属于该家庭' };
     return { valid: true, family };
   } catch (error) {

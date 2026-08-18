@@ -35,7 +35,7 @@ exports.main = async (event, context) => {
       // 校验调用者是否为该家庭成员
       const familyRes = await db.collection('families').doc(familyId).get().catch(() => null)
       const family = familyRes ? familyRes.data : null
-      const isMember = family && (family.creatorOpenId === openid || (family.members || []).some(m => m.openId === openid))
+      const isMember = family && (family.creatorOpenId === openid || (family.members || []).some(m => m.openId === openid || m.openid === openid))
       if (!isMember) {
         return { success: false, error: '无权访问该家庭数据' }
       }
