@@ -6,7 +6,7 @@ const _ = db.command
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
-  const { openid } = wxContext
+  const openid = wxContext.OPENID || wxContext.openid
   const { status = 'pending', category, page = 1, size = 20, includeCompleted = false } = event
 
   try {
