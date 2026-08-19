@@ -43,7 +43,10 @@ Page({
     recordFood: null,
     recordLikeStatus: 1, // 0=不喜欢 1=一般 2=喜欢，默认一般
     recordAllergyStatus: 0, // 0=不过敏 1=轻微过敏 2=重度过敏，默认不过敏
-    recordSaving: false
+    recordSaving: false,
+    // 宽版提示
+    showWideToast: false,
+    wideToastText: ''
   },
 
   /**
@@ -918,14 +921,23 @@ Page({
   /**
    * 选择推荐食物，弹出记录弹窗
    */
-  selectFood: function(e) {
-    // 今日已有排敏记录时，不再弹出记录弹窗（同一天不建议排敏多种食物）
+  /**
+   * 宽版 toast（系统 wx.showToast 宽度太窄，长文案用自定义提示层）
+   */
+  _showWideToast: function(text) {
+    if (this._wideToastTimer) {
+      clearTimeout(this._wideToastTimer);
+    }
+    this.setData({ wideToastText: text, showWideToast: true });
+    this._wideToastTimer = setTimeout(() => {
+      this.setData({ showWideToast: false });
+      this._wideToastTimer = null;
+    }, 3000);
+  },
+
+  selectFood: function(e) {    // 今日已有排敏记录时，不再弹出记录弹窗（同一天不建议排敏多种食物）
     if (this.data.todaySensitivityRecord) {
-      wx.showToast({
-        title: '今天已经记录过了，明天再来吧！未排敏完成的食物不建议同一天内食用多种，给宝宝一些适应时间吧！',
-        icon: 'none',
-        duration: 3000
-      });
+      this._showWideToast('今天已经记录过了，明天再来吧！未排敏完成的食物不建议同一天内食用多种，给宝宝一些适应时间吧！');
       return;
     }
     const foodId = e.currentTarget.dataset.foodId;

@@ -654,3 +654,33 @@
 .modal-bottom.show .modal-content {
   transform: translateY(0);
 }
+
+/* 宽版提示（替代系统 toast，长文案用） */
+.wide-toast {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 78%;
+  max-width: 560rpx;
+  background-color: rgba(0, 0, 0, 0.75);
+  border-radius: 12px;
+  padding: 24px 20px;
+  z-index: 1200;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease;
+}
+
+.wide-toast.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.wide-toast-text {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #FFFFFF;
+  text-align: center;
+  display: block;
+}

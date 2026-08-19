@@ -174,6 +174,11 @@ module.exports = { joinRecipes: joinRecipes };
       </view>
     </view>
 
+    <!-- 宽版提示（替代系统 toast，长文案用） -->
+    <view class="wide-toast {{showWideToast ? 'show' : ''}}">
+      <text class="wide-toast-text">{{wideToastText}}</text>
+    </view>
+
     <!-- 推荐食物记录弹窗（底部上拉） -->
     <view class="modal modal-bottom {{showFoodRecordModal ? 'show' : ''}}">
       <view class="modal-mask" bindtap="hideFoodRecordModal"></view>
