@@ -200,8 +200,6 @@ Page({
   /**
    * 构建历史记录
    */
-   * 构建历史记录
-   */
   buildHistory: function (messages) {
     return messages
       .filter(m => m.type === 'text' || !m.type)
