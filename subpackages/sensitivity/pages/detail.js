@@ -67,8 +67,11 @@ Page({
     
     sensitivityService.getFoodDetail(this.data.foodId)
       .then(res => {
+        if (!res || !res.success || !res.data) {
+          throw new Error((res && res.error) || '获取食物详情失败');
+        }
         this.setData({
-          foodDetail: res.data || {},
+          foodDetail: res.data,
           loading: false
         });
       })

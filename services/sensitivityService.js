@@ -65,6 +65,36 @@ class SensitivityService {
   }
 
   /**
+   * 获取食物详情
+   * @param {string} foodId - 食物ID
+   * @returns {Promise<Object>} { success, data } 或 { success: false, error }
+   */
+  static async getFoodDetail(foodId) {
+    try {
+      const foods = await this.getSensitivityFoods();
+      const food = foods.find(f => String(f._id) === String(foodId));
+      if (!food) {
+        return { success: false, error: '食材不存在' };
+      }
+
+      const riskMap = { 1: '低', 2: '中', 3: '高' };
+      return {
+        success: true,
+        data: {
+          ...food,
+          type: food.category,
+          allergyRisk: riskMap[food.allergyLevel] || '低',
+          minAge: 6,
+          recommendIndex: 5 - food.allergyLevel + 1
+        }
+      };
+    } catch (error) {
+      console.error('获取食物详情失败:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * 获取过敏等级配置
    * @returns {Object}
    */

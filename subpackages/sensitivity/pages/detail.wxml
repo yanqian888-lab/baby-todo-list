@@ -64,6 +64,14 @@
       </view>
     </view>
 
+    <!-- 推荐食谱 -->
+    <view class="food-recipes" wx:if="{{foodDetail.recipes && foodDetail.recipes.length > 0}}">
+      <view class="section-title">推荐食谱</view>
+      <view class="recipe-list">
+        <view class="recipe-item" wx:for="{{foodDetail.recipes}}" wx:key="index">{{item}}</view>
+      </view>
+    </view>
+
     <!-- 注意事项 -->
     <view class="food-notes">
       <view class="section-title">注意事项</view>

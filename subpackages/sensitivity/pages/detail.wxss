@@ -129,7 +129,7 @@
 }
 
 /* 食物介绍 */
-.food-description, .sensitivity-suggestion, .food-notes {
+.food-description, .sensitivity-suggestion, .food-notes, .food-recipes {
   padding: 16px 0;
   border-bottom: 1px solid #EEEEEE;
 }
@@ -150,6 +150,31 @@
 /* 排敏建议 */
 .suggestion-content {
   padding-left: 8px;
+}
+
+/* 推荐食谱 */
+.recipe-list {
+  padding-left: 8px;
+}
+
+.recipe-item {
+  font-size: 14px;
+  color: #2D2A26;
+  line-height: 1.6;
+  margin-bottom: 8px;
+  padding-left: 12px;
+  position: relative;
+}
+
+.recipe-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #8B7355;
 }
 
 .suggestion-item {
