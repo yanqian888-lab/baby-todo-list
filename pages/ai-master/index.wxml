@@ -37,10 +37,6 @@
         <view class="message-bubble" wx:if="{{item.type === 'text' || !item.type}}">
           <text class="message-text">{{item.content}}</text>
         </view>
-        <!-- 图片消息 -->
-        <view class="message-bubble image-bubble" wx:if="{{item.type === 'image'}}" bindtap="previewImage" data-url="{{item.content}}">
-          <image class="message-image" src="{{item.content}}" mode="widthFix" lazy-load="{{true}}"></image>
-        </view>
         <!-- 加载中状态 -->
         <view class="typing-indicator" wx:if="{{item.role === 'bot' && item.typing}}">
           <view class="dot"></view>

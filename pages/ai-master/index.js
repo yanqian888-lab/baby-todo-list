@@ -198,74 +198,8 @@ Page({
   },
 
   /**
-   * 选择图片
+   * 构建历史记录
    */
-  chooseImage: async function () {
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: ['album', 'camera'],
-      success: async (res) => {
-        const tempFilePath = res.tempFiles[0].tempFilePath;
-        await this.sendImageMessage(tempFilePath);
-      },
-      fail: (err) => {
-        if (err.errMsg && err.errMsg.includes('cancel')) {
-          return;
-        }
-        console.error('选择图片失败:', err);
-      }
-    });
-  },
-
-  /**
-   * 发送图片消息
-   */
-  sendImageMessage: async function (tempFilePath) {
-    const { loading } = this.data;
-    if (loading) return;
-
-    this.setData({ loading: true });
-
-    // 添加用户图片消息（先显示本地图片）
-    const userMsgId = generateId();
-    const messages = this.data.messages.concat([
-      { id: userMsgId, role: 'user', type: 'image', content: tempFilePath }
-    ]);
-    this.setData({ messages });
-    this.scrollToBottom();
-
-    try {
-      // 上传图片到云存储
-      const uploadRes = await wx.cloud.uploadFile({
-        cloudPath: `ai-master/${Date.now()}_${Math.random().toString(36).substr(2, 6)}.jpg`,
-        filePath: tempFilePath
-      });
-
-      const fileID = uploadRes.fileID;
-
-      // 基于最新的消息列表更新目标消息，避免覆盖上传期间新增的消息
-      const messages = this.data.messages.map(m => {
-        if (m.id === userMsgId) {
-          return { ...m, fileID: fileID, content: fileID };
-        }
-        return m;
-      });
-      this.setData({ messages });
-
-      // 构建历史记录
-      const history = this.buildHistory(messages.slice(0, -1));
-
-      // 调用 AI，传入图片
-      await this.callAI({ msg: '请帮我看看这张图片', history, fileID, babyInfo: this.data.babyInfo });
-    } catch (err) {
-      console.error('图片上传或发送失败:', err);
-      wx.showToast({ title: '图片发送失败', icon: 'none' });
-      this.setData({ loading: false });
-    }
-  },
-
-  /**
    * 构建历史记录
    */
   buildHistory: function (messages) {
@@ -280,7 +214,7 @@ Page({
   /**
    * 调用 AI（通过 aiChat 云函数）
    */
-  callAI: async function ({ msg, history = [], fileID = '', babyInfo = null }) {
+  callAI: async function ({ msg, history = [], babyInfo = null }) {
     console.log('[ai-master] callAI msg:', msg, 'babyInfo:', JSON.stringify(babyInfo));
     const botMsgId = generateId();
 
@@ -297,7 +231,6 @@ Page({
         data: {
           msg,
           history,
-          fileID,
           babyInfo
         }
       });
@@ -394,17 +327,6 @@ Page({
     } else {
       this.setData({ scrollToMessage: 'msg-footer' });
     }
-  },
-
-  /**
-   * 预览图片
-   */
-  previewImage: function (e) {
-    const url = e.currentTarget.dataset.url;
-    wx.previewImage({
-      current: url,
-      urls: [url]
-    });
   },
 
   /**

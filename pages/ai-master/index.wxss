@@ -154,18 +154,6 @@ page {
   border-top-right-radius: 4px;
 }
 
-.image-bubble {
-  padding: 8px;
-  overflow: hidden;
-}
-
-.message-image {
-  max-width: 200px;
-  max-height: 200px;
-  border-radius: 10px;
-  display: block;
-}
-
 .message-text {
   display: block;
 }
