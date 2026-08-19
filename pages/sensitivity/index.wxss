@@ -449,6 +449,78 @@
   color: #8A847A;
 }
 
+.food-recipes {
+  font-size: 12px;
+  color: #8A847A;
+  margin-top: 6px;
+  line-height: 1.6;
+}
+
+/* ===== 推荐食物记录弹窗 ===== */
+.food-record-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.food-record-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2D2A26;
+}
+
+.food-record-category {
+  font-size: 12px;
+  color: #8A847A;
+  background-color: #F0EDE8;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.food-record-level {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.food-record-section {
+  margin-bottom: 16px;
+}
+
+.food-record-label {
+  font-size: 13px;
+  color: #8A847A;
+  margin-bottom: 8px;
+}
+
+.food-record-recipe {
+  font-size: 13px;
+  color: #2D2A26;
+  line-height: 1.8;
+}
+
+.food-record-options {
+  display: flex;
+  gap: 10px;
+}
+
+.food-record-option {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  color: #2D2A26;
+  background-color: #F5F3F0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px 0;
+}
+
+.food-record-option.active {
+  color: #8B7355;
+  border-color: #8B7355;
+  background-color: rgba(139, 115, 85, 0.08);
+}
+
 .ongoing-tag {
   display: inline-block;
   font-size: 11px;

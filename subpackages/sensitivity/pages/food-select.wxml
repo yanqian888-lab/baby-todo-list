@@ -1,4 +1,10 @@
 <!-- pages/sensitivity/food-select.wxml -->
+<wxs module="fmt">
+function joinRecipes(recipes) {
+  return recipes && recipes.length ? recipes.join(' · ') : '';
+}
+module.exports = { joinRecipes: joinRecipes };
+</wxs>
 <view class="container">
   <!-- 搜索栏 -->
   <view class="search-bar">
@@ -52,6 +58,8 @@
                 <text class="food-category-tag">{{food.category}}</text>
               </view>
               <view class="food-recommendation">{{item.recommendation}}</view>
+              <!-- 建议做法 -->
+              <view wx:if="{{food.recipes && food.recipes.length > 0}}" class="food-recipes">建议做法：{{fmt.joinRecipes(food.recipes)}}</view>
               <!-- 排敏天数显示 -->
               <view class="food-allergy-info {{food.sensitivityProgress ? (food.sensitivityProgress.isComplete ? 'completed' : 'in-progress') : ''}}">
                 <block wx:if="{{food.sensitivityProgress}}">

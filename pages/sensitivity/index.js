@@ -37,7 +37,13 @@ Page({
     currentFamilyName: '我的家庭',
     showJoinFamilyModal: false,
     inviteCode: '',
-    switchingTab: false
+    switchingTab: false,
+    // 推荐食物记录弹窗
+    showFoodRecordModal: false,
+    recordFood: null,
+    recordLikeStatus: 1, // 0=不喜欢 1=一般 2=喜欢，默认一般
+    recordAllergyStatus: 0, // 0=不过敏 1=轻微过敏 2=重度过敏，默认不过敏
+    recordSaving: false
   },
 
   /**
@@ -916,12 +922,105 @@ Page({
   },
 
   /**
-   * 选择推荐食物
+   * 选择推荐食物，弹出记录弹窗
    */
   selectFood: function(e) {
     const foodId = e.currentTarget.dataset.foodId;
     const food = this.data.recommendedFoods.find(f => f._id === foodId);
-    this.setData({ selectedFood: food });
+    if (!food) return;
+    this.setData({
+      selectedFood: food,
+      recordFood: food,
+      recordLikeStatus: 1,
+      recordAllergyStatus: 0,
+      showFoodRecordModal: true
+    });
+  },
+
+  /**
+   * 隐藏推荐食物记录弹窗
+   */
+  hideFoodRecordModal: function() {
+    this.setData({ showFoodRecordModal: false, recordFood: null, recordSaving: false });
+  },
+
+  /**
+   * 选择是否喜欢
+   */
+  onRecordLikeChange: function(e) {
+    const value = Number(e.currentTarget.dataset.value);
+    this.setData({ recordLikeStatus: value });
+  },
+
+  /**
+   * 选择是否过敏
+   */
+  onRecordAllergyChange: function(e) {
+    const value = Number(e.currentTarget.dataset.value);
+    this.setData({ recordAllergyStatus: value });
+  },
+
+  /**
+   * 保存推荐食物排敏记录
+   */
+  saveFoodRecord: async function() {
+    if (this.data.recordSaving) return;
+    const food = this.data.recordFood;
+    if (!food) return;
+
+    const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+    const userId = userInfo.openId || userInfo.openid;
+    if (!userId) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+
+    this.setData({ recordSaving: true });
+
+    const likeStatus = this.data.recordLikeStatus;
+    const allergyStatus = this.data.recordAllergyStatus;
+    const record = {
+      userId: userId,
+      babyId: this.data.babyInfo && this.data.babyInfo._id ? this.data.babyInfo._id : 'local-baby-id',
+      foodId: food._id,
+      foodName: food.name,
+      category: food.category,
+      status: 1,
+      likeStatus: likeStatus,
+      allergyStatus: allergyStatus,
+      allergyLevel: food.allergyLevel,
+      date: safeDateFormat(new Date()),
+      createTime: new Date(),
+      updatedAt: new Date().toISOString(),
+      familyId: this.data.currentFamilyId || null
+    };
+
+    try {
+      await sensitivityService.saveSensitivityRecord(record);
+    } catch (error) {
+      console.error('保存排敏记录失败:', error);
+      this.setData({ recordSaving: false });
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' });
+      return;
+    }
+
+    // 标记刚刚更新了数据，短时间内 getTodaySensitivityRecord 不应覆盖
+    this._lastFoodSelectedTime = Date.now();
+
+    const likeStatusText = ['不喜欢', '一般', '喜欢'][likeStatus] || '未记录';
+    const allergyStatusText = ['不过敏', '轻微过敏', '重度过敏'][allergyStatus] || '未记录';
+
+    this.setData({
+      showFoodRecordModal: false,
+      recordFood: null,
+      recordSaving: false,
+      todaySensitivityRecord: record,
+      likeStatusText: likeStatusText,
+      allergyStatusText: allergyStatusText,
+      recommendationTitle: '明日推荐排敏食物'
+    });
+
+    wx.showToast({ title: '已保存', icon: 'success' });
   },
 
   /**

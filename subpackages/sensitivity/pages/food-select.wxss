@@ -186,6 +186,14 @@
   display: block;
 }
 
+/* 食物建议做法 */
+.food-recipes {
+  font-size: 12px;
+  color: #8A847A;
+  margin-bottom: 8px;
+  display: block;
+}
+
 /* 食物排敏天数信息 */
 .food-allergy-info {
   font-size: 12px;

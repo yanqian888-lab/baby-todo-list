@@ -1,4 +1,10 @@
 <!-- pages/sensitivity/index.wxml - MUJI风格优化版 -->
+<wxs module="fmt">
+function joinRecipes(recipes) {
+  return recipes && recipes.length ? recipes.join(' · ') : '';
+}
+module.exports = { joinRecipes: joinRecipes };
+</wxs>
 <view class="container">
 
   <!-- 宝宝信息填写表单 -->
@@ -130,6 +136,7 @@
               <text wx:else>需排敏{{item.allergyLevel === 3 ? 5 : 3}}天</text>
             </text>
           </view>
+          <view wx:if="{{item.recipes && item.recipes.length > 0}}" class="food-recipes">建议做法：{{fmt.joinRecipes(item.recipes)}}</view>
           <view wx:if="{{item.sensitivityDays}}" class="ongoing-tag">排敏中</view>
         </view>
       </view>
@@ -164,6 +171,55 @@
       
       <view wx:else class="no-record">
         <text>今日尚未添加排敏记录</text>
+      </view>
+    </view>
+
+    <!-- 推荐食物记录弹窗 -->
+    <view class="modal {{showFoodRecordModal ? 'show' : ''}}">
+      <view class="modal-mask" bindtap="hideFoodRecordModal"></view>
+      <view class="modal-content">
+        <view class="modal-header">
+          <text class="modal-title">记录排敏</text>
+          <text class="modal-close" bindtap="hideFoodRecordModal">×</text>
+        </view>
+        <view class="modal-body">
+          <view class="food-record-info">
+            <text class="food-record-name">{{recordFood.name}}</text>
+            <text class="food-record-category">{{recordFood.category}}</text>
+            <text class="food-record-level">
+              <text wx:if="{{recordFood.allergyLevel === 1}}" class="level-low">低敏</text>
+              <text wx:elif="{{recordFood.allergyLevel === 2}}" class="level-medium">中敏</text>
+              <text wx:else class="level-high">高敏</text>
+            </text>
+          </view>
+
+          <view wx:if="{{recordFood.recipes && recordFood.recipes.length > 0}}" class="food-record-section">
+            <view class="food-record-label">建议做法</view>
+            <view class="food-record-recipe" wx:for="{{recordFood.recipes}}" wx:key="index">· {{item}}</view>
+          </view>
+
+          <view class="food-record-section">
+            <view class="food-record-label">是否喜欢</view>
+            <view class="food-record-options">
+              <view class="food-record-option {{recordLikeStatus === 0 ? 'active' : ''}}" data-value="{{0}}" bindtap="onRecordLikeChange">不喜欢</view>
+              <view class="food-record-option {{recordLikeStatus === 1 ? 'active' : ''}}" data-value="{{1}}" bindtap="onRecordLikeChange">一般</view>
+              <view class="food-record-option {{recordLikeStatus === 2 ? 'active' : ''}}" data-value="{{2}}" bindtap="onRecordLikeChange">喜欢</view>
+            </view>
+          </view>
+
+          <view class="food-record-section">
+            <view class="food-record-label">是否过敏</view>
+            <view class="food-record-options">
+              <view class="food-record-option {{recordAllergyStatus === 0 ? 'active' : ''}}" data-value="{{0}}" bindtap="onRecordAllergyChange">不过敏</view>
+              <view class="food-record-option {{recordAllergyStatus === 1 ? 'active' : ''}}" data-value="{{1}}" bindtap="onRecordAllergyChange">轻微过敏</view>
+              <view class="food-record-option {{recordAllergyStatus === 2 ? 'active' : ''}}" data-value="{{2}}" bindtap="onRecordAllergyChange">重度过敏</view>
+            </view>
+          </view>
+        </view>
+        <view class="modal-footer">
+          <button class="btn-secondary" bindtap="hideFoodRecordModal">取消</button>
+          <button class="btn-primary" disabled="{{recordSaving}}" bindtap="saveFoodRecord">{{recordSaving ? '保存中' : '保存'}}</button>
+        </view>
       </view>
     </view>
   </block>
