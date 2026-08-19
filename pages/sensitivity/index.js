@@ -383,16 +383,10 @@ Page({
         recommendationTitle: recommendationTitle
       });
       
-      // 默认选择第一个食物
-      if (recommendedFoods && recommendedFoods.length > 0) {
-        this.setData({
-          selectedFood: recommendedFoods[0]
-        });
-      } else {
-        this.setData({
-          selectedFood: null
-        });
-      }
+      // 不默认选中食物，只有用户点击时才高亮并弹出记录弹窗
+      this.setData({
+        selectedFood: null
+      });
     } catch (error) {
       console.error('获取推荐排敏食物失败:', error);
       wx.showToast({
@@ -941,7 +935,7 @@ Page({
    * 隐藏推荐食物记录弹窗
    */
   hideFoodRecordModal: function() {
-    this.setData({ showFoodRecordModal: false, recordFood: null, recordSaving: false });
+    this.setData({ showFoodRecordModal: false, recordFood: null, recordSaving: false, selectedFood: null });
   },
 
   /**
@@ -1014,6 +1008,7 @@ Page({
       showFoodRecordModal: false,
       recordFood: null,
       recordSaving: false,
+      selectedFood: null,
       todaySensitivityRecord: record,
       likeStatusText: likeStatusText,
       allergyStatusText: allergyStatusText,
