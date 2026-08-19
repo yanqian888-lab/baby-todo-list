@@ -919,6 +919,15 @@ Page({
    * 选择推荐食物，弹出记录弹窗
    */
   selectFood: function(e) {
+    // 今日已有排敏记录时，不再弹出记录弹窗（同一天不建议排敏多种食物）
+    if (this.data.todaySensitivityRecord) {
+      wx.showToast({
+        title: '今天已经记录过了，明天再来吧！未排敏完成的食物不建议同一天内食用多种，给宝宝一些适应时间吧！',
+        icon: 'none',
+        duration: 3000
+      });
+      return;
+    }
     const foodId = e.currentTarget.dataset.foodId;
     const food = this.data.recommendedFoods.find(f => f._id === foodId);
     if (!food) return;
