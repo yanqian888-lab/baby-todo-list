@@ -11,7 +11,7 @@
         </view>
         <view class="ai-entry" bindtap="goAiMaster" hover-class="ai-entry-hover">
           <image class="ai-entry-icon" src="/images/tabbar/ai-master.png" mode="aspectFit" />
-          <text class="ai-entry-text">AI育儿</text>
+          <text class="ai-entry-text">AI育儿大师</text>
         </view>
       </view>
     </view>
