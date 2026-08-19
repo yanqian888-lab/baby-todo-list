@@ -1,0 +1,305 @@
+/* pages/checklist/detail.wxss - 清单详情 */
+
+.container {
+  min-height: 100vh;
+  background-color: #FAFAF8;
+  padding: 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* 顶部操作栏 */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.top-progress {
+  font-size: 13px;
+  color: #8A847A;
+}
+
+.next-round-btn {
+  font-size: 14px;
+  color: #8B7355;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.next-round-hover {
+  background-color: rgba(139, 115, 85, 0.08);
+}
+
+/* 条目列表 */
+.item-list {
+  background-color: #FFFFFF;
+  border-radius: 16px;
+  padding: 8px 16px;
+  box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #F0EDE8;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+/* 圆形勾选框 */
+.item-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #C8C2B8;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  transition: all 0.15s ease;
+}
+
+.item-checkbox.checked {
+  background-color: #8B7355;
+  border-color: #8B7355;
+}
+
+.check-mark {
+  color: #FFFFFF;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.item-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  color: #2D2A26;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.item-text.checked {
+  text-decoration: line-through;
+  color: #B8B2A8;
+}
+
+.item-delete {
+  flex-shrink: 0;
+  font-size: 20px;
+  color: #C8C2B8;
+  padding: 4px 8px;
+  margin-left: 4px;
+}
+
+/* 空清单引导 */
+.empty-items {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.empty-icon {
+  font-size: 44px;
+  margin-bottom: 12px;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #B8B2A8;
+}
+
+/* 删除清单入口 */
+.delete-list-entry {
+  margin-top: 32px;
+  text-align: center;
+  padding: 14px;
+}
+
+.delete-list-text {
+  font-size: 14px;
+  color: #C05B4D;
+}
+
+/* 底部固定输入栏 */
+.input-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background-color: #FFFFFF;
+  border-top: 1px solid #F0EDE8;
+  z-index: 100;
+}
+
+.input-bar-field {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 14px;
+  background-color: #F7F7F7;
+  border-radius: 999px;
+  font-size: 15px;
+  color: #2D2A26;
+}
+
+.input-bar-btn {
+  flex-shrink: 0;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 20px;
+  background-color: #8B7355;
+  color: #FFFFFF;
+  font-size: 14px;
+  border-radius: 999px;
+}
+
+.input-bar-btn::after {
+  border: none;
+}
+
+/* ===== 弹窗基础样式（与排敏页保持一致） ===== */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  visibility: hidden;
+}
+
+.modal.show {
+  visibility: visible;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.modal-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #2D2A26;
+}
+
+.modal-close {
+  font-size: 24px;
+  color: #8A847A;
+  padding: 4px;
+}
+
+.modal-body {
+  margin-bottom: 20px;
+}
+
+.modal-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  background-color: #F7F7F7;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #2D2A26;
+  box-sizing: border-box;
+}
+
+.modal-delete-item {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #C05B4D;
+  padding: 8px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-footer .btn-primary,
+.modal-footer .btn-secondary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  border: none;
+  line-height: 1;
+}
+
+.modal-footer .btn-primary {
+  background-color: #8B7355;
+  color: #FFFFFF;
+}
+
+.modal-footer .btn-secondary {
+  background-color: #F5F3F0;
+  color: #8A847A;
+}
+
+.modal-footer .btn-primary::after,
+.modal-footer .btn-secondary::after {
+  border: none;
+}
+
+/* 底部上拉弹窗 */
+.modal-bottom .modal-mask {
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.modal-bottom.show .modal-mask {
+  opacity: 1;
+}
+
+.modal-bottom .modal-content {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px 16px 0 0;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+  transform: translateY(100%);
+  transition: transform 0.28s ease;
+}
+
+.modal-bottom.show .modal-content {
+  transform: translateY(0);
+}

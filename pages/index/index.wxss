@@ -26,12 +26,24 @@
   font-size: 22px;
   font-weight: 600;
   color: #8B7355;
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+
+/* 问候语行：家庭名自适应换行 + 右侧 AI 入口固定宽度 */
+.greeting-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 .family-selector {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  margin-top: 6px;
   padding: 10px 12px;
   background-color: rgba(255,255,255,0.5);
   border-radius: 12px;
@@ -41,6 +53,32 @@
   width: 44rpx;
   height: 44rpx;
   margin-left: 8rpx;
+  flex-shrink: 0;
+}
+
+/* AI 育儿入口 */
+.ai-entry {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 12px;
+  background-color: rgba(255,255,255,0.5);
+  border-radius: 12px;
+}
+
+.ai-entry-hover {
+  background-color: rgba(139, 115, 85, 0.08);
+}
+
+.ai-entry-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.ai-entry-text {
+  font-size: 13px;
+  color: #8B7355;
 }
 
 .greeting-text .username {

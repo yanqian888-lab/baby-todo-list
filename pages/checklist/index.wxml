@@ -1,0 +1,81 @@
+<!-- pages/checklist/index.wxml - 宝贝清单列表 -->
+<view class="container">
+  <!-- 家庭切换 tabs -->
+  <view class="family-tabs" wx:if="{{families.length > 0}}">
+    <view
+      wx:for="{{families}}"
+      wx:key="_id"
+      class="tab-item {{currentFamilyId === item._id ? 'active' : ''}}"
+      bindtap="switchFamilyTab"
+      data-tab-id="{{item._id}}"
+    >{{item.name || item.displayName}}</view>
+  </view>
+
+  <!-- 清单卡片列表 -->
+  <view class="list-section" wx:if="{{lists.length > 0}}">
+    <view
+      class="list-card"
+      wx:for="{{lists}}"
+      wx:key="_id"
+      data-id="{{item._id}}"
+      bindtap="goDetail"
+      hover-class="list-card-hover"
+    >
+      <view class="list-card-header">
+        <text class="list-name">{{item.name}}</text>
+        <text class="list-progress">{{item.checkedCount}}/{{item.totalCount}} 已完成</text>
+      </view>
+      <view class="list-preview" wx:if="{{item.previewTexts.length > 0}}">
+        <view class="preview-item" wx:for="{{item.previewTexts}}" wx:key="index" wx:for-item="text">· {{text}}</view>
+      </view>
+      <view class="list-all-done" wx:elif="{{item.totalCount > 0}}">全部完成啦 🎉</view>
+      <view class="list-all-done" wx:else>暂无条目，点击添加</view>
+    </view>
+  </view>
+
+  <!-- 空态 -->
+  <view class="empty-lists" wx:if="{{!loading && lists.length === 0}}">
+    <view class="empty-icon">📝</view>
+    <text class="empty-text">还没有清单，点击下方按钮新建一个吧</text>
+  </view>
+
+  <!-- 底部新建按钮 -->
+  <view class="create-btn-wrapper">
+    <button class="create-btn" bindtap="openCreateModal">＋ 新建清单</button>
+  </view>
+
+  <!-- 新建清单弹窗（底部上拉） -->
+  <view class="modal modal-bottom {{showCreateModal ? 'show' : ''}}">
+    <view class="modal-mask" bindtap="closeCreateModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">新建清单</text>
+        <text class="modal-close" bindtap="closeCreateModal">×</text>
+      </view>
+      <view class="modal-body">
+        <input
+          class="modal-input"
+          type="text"
+          placeholder="请输入清单名称"
+          value="{{newListName}}"
+          bindinput="onNameInput"
+          maxlength="30"
+        />
+        <view class="preset-label">选择模板</view>
+        <view class="preset-chips">
+          <view
+            class="preset-chip {{selectedPresetId === item.presetId ? 'active' : ''}}"
+            wx:for="{{presetOptions}}"
+            wx:key="presetId"
+            data-preset-id="{{item.presetId}}"
+            bindtap="selectPreset"
+          >{{item.name}}</view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-secondary" bindtap="closeCreateModal">取消</button>
+        <button class="btn-primary" disabled="{{creating}}" bindtap="submitCreate">{{creating ? '创建中' : '创建'}}</button>
+      </view>
+    </view>
+  </view>
+</view>

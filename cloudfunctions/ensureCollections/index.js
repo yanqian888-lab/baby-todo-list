@@ -30,6 +30,8 @@ async function ensureCollectionsExist() {
     // 排敏
     'sensitivity_foods',
     'sensitivity_records',
+    // 宝贝清单
+    'checklists',
     // 记录
     'check_records'
   ]

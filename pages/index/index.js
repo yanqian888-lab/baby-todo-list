@@ -1845,4 +1845,13 @@ Page({
       url: `/pages/task/create?mode=create${familyIdParam}`
     });
   },
+
+  /**
+   * 打开 AI 育儿大师页面
+   */
+  goAiMaster() {
+    wx.navigateTo({
+      url: '/pages/ai-master/index'
+    });
+  },
 });

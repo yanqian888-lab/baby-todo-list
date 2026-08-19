@@ -3,6 +3,8 @@
     "pages/index/index",
     "pages/ai-master/index",
     "pages/sensitivity/index",
+    "pages/checklist/index",
+    "pages/checklist/detail",
     "pages/profile/index"
   ],
   "subPackages": [
@@ -124,10 +126,10 @@
         "selectedIconPath": "images/tabbar/food-active.png"
       },
       {
-        "pagePath": "pages/ai-master/index",
-        "text": "AI育儿大师",
-        "iconPath": "images/tabbar/ai-master.png",
-        "selectedIconPath": "images/tabbar/ai-master-active.png"
+        "pagePath": "pages/checklist/index",
+        "text": "清单",
+        "iconPath": "images/tabbar/checklist.png",
+        "selectedIconPath": "images/tabbar/checklist-active.png"
       },
       {
         "pagePath": "pages/profile/index",
