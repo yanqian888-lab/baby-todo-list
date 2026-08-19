@@ -179,7 +179,7 @@ module.exports = { joinRecipes: joinRecipes };
       <view class="modal-mask" bindtap="hideFoodRecordModal"></view>
       <view class="modal-content">
         <view class="modal-header">
-          <text class="modal-title">记录排敏</text>
+          <text class="modal-title">添加今日排敏</text>
           <text class="modal-close" bindtap="hideFoodRecordModal">×</text>
         </view>
         <view class="modal-body">
