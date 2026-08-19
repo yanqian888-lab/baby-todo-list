@@ -68,6 +68,8 @@ module.exports = { joinRecipes: joinRecipes };
                 </block>
                 <block wx:else>需排敏{{food.allergyLevel === 3 ? 5 : 3}}天</block>
               </view>
+              <!-- 过敏等级标签 -->
+              <text class="food-allergy-level {{food.allergyLevel === 1 ? 'level-low' : food.allergyLevel === 2 ? 'level-medium' : 'level-high'}}">{{food.allergyLevel === 1 ? '低敏' : food.allergyLevel === 2 ? '中敏' : '高敏'}}</text>
             </view>
             <view class="select-btn" catchtap="toggleFoodSelection" data-food-id="{{food._id}}">
               <view class="select-circle {{selectedFoodMap[food._id] ? 'selected' : ''}}"></view>

@@ -213,6 +213,24 @@
   font-weight: 500;
 }
 
+/* 过敏等级标签 */
+.food-allergy-level {
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.food-allergy-level.level-low {
+  color: #7A9E7E;
+}
+
+.food-allergy-level.level-medium {
+  color: #D4A574;
+}
+
+.food-allergy-level.level-high {
+  color: #C47D7D;
+}
+
 /* 选择按钮 */
 .select-btn {
   width: 28px;
