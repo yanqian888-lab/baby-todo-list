@@ -16,6 +16,7 @@ exports.main = async (event, context) => {
   }
 
   const db = cloud.database()
+  const _ = db.command
 
   try {
     let taskData
@@ -71,6 +72,21 @@ exports.main = async (event, context) => {
         .orderBy('completedAt', 'desc')
         .get()
       clockIns = clockInsRes.data || []
+
+      // 服务端补充打卡人昵称（前端直连 users 集合受权限限制，读不到他人/自己的用户文档）
+      const openIds = [...new Set(clockIns.map(r => r._openid).filter(Boolean))]
+      if (openIds.length > 0) {
+        try {
+          const usersRes = await db.collection('users').where({ openid: _.in(openIds) }).get()
+          const nickMap = {}
+          ;(usersRes.data || []).forEach(u => {
+            nickMap[u.openid] = u.nickName || (u.userInfo && u.userInfo.nickName) || ''
+          })
+          clockIns = clockIns.map(r => ({ ...r, nickName: r.nickName || nickMap[r._openid] || '' }))
+        } catch (e) {
+          console.warn('补充打卡人昵称失败:', e)
+        }
+      }
     } catch (e) {
       console.warn('查询打卡记录失败:', e)
     }
