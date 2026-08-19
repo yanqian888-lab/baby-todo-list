@@ -174,8 +174,8 @@ module.exports = { joinRecipes: joinRecipes };
       </view>
     </view>
 
-    <!-- 推荐食物记录弹窗 -->
-    <view class="modal {{showFoodRecordModal ? 'show' : ''}}">
+    <!-- 推荐食物记录弹窗（底部上拉） -->
+    <view class="modal modal-bottom {{showFoodRecordModal ? 'show' : ''}}">
       <view class="modal-mask" bindtap="hideFoodRecordModal"></view>
       <view class="modal-content">
         <view class="modal-header">

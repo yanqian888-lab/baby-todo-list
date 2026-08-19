@@ -201,11 +201,11 @@
   right: 0;
   bottom: 0;
   z-index: 1000;
-  display: none;
+  visibility: hidden;
 }
 
 .modal.show {
-  display: block;
+  visibility: visible;
 }
 
 .modal-mask {
@@ -629,4 +629,28 @@
   padding: 40px 20px;
   color: #B8B2A8;
   font-size: 14px;
+}
+
+/* 底部上拉弹窗（记录排敏） */
+.modal-bottom .modal-mask {
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.modal-bottom.show .modal-mask {
+  opacity: 1;
+}
+
+.modal-bottom .modal-content {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px 16px 0 0;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+  transform: translateY(100%);
+  transition: transform 0.28s ease;
+}
+
+.modal-bottom.show .modal-content {
+  transform: translateY(0);
 }
