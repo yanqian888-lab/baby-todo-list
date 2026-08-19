@@ -610,7 +610,8 @@ Page({
           category: c.name,
           month: '',
           order: f.sensitivityOrder,
-          allergyLevel: f.allergyLevel
+          allergyLevel: f.allergyLevel,
+          recipes: f.recipes || []
         }))
       }));
 
