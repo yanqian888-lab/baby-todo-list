@@ -42,6 +42,7 @@ Page({
   onLoad: function (options) {
     this.loadUserInfo();
     this._babyInfoReady = this.loadBabyInfo();
+    this.loadMessages();
   },
 
   onShow: function () {
@@ -195,6 +196,7 @@ Page({
     ]);
     this.setData({ messages, inputValue: '', hasInput: false, loading: true });
     this.scrollToBottom();
+    this.saveMessages(); // 用户消息持久化
 
     // 构建历史记录
     const history = this.buildHistory(messages.slice(0, -1));
@@ -301,6 +303,38 @@ Page({
     if (this.typeWriterTimer) {
       clearInterval(this.typeWriterTimer);
       this.typeWriterTimer = null;
+      // 打字中途退出，保存当前已显示的内容
+      this.saveMessages();
+    }
+  },
+
+  /**
+   * 从本地存储恢复聊天记录
+   */
+  loadMessages: function () {
+    try {
+      const saved = wx.getStorageSync('ai_chat_history');
+      if (Array.isArray(saved) && saved.length > 0) {
+        this.setData({ messages: saved });
+        // 等待渲染完成后滚到底部
+        setTimeout(() => this.scrollToBottom(), 100);
+      }
+    } catch (e) {
+      console.warn('[ai-master] 恢复聊天记录失败:', e);
+    }
+  },
+
+  /**
+   * 保存聊天记录到本地存储（最多保留最近 100 条，去掉打字中状态）
+   */
+  saveMessages: function () {
+    try {
+      const messages = this.data.messages
+        .map(m => ({ ...m, typing: false }))
+        .slice(-100);
+      wx.setStorageSync('ai_chat_history', messages);
+    } catch (e) {
+      console.warn('[ai-master] 保存聊天记录失败:', e);
     }
   },
 
@@ -317,6 +351,7 @@ Page({
     this.setData({ messages });
     if (!typing) {
       this.scrollToBottom();
+      this.saveMessages(); // 消息定稿后持久化
     }
   },
 
