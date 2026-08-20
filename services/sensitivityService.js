@@ -263,6 +263,28 @@ class SensitivityService {
         this.getAllergyConfig()
       ]);
 
+      // 合并本地自定义食物到推荐池（否则自定义食物的排敏记录会被当作"未知食物"跳过）
+      try {
+        const customFoods = wx.getStorageSync('custom_sensitivity_foods');
+        if (Array.isArray(customFoods)) {
+          const existingNames = new Set(allFoods.map(f => f.name));
+          customFoods.forEach(cf => {
+            if (cf && cf.name && !existingNames.has(cf.name)) {
+              allFoods.push({
+                _id: cf._id,
+                name: cf.name,
+                category: cf.category || '自定义食物',
+                allergyLevel: cf.allergyLevel || 1,
+                recipes: cf.recipes || []
+              });
+              existingNames.add(cf.name);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('读取自定义食物失败:', e);
+      }
+
       const completedFoods = new Set();
       const ongoingFoods = new Map();
 
@@ -312,8 +334,13 @@ class SensitivityService {
       };
 
       // 优先推荐排敏中（天数不达标）的食物，再推荐未开始的
-      // 两组内部均按 sensitivityOrder 排序，相同数字随机
-      sortBySensitivityOrder(ongoingList);
+      // 排敏中的按最早提交排敏的时间排序（先开始的排前面），未开始的按 sensitivityOrder
+      ongoingList.sort((a, b) => {
+        const fa = ongoingFoods.get(a.name)?.firstDate || '9999-99-99';
+        const fb = ongoingFoods.get(b.name)?.firstDate || '9999-99-99';
+        if (fa !== fb) return fa < fb ? -1 : 1;
+        return (a.sensitivityOrder !== undefined ? a.sensitivityOrder : 999) - (b.sensitivityOrder !== undefined ? b.sensitivityOrder : 999);
+      });
       sortBySensitivityOrder(notStartedList);
       const recommendedFoods = [...ongoingList, ...notStartedList].slice(0, limit);
       
@@ -648,7 +675,9 @@ class SensitivityService {
       if (actualDays >= totalDays) {
         completedFoods.add(foodName);
       } else {
-        ongoingFoods.set(foodName, { sensitivityDays: actualDays, totalSensitivityDays: totalDays });
+        // 记录最早提交排敏的日期，用于推荐列表按提交时间排序
+        const firstDate = Array.from(uniqueDates).sort()[0] || '';
+        ongoingFoods.set(foodName, { sensitivityDays: actualDays, totalSensitivityDays: totalDays, firstDate });
       }
     }
   }
