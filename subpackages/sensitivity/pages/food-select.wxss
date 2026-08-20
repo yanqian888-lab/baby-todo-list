@@ -390,7 +390,10 @@
 /* 适配不同屏幕尺寸 */
 @media (max-width: 375px) {
   .container {
-    padding: 12px;
+    /* 不能用 padding 简写，会把底部的按钮留白覆盖掉 */
+    padding-top: 12px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
   
   .food-item {
