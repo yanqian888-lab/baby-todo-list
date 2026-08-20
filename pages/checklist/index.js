@@ -7,9 +7,11 @@ const familyService = require('../../services/familyService');
 const PRESET_OPTIONS = [
   { presetId: '', name: '空白清单' },
   { presetId: 'shopping', name: '家庭购物清单' },
-  { presetId: 'outing', name: '出门清单' },
-  { presetId: 'travel', name: '旅行清单' },
-  { presetId: 'hospital', name: '待产包' }
+  { presetId: 'hospital', name: '孕妈待产包' },
+  { presetId: 'home', name: '新生儿居家清单' },
+  { presetId: 'outing', name: '日常出门随身包' },
+  { presetId: 'travel', name: '短途过夜旅行清单' },
+  { presetId: 'weaning', name: '辅食必备工具' }
 ];
 
 Page({
