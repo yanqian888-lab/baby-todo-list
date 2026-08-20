@@ -918,7 +918,44 @@ Page({
           return category.foods.length > 0;
         }
       });
-      
+
+      // 从宝宝信息页进入时，预勾选只保留「已排敏完成」的食物：
+      // 选中即代表已完成排敏（不再进入推荐），所以"排敏中"（有记录但天数未达标）的食物要取消默认选中
+      if (this.data.isFromBabyInfo && selectedFoodIds.length > 0) {
+        const allergyConfig = await sensitivityService.getAllergyConfig();
+        // 纯记录口径的排敏天数（不看宝宝信息里的声明），用于识别"排敏中"
+        const recordDaysMap = {};
+        userRecords.forEach(r => {
+          if (!r.foodName) return;
+          if (!recordDaysMap[r.foodName]) recordDaysMap[r.foodName] = new Set();
+          const d = this.normalizeDateString(r.date);
+          if (d) recordDaysMap[r.foodName].add(d);
+        });
+        const findFoodById = (id) => {
+          for (const c of filteredCategories) {
+            const f = (c.foods || []).find(x => String(x._id) === String(id));
+            if (f) return f;
+          }
+          return null;
+        };
+        const keptIds = selectedFoodIds.filter(id => {
+          const food = findFoodById(id);
+          if (!food) return true;
+          const daysSet = recordDaysMap[food.name];
+          if (!daysSet) return true; // 无排敏记录：保持选中（属声明完成的）
+          const required = allergyConfig[food.allergyLevel]?.days || 3;
+          return daysSet.size >= required; // 只保留记录天数达标的
+        });
+        // 原地同步选中数组/映射/偏好
+        selectedFoodIds.splice(0, selectedFoodIds.length, ...keptIds);
+        Object.keys(selectedFoodMap).forEach(id => {
+          if (!keptIds.includes(id)) delete selectedFoodMap[id];
+        });
+        Object.keys(foodPreferences).forEach(id => {
+          if (!keptIds.includes(id)) delete foodPreferences[id];
+        });
+      }
+
       this.setData({
         foodCategories: filteredCategories,
         allFoods: filteredCategories,
