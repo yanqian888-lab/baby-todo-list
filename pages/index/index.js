@@ -424,6 +424,8 @@ Page({
     } finally {
       this._loading = false;
       this.setData({ hasLoaded: true });
+      // 首个 onShow 被 _loading 守卫跳过，这里补一次宝宝信息完善检查（方法幂等，可安全多调）
+      this.checkBabyInfoComplete();
     }
   },
   

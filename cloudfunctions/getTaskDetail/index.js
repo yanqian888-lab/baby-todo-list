@@ -39,7 +39,7 @@ exports.main = async (event, context) => {
     } else if (taskFamilyId) {
       const familyRes = await db.collection('families').doc(taskFamilyId).get().catch(() => null)
       const family = familyRes ? familyRes.data : null
-      const isMember = family && (family.members || []).some(m => m.openId === openid)
+      const isMember = family && (family.members || []).some(m => m.openId === openid || m.openid === openid)
       const isCreator = family && family.creatorOpenId === openid
       if (isMember || isCreator) {
         hasPermission = true

@@ -281,12 +281,22 @@ Page({
     if (this.typeWriterTimer) {
       clearInterval(this.typeWriterTimer);
       this.typeWriterTimer = null;
+      // 上一条消息未打完，先一次性补全，避免半截内容被持久化
+      if (this._typingMsgId) {
+        this.updateBotMessage(this._typingMsgId, this._typingFullText, false);
+      }
     }
+
+    // 记录当前正在打字的消息，供下一段打字开始时补全
+    this._typingMsgId = msgId;
+    this._typingFullText = content;
 
     const timer = setInterval(() => {
       if (displayed.length >= content.length) {
         clearInterval(timer);
         this.typeWriterTimer = null;
+        this._typingMsgId = null;
+        this._typingFullText = null;
         this.updateBotMessage(msgId, content, false);
         return;
       }

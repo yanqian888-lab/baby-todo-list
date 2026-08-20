@@ -84,7 +84,7 @@ function makeItem(text) {
   };
 }
 
-// 获取家庭全部清单；若一条都没有则自动实例化 4 个预制清单（幂等，仅在 0 条时触发）
+// 获取家庭全部清单；若一条都没有且未初始化过则自动实例化 6 个预制清单（确定性ID + 初始化标记，保证幂等）
 async function getLists(OPENID, event) {
   try {
     const { familyId } = event;
@@ -101,10 +101,11 @@ async function getLists(OPENID, event) {
     let result = await db.collection('checklists').where({ familyId }).get();
     let lists = result.data || [];
 
-    // 家庭首次使用：实例化预制清单
-    if (lists.length === 0) {
+    // 家庭首次使用：实例化预制清单（presetsInitialized 标记防止用户删光后复活）
+    if (lists.length === 0 && !family.presetsInitialized) {
       for (const preset of PRESET_LISTS) {
-        await db.collection('checklists').add({
+        // 使用确定性文档ID，set 幂等，并发首次进入不会重复插入
+        await db.collection('checklists').doc(`${familyId}_${preset.presetId}`).set({
           data: {
             familyId: familyId,
             name: preset.name,
@@ -116,6 +117,18 @@ async function getLists(OPENID, event) {
             updateTime: new Date()
           }
         });
+      }
+      // 标记家庭已初始化预制清单，此后删光也不再复活
+      try {
+        await db.collection('families').doc(familyId).update({
+          data: { presetsInitialized: true }
+        });
+      } catch (e) {
+        console.warn('更新预制清单初始化标记失败，尝试 set 合并:', e);
+        const { _id, ...familyData } = family;
+        await db.collection('families').doc(familyId).set({
+          data: { ...familyData, presetsInitialized: true }
+        }).catch(err => console.error('set 合并家庭文档失败:', err));
       }
       result = await db.collection('checklists').where({ familyId }).get();
       lists = result.data || [];
@@ -130,7 +143,7 @@ async function getLists(OPENID, event) {
     };
   } catch (error) {
     console.error('获取清单列表失败:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: '操作失败，请稍后再试' };
   }
 }
 
@@ -162,11 +175,13 @@ async function createList(OPENID, event) {
     }
 
     let items = [];
+    let matchedPreset = null;
     if (presetId) {
-      const preset = PRESET_LISTS.find(p => p.presetId === presetId);
-      if (preset) {
-        items = preset.items.map(text => makeItem(text));
+      matchedPreset = PRESET_LISTS.find(p => p.presetId === presetId) || null;
+      if (matchedPreset) {
+        items = matchedPreset.items.map(text => makeItem(text));
       }
+      // 传入查不到的 presetId 时按普通清单处理
     }
 
     const listData = {
@@ -174,8 +189,8 @@ async function createList(OPENID, event) {
       name: name,
       items: items,
       creatorOpenId: OPENID,
-      isPreset: !!presetId,
-      presetId: presetId || null,
+      isPreset: !!matchedPreset,
+      presetId: matchedPreset ? matchedPreset.presetId : null,
       createTime: new Date(),
       updateTime: new Date()
     };
@@ -184,7 +199,7 @@ async function createList(OPENID, event) {
     return { success: true, data: { _id: addResult._id, list: { ...listData, _id: addResult._id } } };
   } catch (error) {
     console.error('创建清单失败:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: '操作失败，请稍后再试' };
   }
 }
 
@@ -215,7 +230,7 @@ async function renameList(OPENID, event) {
     return { success: true };
   } catch (error) {
     console.error('重命名清单失败:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: '操作失败，请稍后再试' };
   }
 }
 
@@ -240,7 +255,7 @@ async function deleteList(OPENID, event) {
     return { success: true };
   } catch (error) {
     console.error('删除清单失败:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: '操作失败，请稍后再试' };
   }
 }
 
@@ -280,7 +295,7 @@ async function addItem(OPENID, event) {
     return { success: true, data: { item: newItem } };
   } catch (error) {
     console.error('添加条目失败:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: '操作失败，请稍后再试' };
   }
 }
 
@@ -319,7 +334,7 @@ async function renameItem(OPENID, event) {
     return { success: true };
   } catch (error) {
     console.error('重命名条目失败:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: '操作失败，请稍后再试' };
   }
 }
 
@@ -349,7 +364,7 @@ async function deleteItem(OPENID, event) {
     return { success: true };
   } catch (error) {
     console.error('删除条目失败:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: '操作失败，请稍后再试' };
   }
 }
 
@@ -359,6 +374,9 @@ async function toggleItem(OPENID, event) {
     const { listId, itemId, checked } = event;
     if (!listId || !itemId) {
       return { success: false, error: '缺少清单ID或条目ID' };
+    }
+    if (typeof checked !== 'boolean') {
+      return { success: false, error: '参数错误' };
     }
 
     const check = await getListAndVerify(listId, OPENID);
@@ -401,7 +419,7 @@ async function toggleItem(OPENID, event) {
     return { success: true };
   } catch (error) {
     console.error('勾选条目失败:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: '操作失败，请稍后再试' };
   }
 }
 
@@ -433,7 +451,7 @@ async function clearChecked(OPENID, event) {
     return { success: true };
   } catch (error) {
     console.error('清除勾选失败:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: '操作失败，请稍后再试' };
   }
 }
 

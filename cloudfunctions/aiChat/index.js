@@ -282,28 +282,12 @@ async function checkDailyQuota(openid) {
  * @returns {Promise<Object>} 处理结果
  */
 exports.main = async (event, context) => {
-  const { msg, history = [], fileID, babyInfo } = event;
+  const { msg, history = [], babyInfo } = event;
 
   try {
     // API Key 未配置时直接返回友好提示
     if (!process.env.TOKENHUB_API_KEY) {
       return { code: -1, error: 'AI 服务未配置，请稍后再试' };
-    }
-
-    // 按 openid 限制每个用户每天的调用次数
-    const wxContext = cloud.getWXContext();
-    const openid = wxContext.OPENID || wxContext.openid;
-    const quota = await checkDailyQuota(openid);
-    if (!quota.allowed) {
-      return { code: 0, content: '今天的聊天次数已经达到上限啦（每天最多30次），早点休息，明天再来找我聊吧～' };
-    }
-
-    let imageUrl = null;
-    if (fileID) {
-      const fileRes = await cloud.getTempFileURL({ fileList: [fileID] });
-      if (fileRes.fileList && fileRes.fileList[0] && fileRes.fileList[0].tempFileURL) {
-        imageUrl = fileRes.fileList[0].tempFileURL;
-      }
     }
 
     // 组装 system prompt
@@ -358,6 +342,14 @@ exports.main = async (event, context) => {
       };
     }
 
+    // 按 openid 限制每个用户每天的调用次数（放在快速回复之后，只在真正调用大模型前扣额度）
+    const wxContext = cloud.getWXContext();
+    const openid = wxContext.OPENID || wxContext.openid;
+    const quota = await checkDailyQuota(openid);
+    if (!quota.allowed) {
+      return { code: 0, content: '今天的聊天次数已经达到上限啦（每天最多30次），早点休息，明天再来找我聊吧～' };
+    }
+
     console.log('aiChat babyInfo:', JSON.stringify(babyInfo), 'userMonth:', userMonth);
 
     // 检索知识库（传入 userMonth 优先匹配对应月龄内容）
@@ -402,17 +394,7 @@ exports.main = async (event, context) => {
       finalMsg = `我家宝宝现在${userMonth}个月。${msg}`;
     }
 
-    if (imageUrl) {
-      messages.push({
-        role: "user",
-        content: [
-          { type: "text", text: finalMsg || "请帮我看看这张图片" },
-          { type: "image_url", image_url: { url: imageUrl } }
-        ]
-      });
-    } else {
-      messages.push({ role: "user", content: finalMsg });
-    }
+    messages.push({ role: "user", content: finalMsg });
 
     // 调用 TokenHub API（使用官方 OpenAI SDK）
     console.log('aiChat calling TokenHub with model:', MODEL_NAME);

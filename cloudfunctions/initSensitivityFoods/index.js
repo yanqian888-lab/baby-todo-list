@@ -732,30 +732,6 @@ const sensitivityFoodsData = {
             "猪肝大米粥",
             "猪肝菠菜泥"
           ]
-        },
-        {
-          "_id": "58",
-          "name": "三文鱼",
-          "allergyLevel": 2,
-          "sortOrder": 58,
-          "sensitivityOrder": 11,
-          "recipes": [
-            "三文鱼泥",
-            "三文鱼大米粥",
-            "三文鱼土豆泥"
-          ]
-        },
-        {
-          "_id": "59",
-          "name": "鳕鱼",
-          "allergyLevel": 2,
-          "sortOrder": 59,
-          "sensitivityOrder": 11,
-          "recipes": [
-            "鳕鱼泥",
-            "鳕鱼大米粥",
-            "鳕鱼南瓜泥"
-          ]
         }
       ]
     },
