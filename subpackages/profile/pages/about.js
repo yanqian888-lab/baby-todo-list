@@ -4,11 +4,11 @@ Page({
    * 页面的初始数据
    */
   data: {
-    appName: '母婴打卡',
+    appName: '朵叽排敏生活全家记',
     version: '1.0.0',
     description: '记录宝宝成长的每一天',
-    developer: '母婴打卡团队',
-    contact: 'support@babycheckin.com'
+    developer: '北京绵言科技发展中心（个体工商户）',
+    contact: '18501059798'
   },
 
   /**

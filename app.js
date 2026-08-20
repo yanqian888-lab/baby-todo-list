@@ -1,4 +1,4 @@
-// 母婴打卡小程序入口文件
+// 朵叽排敏生活全家记小程序入口文件
 App({
   /**
    * 小程序初始化时执行
@@ -262,7 +262,7 @@ App({
    */
   globalData: {
     userInfo: null,
-    appName: '母婴打卡',
+    appName: '朵叽排敏生活全家记',
     themeColor: '#FF7A85',
     db: null, // 数据库引用
     lastSyncTime: null, // 上次同步时间

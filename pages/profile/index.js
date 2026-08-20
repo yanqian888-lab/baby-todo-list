@@ -433,7 +433,7 @@ Page({
    */
   onShareAppMessage: function () {
     return {
-      title: '母婴打卡 - 记录宝宝成长的每一天',
+      title: '朵叽排敏生活全家记 - 记录宝宝成长的每一天',
       path: '/pages/index/index',
       imageUrl: '/assets/share-cover.png'
     };
