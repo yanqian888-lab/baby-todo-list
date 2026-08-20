@@ -71,9 +71,13 @@ Page({
         userInfo: null
       });
     }
-    this.loadFamilyInfo().then(() => {
-      this.checkBabyInfo();
-    });
+    // 初始化进行中标志，onShow 在此期间跳过，避免 onLoad/onShow 重复初始化
+    this._initializing = true;
+    this.loadFamilyInfo()
+      .then(() => this.checkBabyInfo())
+      .finally(() => {
+        this._initializing = false;
+      });
   },
 
   /**
@@ -86,13 +90,13 @@ Page({
       return;
     }
 
+    // onLoad 初始化尚未完成，跳过本次刷新，避免重复请求
+    if (this._initializing) {
+      return;
+    }
     if (this.data.hasLoaded) {
       this.loadFamilyInfo().then(() => {
         this.checkBabyInfo();
-        // 延迟获取今日排敏记录，避免从 food-select 返回时覆盖即时更新的数据
-        setTimeout(() => {
-          this.getTodaySensitivityRecord();
-        }, 300);
       });
     } else {
       this.setData({ hasLoaded: true });
@@ -369,14 +373,15 @@ Page({
 
       // 获取今日家庭排敏记录（用于判断推荐标题）
       const todayStr = safeDateFormat(new Date());
-      const familyRecords = await sensitivityService.getUserSensitivityRecords(userId, babyId, familyId);
+      // 两个接口入参在入口已确定、互不依赖，并行请求减少等待
+      const [familyRecords, recommendedFoods] = await Promise.all([
+        sensitivityService.getUserSensitivityRecords(userId, babyId, familyId),
+        sensitivityService.getRecommendedFoods(userId, babyId, 3, familyId)
+      ]);
       const todayRecords = familyRecords.filter(record => {
         const recordDateStr = safeDateFormat(record.date);
         return recordDateStr === todayStr;
       });
-
-      // 获取推荐排敏食物
-      const recommendedFoods = await sensitivityService.getRecommendedFoods(userId, babyId, 3, familyId);
       
       // 根据今日是否已有排敏记录，设置推荐模块标题
       const recommendationTitle = todayRecords.length > 0 ? '明日推荐排敏食物' : '今日推荐排敏食物';

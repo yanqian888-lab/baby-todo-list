@@ -1,6 +1,16 @@
 // services/familyService.js
 // 家庭共享服务
 
+// getMyFamilies 结果缓存：成功结果缓存 60 秒，避免每个 tab 页 onLoad/onShow 都触发云函数冷启动
+const FAMILIES_CACHE_TTL = 60 * 1000;
+let familiesCache = null; // { timestamp: number, data: object }
+let familiesInFlight = null; // 进行中的请求 Promise，并发调用复用同一次网络请求
+
+// 清空家庭列表缓存（任何修改家庭数据的操作成功后调用）
+function clearFamiliesCache() {
+  familiesCache = null;
+}
+
 const familyService = {
   // 创建家庭
   createFamily: async function(familyName, babyInfo) {
@@ -17,6 +27,7 @@ const familyService = {
       if (result.result.success) {
         // 保存当前家庭到本地
         wx.setStorageSync('currentFamilyId', result.result.familyId);
+        clearFamiliesCache();
         return result.result;
       } else {
         throw new Error(result.result.error);
@@ -29,27 +40,51 @@ const familyService = {
 
   // 获取我的家庭列表
   getMyFamilies: async function() {
-    try {
-      const result = await wx.cloud.callFunction({
-        name: 'familyManager',
-        data: {
-          action: 'getMyFamilies'
-        }
-      });
-      
-      if (result.result.success) {
-        // 保存当前家庭ID
-        if (result.result.currentFamilyId) {
-          wx.setStorageSync('currentFamilyId', result.result.currentFamilyId);
-        }
-        return result.result;
-      } else {
-        throw new Error(result.result.error);
+    // 命中未过期缓存直接返回（保留写 storage currentFamilyId 的副作用）
+    if (familiesCache && Date.now() - familiesCache.timestamp < FAMILIES_CACHE_TTL) {
+      if (familiesCache.data.currentFamilyId) {
+        wx.setStorageSync('currentFamilyId', familiesCache.data.currentFamilyId);
       }
-    } catch (error) {
-      console.error('获取家庭列表失败:', error);
-      throw error;
+      return familiesCache.data;
     }
+
+    // 已有进行中的请求，复用同一 Promise，避免 onLoad/onShow 等并发重复调用
+    if (familiesInFlight) {
+      return familiesInFlight;
+    }
+
+    familiesInFlight = (async () => {
+      try {
+        const result = await wx.cloud.callFunction({
+          name: 'familyManager',
+          data: {
+            action: 'getMyFamilies'
+          }
+        });
+
+        if (result.result.success) {
+          // 保存当前家庭ID
+          if (result.result.currentFamilyId) {
+            wx.setStorageSync('currentFamilyId', result.result.currentFamilyId);
+          }
+          // 仅成功时写入缓存
+          familiesCache = {
+            timestamp: Date.now(),
+            data: result.result
+          };
+          return result.result;
+        } else {
+          throw new Error(result.result.error);
+        }
+      } catch (error) {
+        console.error('获取家庭列表失败:', error);
+        throw error;
+      } finally {
+        familiesInFlight = null;
+      }
+    })();
+
+    return familiesInFlight;
   },
 
   // 切换家庭
@@ -66,6 +101,7 @@ const familyService = {
       if (result.result.success) {
         wx.setStorageSync('currentFamilyId', familyId);
         wx.setStorageSync('currentFamily', result.result.family);
+        clearFamiliesCache();
         return result.result;
       } else {
         throw new Error(result.result.error);
@@ -88,6 +124,7 @@ const familyService = {
       });
       
       if (result.result.success) {
+        clearFamiliesCache();
         return result.result;
       } else {
         throw new Error(result.result.error);
@@ -115,6 +152,7 @@ const familyService = {
         if (app && app.globalData) {
           app.globalData.currentFamilyId = result.result.familyId;
         }
+        clearFamiliesCache();
         return {
           ...result.result,
           familyName: result.result.familyName || '家庭'
@@ -140,6 +178,7 @@ const familyService = {
       });
       
       if (result.result.success) {
+        clearFamiliesCache();
         // 清除当前家庭缓存
         const currentFamilyId = wx.getStorageSync('currentFamilyId');
         if (currentFamilyId === familyId) {
@@ -173,6 +212,7 @@ const familyService = {
       });
       
       if (result.result.success) {
+        clearFamiliesCache();
         return result.result;
       } else {
         throw new Error(result.result.error);
@@ -196,6 +236,7 @@ const familyService = {
       });
       
       if (result.result.success) {
+        clearFamiliesCache();
         return result.result;
       } else {
         throw new Error(result.result.error);
@@ -209,6 +250,11 @@ const familyService = {
   // 获取当前家庭ID
   getCurrentFamilyId: function() {
     return wx.getStorageSync('currentFamilyId');
+  },
+
+  // 手动清空 getMyFamilies 缓存（供绕过本服务直接调用 familyManager 写操作的页面使用）
+  clearCache: function() {
+    clearFamiliesCache();
   },
 
   // 分享邀请

@@ -52,9 +52,13 @@ Page({
       return;
     }
     this.setData({ hasLoaded: true });
-    this.loadFamilyInfo().then(() => {
-      this.loadLists();
-    });
+    // 初始化进行中标志，onShow 在此期间跳过，避免 onLoad/onShow 重复初始化
+    this._initializing = true;
+    this.loadFamilyInfo()
+      .then(() => this.loadLists())
+      .finally(() => {
+        this._initializing = false;
+      });
   },
 
   /**
@@ -64,6 +68,10 @@ Page({
     const userService = require('../../services/userService');
     if (!userService.checkLoginStatus()) {
       wx.redirectTo({ url: '/pages/login/login' });
+      return;
+    }
+    if (this._initializing) {
+      // onLoad 初始化尚未完成，跳过本次刷新，避免重复请求
       return;
     }
     if (this.data.hasLoaded) {

@@ -67,8 +67,11 @@ Page({
       return;
     }
     this.setData({ hasLoaded: true });
-    // 页面加载时初始化数据
-    this.initData();
+    // 页面加载时初始化数据（置初始化标志，onShow 在此期间跳过，避免 onLoad/onShow 重复请求）
+    this._initializing = true;
+    Promise.resolve(this.initData()).finally(() => {
+      this._initializing = false;
+    });
   },
 
   /**
@@ -80,11 +83,13 @@ Page({
       wx.redirectTo({ url: '/pages/login/login' });
       return;
     }
-    if (this.data.hasLoaded) {
-      // 从其他页面返回时刷新数据
-      this.initData();
-    } else {
-      this.setData({ hasLoaded: true });
+    if (!this._initializing) {
+      if (this.data.hasLoaded) {
+        // 从其他页面返回时刷新数据
+        this.initData();
+      } else {
+        this.setData({ hasLoaded: true });
+      }
     }
     // 重置导航状态
     this.setData({ isNavigating: false });
@@ -94,7 +99,7 @@ Page({
    * 初始化页面数据
    */
   initData: function () {
-    userService.getUserInfo().then((userInfo) => {
+    return userService.getUserInfo().then((userInfo) => {
       this.setData({
         userInfo: this._sanitizeUserInfo(userInfo),
         hasUserInfo: true

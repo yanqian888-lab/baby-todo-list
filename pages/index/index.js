@@ -221,9 +221,11 @@ Page({
         currentFamilyName: family.name || `${family.babyNickname || '宝宝'}的家`,
         isFamilyCreator
       });
-      // 刷新所有家庭相关数据
-      await this.getTodoTasks(true);
-      this.getUserStatistics();
+      // 刷新所有家庭相关数据（两个接口只依赖已设置的 currentFamilyId，互不依赖，并行请求）
+      await Promise.all([
+        this.getTodoTasks(true),
+        this.getUserStatistics()
+      ]);
     } catch (error) {
       console.error('切换家庭失败:', error);
       wx.showToast({ title: '切换家庭失败', icon: 'none' });
@@ -559,6 +561,7 @@ Page({
           }
         }
         // 刷新家庭信息和页面数据
+        familyService.clearCache(); // 本方法绕过 familyService 直接调 familyManager，需手动清缓存
         await this.loadFamilyInfo();
         this.setData({ showBabyInfoForm: false });
         await this.initData();

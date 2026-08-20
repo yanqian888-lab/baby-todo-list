@@ -2,6 +2,7 @@
 const app = getApp();
 const db = wx.cloud.database();
 const _ = db.command;
+const familyService = require('../../services/familyService');
 
 Page({
   data: {
@@ -213,6 +214,7 @@ Page({
       if (result.result.success) {
         wx.showToast({ title: '加入成功', icon: 'success' });
         wx.setStorageSync('currentFamilyId', result.result.familyId);
+        familyService.clearCache(); // 直接调 familyManager 写操作，手动清 getMyFamilies 缓存
         const app = getApp();
         if (app && app.globalData) {
           app.globalData.currentFamilyId = result.result.familyId;
@@ -266,6 +268,7 @@ Page({
       
       if (result.result.success) {
         wx.showToast({ title: '已退出', icon: 'success' });
+        familyService.clearCache(); // 直接调 familyManager 写操作，手动清 getMyFamilies 缓存
         // 清理本地与全局缓存
         wx.removeStorageSync('currentFamilyId');
         wx.removeStorageSync('currentFamily');
@@ -332,6 +335,7 @@ Page({
       
       if (result.result.success) {
         wx.showToast({ title: '已移出', icon: 'success' });
+        familyService.clearCache(); // 直接调 familyManager 写操作，手动清 getMyFamilies 缓存
         this.loadFamilyData();
       } else {
         wx.showToast({ title: result.result.error || '移出失败', icon: 'none' });
