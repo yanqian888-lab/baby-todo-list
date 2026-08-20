@@ -1208,57 +1208,37 @@ Page({
     console.log('=== 开始保存自定义食物 ===');
     console.log('要保存的自定义食物:', newCustomFood);
 
-    // 1. 先将本地存储中的数据重置为空数组，确保数据格式正确
-    try {
-      wx.setStorageSync('custom_sensitivity_foods', []);
-      console.log('已将本地存储中的custom_sensitivity_foods重置为空数组');
-    } catch (error) {
-      console.error('重置本地存储失败:', error);
-    }
-
-    // 2. 再次获取本地存储中的数据
+    // 读取本地已有自定义食物（不能重置存储，否则历史自定义食物会被清空）
     let existingCustomFoods = [];
     try {
       existingCustomFoods = wx.getStorageSync('custom_sensitivity_foods');
-      console.log('重置后从本地存储获取的自定义食物:', existingCustomFoods);
-      console.log('重置后获取的数据类型:', typeof existingCustomFoods);
-      console.log('重置后获取的数据是否为数组:', Array.isArray(existingCustomFoods));
-      
       // 确保是数组
       if (!Array.isArray(existingCustomFoods)) {
         existingCustomFoods = [];
-        console.log('重置后数据不是数组，使用空数组');
       }
     } catch (error) {
-      console.error('获取重置后的自定义食物失败:', error);
+      console.error('获取本地自定义食物失败:', error);
       existingCustomFoods = [];
     }
 
-    // 3. 添加新自定义食物到现有列表
+    // 添加新自定义食物到现有列表并保存到本地存储
     existingCustomFoods.push(newCustomFood);
-    console.log('添加新自定义食物后:', existingCustomFoods);
-    console.log('添加后数组长度:', existingCustomFoods.length);
-
-    // 4. 直接保存到本地存储
     try {
       wx.setStorageSync('custom_sensitivity_foods', existingCustomFoods);
-      console.log('自定义食物已成功保存到本地存储');
-      
-      // 验证保存结果
-      const savedCustomFoods = wx.getStorageSync('custom_sensitivity_foods');
-      console.log('保存后立即验证:', savedCustomFoods);
-      console.log('保存后验证的类型:', typeof savedCustomFoods);
-      console.log('保存后验证的是否为数组:', Array.isArray(savedCustomFoods));
-      console.log('保存后验证的长度:', Array.isArray(savedCustomFoods) ? savedCustomFoods.length : 'N/A');
+      console.log('自定义食物已保存到本地存储，共', existingCustomFoods.length, '条');
     } catch (error) {
       console.error('保存自定义食物到本地存储失败:', error);
     }
 
-    // 5. 重新初始化数据，确保自定义食物能显示
-    this.initData();
+    // 同步追加到页面「自定义食物」分类（不依赖 initData 的异步重建，确保 confirmSelection 能立即找到）
+    const foodCategories = this.data.foodCategories;
+    if (foodCategories.length > 0 && foodCategories[0].id === 'custom') {
+      foodCategories[0].foods.unshift(newCustomFood);
+    }
 
-    // 6. 自动选择新添加的自定义食物
+    // 自动选择新添加的自定义食物并带上偏好，隐藏弹窗、重置表单
     this.setData({
+      foodCategories: foodCategories,
       selectedFoodIds: [customFoodId],
       selectedFoodMap: { [customFoodId]: true },
       // 设置食物偏好
@@ -1278,12 +1258,9 @@ Page({
         likeIndex: 0,
         allergyIndex: 0
       }
-    });
-
-    // 显示成功提示
-    wx.showToast({
-      title: '自定义食物添加成功',
-      icon: 'success'
+    }, () => {
+      // 直接走「完成」确认流程：保存为所选日期的排敏记录并返回排敏页
+      this.confirmSelection();
     });
 
     console.log('=== 保存自定义食物完成 ===');
