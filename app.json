@@ -4,7 +4,6 @@
     "pages/ai-master/index",
     "pages/sensitivity/index",
     "pages/checklist/index",
-    "pages/checklist/detail",
     "pages/profile/index"
   ],
   "subPackages": [

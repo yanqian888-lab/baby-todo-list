@@ -1,4 +1,4 @@
-/* pages/checklist/index.wxss - 宝贝清单列表 */
+/* pages/checklist/index.wxss - 宝贝清单列表（卡片手风琴展开） */
 
 .container {
   min-height: 100vh;
@@ -42,14 +42,16 @@
   box-shadow: 0 2px 6px rgba(45, 42, 38, 0.03);
 }
 
-.list-card-hover {
-  background-color: #F7F5F2;
-}
-
 .list-card-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  margin: -6px;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.list-card-header-hover {
+  background-color: #F7F5F2;
 }
 
 .list-name {
@@ -70,6 +72,21 @@
   margin-left: 12px;
 }
 
+/* 展开箭头 */
+.expand-arrow {
+  flex-shrink: 0;
+  margin-left: 6px;
+  font-size: 18px;
+  color: #C8C2B8;
+  transform: rotate(90deg);
+  transition: transform 0.28s ease;
+}
+
+.expand-arrow.expanded {
+  transform: rotate(-90deg);
+}
+
+/* 收起状态：预览 */
 .list-preview {
   margin-top: 12px;
 }
@@ -89,6 +106,153 @@
   color: #B8B2A8;
 }
 
+/* 展开状态：手风琴动画（max-height 过渡） */
+.card-body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.25s ease;
+}
+
+.card-body.expanded {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+.card-body-inner {
+  padding-top: 12px;
+  border-top: 1px solid #F0EDE8;
+  margin-top: 12px;
+}
+
+/* 条目列表（备忘录勾选式） */
+.item-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #F0EDE8;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+/* 圆形勾选框 */
+.item-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #C8C2B8;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  transition: all 0.15s ease;
+}
+
+.item-checkbox.checked {
+  background-color: #8B7355;
+  border-color: #8B7355;
+}
+
+.check-mark {
+  color: #FFFFFF;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.item-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  color: #2D2A26;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.item-text.checked {
+  text-decoration: line-through;
+  color: #B8B2A8;
+}
+
+.item-delete {
+  flex-shrink: 0;
+  font-size: 20px;
+  color: #C8C2B8;
+  padding: 4px 8px;
+  margin-left: 4px;
+}
+
+/* 展开卡片的空清单引导 */
+.empty-items {
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+  color: #B8B2A8;
+}
+
+/* 展开卡片底部：条目输入栏 */
+.item-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.item-input-field {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 14px;
+  background-color: #F7F7F7;
+  border-radius: 999px;
+  font-size: 15px;
+  color: #2D2A26;
+}
+
+.item-input-btn {
+  flex-shrink: 0;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 20px;
+  background-color: #8B7355;
+  color: #FFFFFF;
+  font-size: 14px;
+  border-radius: 999px;
+}
+
+.item-input-btn::after {
+  border: none;
+}
+
+/* 展开卡片操作区 */
+.card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 4px;
+}
+
+.action-next-round {
+  font-size: 14px;
+  color: #8B7355;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.action-delete-list {
+  font-size: 14px;
+  color: #C05B4D;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.action-hover {
+  background-color: rgba(139, 115, 85, 0.08);
+}
+
 /* 空态 */
 .empty-lists {
   text-align: center;
@@ -105,28 +269,32 @@
   color: #B8B2A8;
 }
 
-/* 底部新建按钮 */
-.create-btn-wrapper {
+/* 右下角新建清单 FAB（与首页添加事项按钮一致） */
+.add-btn {
   position: fixed;
-  left: 16px;
-  right: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  right: 20px;
+  bottom: 100px;
+  width: 56px;
+  height: 56px;
+  background-color: #8B7355;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
   z-index: 100;
 }
 
-.create-btn {
-  height: 48px;
-  line-height: 48px;
-  background-color: #8B7355;
-  color: #FFFFFF;
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
+.add-btn:active {
+  transform: scale(0.95);
+  background-color: #6B5635;
 }
 
-.create-btn::after {
-  border: none;
+.add-btn-icon {
+  color: #FFFFFF;
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
 }
 
 /* ===== 弹窗基础样式（与排敏页保持一致） ===== */
@@ -195,6 +363,14 @@
   font-size: 15px;
   color: #2D2A26;
   box-sizing: border-box;
+}
+
+.modal-delete-item {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #C05B4D;
+  padding: 8px;
 }
 
 .modal-footer {

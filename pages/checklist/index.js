@@ -1,5 +1,5 @@
 // pages/checklist/index.js
-// 宝贝清单列表页（tab 页）
+// 宝贝清单列表页（tab 页，卡片手风琴展开，无需跳转详情页）
 const app = getApp();
 const familyService = require('../../services/familyService');
 
@@ -23,12 +23,23 @@ Page({
     lists: [],
     isCreator: false,
     loading: true,
+    // 当前展开的清单 id（手风琴，同时只展开一个）
+    expandedListId: '',
+    // 展开卡片底部的新条目输入
+    newItemText: '',
+    adding: false,
     // 新建清单弹窗
     showCreateModal: false,
     newListName: '',
     selectedPresetId: '',
     presetOptions: PRESET_OPTIONS,
-    creating: false
+    creating: false,
+    // 编辑条目弹窗
+    showEditModal: false,
+    editingListId: '',
+    editingItem: null,
+    editingText: '',
+    saving: false
   },
 
   /**
@@ -152,8 +163,8 @@ Page({
     try {
       wx.showLoading({ title: '切换中...' });
       await familyService.switchFamily(familyId);
-      this.setData({ currentFamilyId: familyId });
-      // 切换家庭后重新加载清单
+      // 切换家庭后收起展开项并重新加载清单
+      this.setData({ currentFamilyId: familyId, expandedListId: '', newItemText: '' });
       await this.loadLists();
     } catch (error) {
       console.error('切换家庭失败:', error);
@@ -165,7 +176,7 @@ Page({
   },
 
   /**
-   * 加载清单列表
+   * 加载清单列表（补充进度和预览字段）
    */
   loadLists: async function () {
     const familyId = this.data.currentFamilyId;
@@ -185,25 +196,18 @@ Page({
         throw new Error(result.error || '获取清单失败');
       }
 
-      // 补充进度和预览字段
-      const lists = (result.data.lists || []).map(list => {
-        const items = list.items || [];
-        const checkedCount = items.filter(item => item.checked).length;
-        const previewTexts = items
-          .filter(item => !item.checked)
-          .slice(0, 3)
-          .map(item => item.text);
-        return {
-          ...list,
-          totalCount: items.length,
-          checkedCount,
-          previewTexts
-        };
-      });
+      const lists = (result.data.lists || []).map(list => this._decorateList(list));
+
+      // 展开的清单可能已被删除，兜底收起
+      let expandedListId = this.data.expandedListId;
+      if (expandedListId && !lists.find(l => l._id === expandedListId)) {
+        expandedListId = '';
+      }
 
       this.setData({
         lists,
         isCreator: !!result.data.isCreator,
+        expandedListId,
         loading: false
       });
     } catch (error) {
@@ -214,12 +218,263 @@ Page({
   },
 
   /**
-   * 进入清单详情页
+   * 给清单补充进度、预览等展示字段
    */
-  goDetail: function (e) {
+  _decorateList: function (list) {
+    const items = list.items || [];
+    const checkedCount = items.filter(item => item.checked).length;
+    const previewTexts = items
+      .filter(item => !item.checked)
+      .slice(0, 3)
+      .map(item => item.text);
+    return {
+      ...list,
+      totalCount: items.length,
+      checkedCount,
+      previewTexts
+    };
+  },
+
+  /**
+   * 调用云函数的通用封装
+   */
+  _call: async function (data) {
+    const res = await wx.cloud.callFunction({
+      name: 'checklistManager',
+      data
+    });
+    const result = res.result || {};
+    if (!result.success) {
+      throw new Error(result.error || '操作失败');
+    }
+    return result.data;
+  },
+
+  /**
+   * 点击卡片头部，展开/收起（手风琴，同时只展开一个）
+   */
+  toggleExpand: function (e) {
     const listId = e.currentTarget.dataset.id;
-    wx.navigateTo({
-      url: `/pages/checklist/detail?id=${listId}`
+    const expanded = this.data.expandedListId === listId;
+    this.setData({
+      expandedListId: expanded ? '' : listId,
+      newItemText: ''
+    });
+  },
+
+  /**
+   * 勾选/取消勾选条目（乐观更新，失败回滚）
+   */
+  toggleItem: async function (e) {
+    const { listId, itemId } = e.currentTarget.dataset;
+    const lists = this.data.lists;
+    const listIndex = lists.findIndex(l => l._id === listId);
+    if (listIndex < 0) return;
+    const itemIndex = lists[listIndex].items.findIndex(item => item.id === itemId);
+    if (itemIndex < 0) return;
+
+    const oldChecked = !!lists[listIndex].items[itemIndex].checked;
+    const newChecked = !oldChecked;
+    const oldCount = lists[listIndex].checkedCount;
+
+    // 乐观更新 UI（勾选状态 + 进度计数）
+    const checkedCount = oldCount + (newChecked ? 1 : -1);
+    this.setData({
+      [`lists[${listIndex}].items[${itemIndex}].checked`]: newChecked,
+      [`lists[${listIndex}].checkedCount`]: checkedCount
+    });
+
+    try {
+      await this._call({ action: 'toggleItem', listId, itemId, checked: newChecked });
+    } catch (error) {
+      console.error('勾选条目失败:', error);
+      // 失败回滚
+      this.setData({
+        [`lists[${listIndex}].items[${itemIndex}].checked`]: oldChecked,
+        [`lists[${listIndex}].checkedCount`]: oldCount
+      });
+      wx.showToast({ title: '操作失败，请重试', icon: 'none' });
+    }
+  },
+
+  /**
+   * 打开条目编辑弹窗（点击条目文字）
+   */
+  openEditModal: function (e) {
+    const { listId, itemId } = e.currentTarget.dataset;
+    const list = this.data.lists.find(l => l._id === listId);
+    if (!list) return;
+    const item = (list.items || []).find(it => it.id === itemId);
+    if (!item) return;
+    this.setData({
+      showEditModal: true,
+      editingListId: listId,
+      editingItem: item,
+      editingText: item.text,
+      saving: false
+    });
+  },
+
+  /**
+   * 关闭条目编辑弹窗
+   */
+  closeEditModal: function () {
+    this.setData({ showEditModal: false, editingListId: '', editingItem: null, editingText: '' });
+  },
+
+  /**
+   * 编辑内容输入
+   */
+  onEditInput: function (e) {
+    this.setData({ editingText: e.detail.value });
+  },
+
+  /**
+   * 保存条目编辑
+   */
+  saveEditItem: async function () {
+    if (this.data.saving) return;
+    const item = this.data.editingItem;
+    const listId = this.data.editingListId;
+    if (!item || !listId) return;
+
+    const text = (this.data.editingText || '').trim();
+    if (!text) {
+      wx.showToast({ title: '内容不能为空', icon: 'none' });
+      return;
+    }
+    if (text === item.text) {
+      this.closeEditModal();
+      return;
+    }
+
+    this.setData({ saving: true });
+    try {
+      wx.showLoading({ title: '保存中...' });
+      await this._call({ action: 'renameItem', listId, itemId: item.id, text });
+      wx.hideLoading();
+      this.closeEditModal();
+      wx.showToast({ title: '已保存', icon: 'success' });
+      await this.loadLists();
+    } catch (error) {
+      wx.hideLoading();
+      console.error('保存条目失败:', error);
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' });
+      this.setData({ saving: false });
+    }
+  },
+
+  /**
+   * 删除条目（行内 × 与编辑弹窗内共用）
+   */
+  deleteItem: async function (e) {
+    const dataset = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const listId = dataset.listId || this.data.editingListId;
+    const itemId = dataset.itemId || (this.data.editingItem && this.data.editingItem.id);
+    if (!listId || !itemId) return;
+
+    try {
+      wx.showLoading({ title: '删除中...' });
+      await this._call({ action: 'deleteItem', listId, itemId });
+      wx.hideLoading();
+      if (this.data.showEditModal) {
+        this.closeEditModal();
+      }
+      wx.showToast({ title: '已删除', icon: 'success' });
+      await this.loadLists();
+    } catch (error) {
+      wx.hideLoading();
+      console.error('删除条目失败:', error);
+      wx.showToast({ title: '删除失败，请重试', icon: 'none' });
+    }
+  },
+
+  /**
+   * 新条目内容输入
+   */
+  onNewItemInput: function (e) {
+    this.setData({ newItemText: e.detail.value });
+  },
+
+  /**
+   * 添加条目（即点即存）
+   */
+  addItem: async function (e) {
+    if (this.data.adding) return;
+
+    const listId = e.currentTarget.dataset.listId || this.data.expandedListId;
+    const text = (this.data.newItemText || '').trim();
+    if (!listId) return;
+    if (!text) {
+      wx.showToast({ title: '请输入条目内容', icon: 'none' });
+      return;
+    }
+
+    this.setData({ adding: true });
+    try {
+      await this._call({ action: 'addItem', listId, text });
+      this.setData({ newItemText: '', adding: false });
+      await this.loadLists();
+    } catch (error) {
+      console.error('添加条目失败:', error);
+      wx.showToast({ title: '添加失败，请重试', icon: 'none' });
+      this.setData({ adding: false });
+    }
+  },
+
+  /**
+   * 开启下一轮（清空已勾选条目）
+   */
+  startNextRound: function (e) {
+    const listId = e.currentTarget.dataset.listId;
+    if (!listId) return;
+
+    wx.showModal({
+      title: '开启下一轮',
+      content: '你是否确认结束本轮记录，开启下一轮？',
+      confirmColor: '#8B7355',
+      success: async (res) => {
+        if (!res.confirm) return;
+        try {
+          wx.showLoading({ title: '处理中...' });
+          await this._call({ action: 'clearChecked', listId });
+          wx.hideLoading();
+          wx.showToast({ title: '已开启新一轮', icon: 'success' });
+          await this.loadLists();
+        } catch (error) {
+          wx.hideLoading();
+          console.error('开启下一轮失败:', error);
+          wx.showToast({ title: '操作失败，请重试', icon: 'none' });
+        }
+      }
+    });
+  },
+
+  /**
+   * 删除清单（仅家庭创建者可见入口）
+   */
+  deleteList: function (e) {
+    const listId = e.currentTarget.dataset.listId;
+    if (!listId) return;
+
+    wx.showModal({
+      title: '删除清单',
+      content: '确定要删除这个清单吗？删除后无法恢复。',
+      confirmColor: '#D9534F',
+      success: async (res) => {
+        if (!res.confirm) return;
+        try {
+          wx.showLoading({ title: '删除中...' });
+          await this._call({ action: 'deleteList', listId });
+          wx.hideLoading();
+          wx.showToast({ title: '已删除', icon: 'success' });
+          await this.loadLists();
+        } catch (error) {
+          wx.hideLoading();
+          console.error('删除清单失败:', error);
+          wx.showToast({ title: error.message || '删除失败', icon: 'none' });
+        }
+      }
     });
   },
 
@@ -258,7 +513,7 @@ Page({
   },
 
   /**
-   * 创建清单
+   * 创建清单（创建成功后自动展开该清单卡片）
    */
   submitCreate: async function () {
     if (this.data.creating) return;
@@ -303,6 +558,19 @@ Page({
       wx.showToast({ title: '创建成功', icon: 'success' });
       this.setData({ showCreateModal: false, creating: false });
       await this.loadLists();
+
+      // 创建成功后自动展开新清单卡片（优先用返回值里的 id，兜底按名称匹配最后一个）
+      const d = result.data || {};
+      let newListId = (d.list && d.list._id) || d._id || d.listId || '';
+      if (!newListId) {
+        const matched = this.data.lists.filter(l => l.name === finalName);
+        if (matched.length > 0) {
+          newListId = matched[matched.length - 1]._id;
+        }
+      }
+      if (newListId) {
+        this.setData({ expandedListId: newListId, newItemText: '' });
+      }
     } catch (error) {
       wx.hideLoading();
       console.error('创建清单失败:', error);
