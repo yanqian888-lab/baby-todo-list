@@ -25,14 +25,7 @@
         <text class="expand-arrow {{expandedListId === item._id ? 'expanded' : ''}}">›</text>
       </view>
 
-      <!-- 收起状态：前 3 条未勾选预览 -->
-      <block wx:if="{{expandedListId !== item._id}}">
-        <view class="list-preview" wx:if="{{item.previewTexts.length > 0}}" data-id="{{item._id}}" bindtap="toggleExpand">
-          <view class="preview-item" wx:for="{{item.previewTexts}}" wx:key="index" wx:for-item="text">· {{text}}</view>
-        </view>
-        <view class="list-all-done" wx:elif="{{item.totalCount > 0}}" data-id="{{item._id}}" bindtap="toggleExpand">全部完成啦 🎉</view>
-        <view class="list-all-done" wx:else data-id="{{item._id}}" bindtap="toggleExpand">暂无条目，点击展开添加</view>
-      </block>
+      <!-- 收起状态：仅标题和进度 -->
 
       <!-- 展开状态：完整备忘录式交互 -->
       <view class="card-body {{expandedListId === item._id ? 'expanded' : ''}}">

@@ -218,20 +218,15 @@ Page({
   },
 
   /**
-   * 给清单补充进度、预览等展示字段
+   * 给清单补充进度等展示字段
    */
   _decorateList: function (list) {
     const items = list.items || [];
     const checkedCount = items.filter(item => item.checked).length;
-    const previewTexts = items
-      .filter(item => !item.checked)
-      .slice(0, 3)
-      .map(item => item.text);
     return {
       ...list,
       totalCount: items.length,
-      checkedCount,
-      previewTexts
+      checkedCount
     };
   },
 
