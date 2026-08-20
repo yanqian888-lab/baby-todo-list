@@ -118,7 +118,7 @@ exports.main = async (event, context) => {
       if (taskFamilyId) {
         const familyRes = await db.collection('families').doc(taskFamilyId).get().catch(() => null);
         const family = familyRes ? familyRes.data : null;
-        const isMember = family && (family.members || []).some(m => m.openId === openid);
+        const isMember = family && (family.creatorOpenId === openid || (family.members || []).some(m => m.openId === openid || m.openid === openid));
         if (!isMember) {
           return { success: false, error: '无权查看此任务的打卡记录' };
         }

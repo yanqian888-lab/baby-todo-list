@@ -153,6 +153,18 @@ exports.main = async (event, context) => {
           } catch (e) {
             console.warn('解散家庭时清理打卡记录失败:', e);
           }
+          try {
+            const checklistsRes = await db.collection('checklists').where({ familyId: family._id }).remove();
+            deleteResults.push({ collection: 'checklists(dissolved)', stats: checklistsRes.stats });
+          } catch (e) {
+            console.warn('解散家庭时清理清单失败:', e);
+          }
+          try {
+            const sensRecordsRes = await db.collection('sensitivity_records').where({ familyId: family._id }).remove();
+            deleteResults.push({ collection: 'sensitivity_records(dissolved)', stats: sensRecordsRes.stats });
+          } catch (e) {
+            console.warn('解散家庭时清理排敏记录失败:', e);
+          }
           await db.collection('families').doc(family._id).remove();
           await db.collection('family_invitations').where({
             familyId: family._id

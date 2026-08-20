@@ -144,15 +144,10 @@ Page({
         return bOwner - aOwner;
       });
 
-      // 优先保留用户当前已选择的家庭（避免 onShow 时强制切回默认家庭）
-      let currentFamilyId = this.data.currentFamilyId;
+      // 优先使用 storage 中用户当前选择的家庭（与首页保持一致）
+      let currentFamilyId = wx.getStorageSync('currentFamilyId') || result.currentFamilyId || null;
       let currentFamily = families.find(f => f._id === currentFamilyId);
-      
-      if (!currentFamily) {
-        currentFamilyId = wx.getStorageSync('currentFamilyId') || result.currentFamilyId || null;
-        currentFamily = families.find(f => f._id === currentFamilyId);
-      }
-      
+
       if (!currentFamily) {
         // 首次进入或没有已选家庭时，默认优先展示用户创建的家庭
         if (createdFamilies.length > 0) {
@@ -171,9 +166,10 @@ Page({
           currentFamilyId,
           currentFamilyName
         });
-        // 迁移旧的无 familyId 记录到当前家庭
-        this.migrateLocalRecords(currentFamilyId);
+        // 迁移旧的无 familyId 记录到当前家庭（仅在单一家庭、无歧义时执行）
+        this.migrateLocalRecords(currentFamilyId, families.length);
       } else {
+        wx.removeStorageSync('currentFamilyId');
         this.setData({
           families,
           currentFamilyId: null,
@@ -186,10 +182,10 @@ Page({
   },
 
   /**
-   * 迁移旧的无 familyId 本地记录到当前家庭
+   * 迁移旧的无 familyId 本地记录到当前家庭（仅在单一家庭时执行，避免多家庭挂错）
    */
-  migrateLocalRecords: function(familyId) {
-    if (!familyId) return;
+  migrateLocalRecords: function(familyId, familyCount) {
+    if (!familyId || familyCount !== 1) return;
     try {
       const allRecords = wx.getStorageSync('sensitivity_records') || [];
       let hasChanged = false;

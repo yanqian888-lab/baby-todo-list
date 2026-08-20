@@ -748,6 +748,11 @@ class SensitivityService {
       if (familyId) {
         return record.familyId === familyId;
       }
+
+      // 非家庭模式下排除已归属某个家庭的记录
+      if (record.familyId) {
+        return false;
+      }
       
       // 兼容大小写不同的userId
       const recordUserId = record.userId || record.openId || record.openid || record._openid;

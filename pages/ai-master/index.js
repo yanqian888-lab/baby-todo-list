@@ -58,7 +58,13 @@ Page({
       const result = await familyService.getMyFamilies();
       const families = result.families || [];
       const currentFamilyId = wx.getStorageSync('currentFamilyId') || result.currentFamilyId;
-      const currentFamily = families.find(f => f._id === currentFamilyId) || families[0];
+      let currentFamily = families.find(f => f._id === currentFamilyId);
+      if (!currentFamily && families.length > 0) {
+        // 兜底时与其他页面保持一致：优先用户自己创建的家庭
+        const userInfo = wx.getStorageSync('userInfo') || {};
+        const currentOpenId = userInfo.openId || userInfo._id || userInfo.openid || userInfo.openID || '';
+        currentFamily = families.find(f => (f.creatorOpenId || f.creator || f.ownerOpenId) === currentOpenId) || families[0];
+      }
       
       if (currentFamily && currentFamily.babyInfo && currentFamily.babyInfo.nickname) {
         const babyInfo = currentFamily.babyInfo;

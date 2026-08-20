@@ -126,14 +126,9 @@ Page({
         return bOwner - aOwner;
       });
 
-      // 优先保留用户当前已选择的家庭
-      let currentFamilyId = this.data.currentFamilyId;
+      // 优先使用 storage 中用户当前选择的家庭（与首页保持一致）
+      let currentFamilyId = wx.getStorageSync('currentFamilyId') || result.currentFamilyId || null;
       let currentFamily = families.find(f => f._id === currentFamilyId);
-
-      if (!currentFamily) {
-        currentFamilyId = wx.getStorageSync('currentFamilyId') || result.currentFamilyId || null;
-        currentFamily = families.find(f => f._id === currentFamilyId);
-      }
 
       if (!currentFamily) {
         // 首次进入或没有已选家庭时，默认优先展示用户创建的家庭
@@ -149,6 +144,7 @@ Page({
         wx.setStorageSync('currentFamilyId', currentFamilyId);
         this.setData({ families, currentFamilyId });
       } else {
+        wx.removeStorageSync('currentFamilyId');
         this.setData({ families, currentFamilyId: null });
       }
     } catch (error) {

@@ -454,11 +454,17 @@ async function exitFamily(event, context) {
       }
     });
     
-    // 清除用户的 currentFamilyId
-    await db.collection('users').where({ openid: OPENID }).update({
+    // 清除用户的 currentFamilyId（仅当当前家庭就是所退出的家庭时）
+    await db.collection('users').where({ openid: OPENID, currentFamilyId: familyId }).update({
       data: { currentFamilyId: null }
     });
-    
+
+    // 清理退出者在该家庭任务上的打卡记录（与 removeMember 保持一致）
+    await db.collection('task_completions').where({
+      familyId: familyId,
+      _openid: OPENID
+    }).remove();
+
     return { success: true, message: '退出成功' };
   } catch (error) {
     console.error('退出家庭失败:', error);

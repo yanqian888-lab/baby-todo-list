@@ -38,6 +38,13 @@ async function addRecord(OPENID, record) {
     if (!record || typeof record !== 'object') {
       return { success: false, error: '记录数据格式错误' };
     }
+    // 鉴权：带 familyId 的记录仅家庭成员可写入
+    if (record.familyId) {
+      const verify = await verifyFamilyMember(record.familyId, OPENID);
+      if (!verify.valid) {
+        return { success: false, error: verify.error };
+      }
+    }
     const data = { ...record, _openid: OPENID, userId: OPENID };
     delete data._id;
     const res = await db.collection('sensitivity_records').add({ data });
@@ -163,6 +170,7 @@ async function getRecords(OPENID, event) {
       query.familyId = familyId;
     } else {
       query._openid = OPENID;
+      query.familyId = _.exists(false);
       if (babyId && babyId !== 'local-baby-id') {
         query.babyId = babyId;
       }
