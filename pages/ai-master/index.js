@@ -41,11 +41,11 @@ Page({
 
   onLoad: function (options) {
     this.loadUserInfo();
-    this.loadBabyInfo();
+    this._babyInfoReady = this.loadBabyInfo();
   },
 
   onShow: function () {
-    this.loadBabyInfo();
+    this._babyInfoReady = this.loadBabyInfo();
   },
 
   /**
@@ -165,9 +165,15 @@ Page({
    * 发送文本消息
    */
   sendTextMessage: async function () {
-    const { inputValue, loading, babyInfo } = this.data;
+    const { inputValue, loading } = this.data;
     let text = inputValue.trim();
     if (!text || loading) return;
+
+    // 等待宝宝信息加载完成（页面打开后立即点快捷问题时 babyInfo 可能还没就绪）
+    try {
+      await this._babyInfoReady;
+    } catch (e) { /* 加载失败不阻断发送 */ }
+    const babyInfo = this.data.babyInfo;
 
     console.log('[ai-master] sendTextMessage babyInfo:', JSON.stringify(babyInfo));
     
