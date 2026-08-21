@@ -38,7 +38,7 @@ Page({
     customFood: {
       name: '', // 食物名称
       categoryIndex: 0, // 食物种类索引
-      allergyLevel: 1, // 排敏天数对应的过敏级别（1:3天, 2:5天）
+      allergyLevel: 1, // 排敏天数对应的过敏级别（1:3天, 3:5天）
       likeIndex: 0, // 喜欢程度索引
       allergyIndex: 0 // 过敏情况索引
     },
@@ -763,7 +763,7 @@ Page({
       // 在过滤食物之前，先检查所选日期是否已有记录
       // 如果已经通过URL传入了todayRecord，不再查询覆盖，避免家庭成员修改时取到旧记录
       // 如果当前是修改模式（modify=true）但todayRecord缺失，也不查询覆盖，防止选中错误食物
-      if (!this.data.todayRecord && !this.data.modifyMode) {
+      if (!this.data.todayRecord && !this.data.modifyMode && !this.data.isFromBabyInfo) {
         const selectedDate = this.data.selectedDate;
         console.log('初始化时检查已有记录，当前日期:', selectedDate);
         const existingRecord = this.checkExistingRecord(selectedDate);
@@ -966,7 +966,7 @@ Page({
       }, () => {
         // 页面加载后，检查所选日期是否已有排敏记录
         // 使用回调函数确保数据已更新
-        if (!this.data.todayRecord && !this.data.modifyMode) {
+        if (!this.data.todayRecord && !this.data.modifyMode && !this.data.isFromBabyInfo) {
           const existingRecord = this.checkExistingRecord(this.data.selectedDate);
           if (existingRecord) {
             // 如果已有记录且当前不是修改模式，设置为修改模式
@@ -1182,8 +1182,8 @@ Page({
    * @param {Object} e - 事件对象，包含选择索引
    */
   onCustomFoodDaysChange: function (e) {
-    // 0: 3天, 1: 5天
-    const allergyLevel = e.detail.value + 1;
+    // 0: 3天 -> allergyLevel 1, 1: 5天 -> allergyLevel 3（食材配置 level 3=5天）
+    const allergyLevel = Number(e.detail.value) === 1 ? 3 : 1;
     this.setData({
       'customFood.allergyLevel': allergyLevel
     });
@@ -1491,7 +1491,8 @@ Page({
             likeIndex: Number(preferences.likeIndex || 0),
             likeText: this.data.likeOptions[Number(preferences.likeIndex || 0)],
             allergyIndex: Number(preferences.allergyIndex || 0),
-            allergyText: this.data.allergyOptions[Number(preferences.allergyIndex || 0)]
+            allergyText: this.data.allergyOptions[Number(preferences.allergyIndex || 0)],
+            date: this.data.selectedDate // 记录所选日期，供上一页区分补录历史日期
           });
         }
       });
@@ -1520,7 +1521,8 @@ Page({
           }
           
           // 为每个选择的食物创建排敏记录
-          for (const food of selectedFoods) {
+          // 从宝宝信息页进入时只声明已完成排敏，不写当日排敏记录
+          for (const food of (this.data.isFromBabyInfo ? [] : selectedFoods)) {
             // 创建排敏记录对象，使用用户选择的日期
             const selectedDate = this.data.selectedDate;
             

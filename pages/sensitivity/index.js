@@ -845,7 +845,11 @@ Page({
     // 确保selectedFoods存在且有数据
     if (selectedFoods && selectedFoods.length > 0) {
       const food = selectedFoods[0];
-      
+
+      // 使用选择页传入的所选日期（补录历史日期时不是今天），缺省回落今天
+      const recordDate = safeDateFormat(food.date) || safeDateFormat(new Date());
+      const isToday = recordDate === safeDateFormat(new Date());
+
       // 更新今日排敏记录
       const todayRecord = {
         foodId: food.foodId,
@@ -853,7 +857,7 @@ Page({
         category: food.category,
         likeStatus: food.likeIndex - 1, // 转换为后端需要的状态值（-1, 0, 1, 2）
         allergyStatus: food.allergyIndex - 1, // 转换为后端需要的状态值（-1, 0, 1, 2）
-        date: new Date().toISOString(),
+        date: recordDate,
         updatedAt: new Date().toISOString(),
         familyId: this.data.currentFamilyId
       };
@@ -891,12 +895,15 @@ Page({
       
       const likeStatusText = getLikeText(todayRecord.likeStatus);
       const allergyStatusText = getStatusText(todayRecord.allergyStatus);
-      
-      this.setData({
-        todaySensitivityRecord: todayRecord,
-        likeStatusText: likeStatusText,
-        allergyStatusText: allergyStatusText
-      });
+
+      // 补录历史日期时不覆盖今日记录展示，只刷新推荐等相关数据
+      if (isToday) {
+        this.setData({
+          todaySensitivityRecord: todayRecord,
+          likeStatusText: likeStatusText,
+          allergyStatusText: allergyStatusText
+        });
+      }
       
       // 同步更新本地存储，避免后续 getTodaySensitivityRecord 读取到旧数据
       try {
@@ -912,10 +919,16 @@ Page({
         console.warn('onFoodsSelected 同步到本地存储失败:', e);
       }
       
-      // 更新推荐模块标题
-      this.setData({
-        recommendationTitle: '明日推荐排敏食物'
-      });
+      if (isToday) {
+        // 更新推荐模块标题
+        this.setData({
+          recommendationTitle: '明日推荐排敏食物'
+        });
+      } else {
+        // 补录历史日期：今日展示不变，只刷新推荐和进度
+        this.getRecommendedFoods();
+        this.getSensitivityProgress();
+      }
     }
   },
 

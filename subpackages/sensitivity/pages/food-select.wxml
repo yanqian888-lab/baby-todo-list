@@ -133,7 +133,7 @@ module.exports = { joinRecipes: joinRecipes };
         <!-- 排敏天数 -->
         <view class="form-item">
           <text class="form-label">排敏天数 <text class="required">*</text></text>
-          <picker bindchange="onCustomFoodDaysChange" value="{{customFood.allergyLevel - 1}}" range="{{['3天', '5天']}}">
+          <picker bindchange="onCustomFoodDaysChange" value="{{customFood.allergyLevel === 1 ? 0 : 1}}" range="{{['3天', '5天']}}">
             <view class="picker form-picker">
               <text class="picker-value">{{customFood.allergyLevel === 1 ? '3天' : '5天'}}</text>
               <text class="picker-arrow">▼</text>

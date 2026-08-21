@@ -447,12 +447,15 @@ class SensitivityService {
       
       if (!exists) {
         // 添加新的已排敏食物
+        // likeStatus 口径转换：记录口径(-1未选/0不喜欢/1一般/2喜欢) -> 宝宝信息口径(-2未选/-1不喜欢/0一般/1喜欢)
+        const lastRecord = foodRecords[foodRecords.length - 1];
+        const lastLikeStatus = lastRecord && lastRecord.likeStatus;
         safeFoodsList.push({
-          foodId: food ? food._id : foodName,
+          foodId: food ? food._id : (this._findCustomFoodId(foodName) || foodName),
           foodName: foodName,
           category: food ? food.category : '',
-          likeStatus: foodRecords[foodRecords.length - 1]?.likeStatus || 0,
-          allergyStatus: foodRecords[foodRecords.length - 1]?.allergyStatus || 0
+          likeStatus: lastLikeStatus === undefined ? -2 : lastLikeStatus - 1,
+          allergyStatus: lastRecord?.allergyStatus || 0
         });
         
         // 更新宝宝信息
@@ -495,6 +498,73 @@ class SensitivityService {
       console.error('更新排敏记录失败:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  /**
+   * 删除某个食物的所有排敏记录（本地缓存 + 云端逐条删除）
+   * 用于宝宝信息页删除已完成食物时联动清理，避免"从排敏记录同步"把它加回来
+   * @param {string} userId - 用户ID
+   * @param {string} babyId - 宝宝ID
+   * @param {string} foodName - 食物名称
+   * @param {string} familyId - 家庭ID（my_family 时为 null）
+   */
+  static async deleteRecordsForFood(userId, babyId, foodName, familyId = null) {
+    if (!foodName) return;
+
+    try {
+      // 取合并后的记录，筛出该食物的记录
+      const records = await this.getUserSensitivityRecords(userId, babyId, familyId);
+      const foodRecords = records.filter(r => r.foodName === foodName);
+      if (foodRecords.length === 0) return;
+
+      // 本地缓存移除（过滤口径与 _getLocalRecords 保持一致）
+      const localRecords = stores.sensitivityRecords.getLocal();
+      const newLocalRecords = localRecords.filter(r => {
+        if (r.foodName !== foodName) return true;
+        const rFamilyId = r.familyId || null;
+        if (familyId) return rFamilyId !== familyId;
+        if (rFamilyId) return true;
+        const rUserId = r.userId || r.openId || r.openid || r._openid;
+        return rUserId !== userId;
+      });
+      if (newLocalRecords.length !== localRecords.length) {
+        stores.sensitivityRecords.setLocal(newLocalRecords);
+      }
+
+      // 云端逐条删除，失败的记录 console.warn 不阻断
+      for (const record of foodRecords) {
+        const recordId = record._id;
+        if (!recordId || String(recordId).startsWith('local-')) continue;
+        try {
+          await wx.cloud.callFunction({
+            name: 'sensitivityManager',
+            data: { action: 'deleteRecord', recordId }
+          });
+        } catch (e) {
+          console.warn(`删除云端排敏记录失败 (${foodName}/${recordId}):`, e);
+        }
+      }
+    } catch (e) {
+      console.warn(`删除食物 ${foodName} 的排敏记录失败:`, e);
+    }
+  }
+
+  /**
+   * 在本地自定义食物缓存中按名称查找食物ID（自定义食物不在系统食材表中）
+   * @param {string} foodName - 食物名称
+   * @returns {string|null} 自定义食物ID（custom_xxx）或 null
+   */
+  static _findCustomFoodId(foodName) {
+    try {
+      const customFoods = wx.getStorageSync('custom_sensitivity_foods');
+      if (Array.isArray(customFoods)) {
+        const customFood = customFoods.find(cf => cf && cf.name === foodName);
+        if (customFood && customFood._id) return customFood._id;
+      }
+    } catch (e) {
+      console.warn('查找自定义食物ID失败:', e);
+    }
+    return null;
   }
 
   /**

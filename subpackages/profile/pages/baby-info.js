@@ -291,7 +291,7 @@ Page({
                 else if (lastRecord.allergyStatus === 2) allergyStatus = 2;
               }
               safeFoodsList.push({
-                foodId: food ? food._id : foodName,
+                foodId: food ? food._id : (sensitivityService._findCustomFoodId(foodName) || foodName),
                 foodName: foodName,
                 category: food ? food.category : '',
                 likeStatus,
@@ -372,12 +372,24 @@ Page({
   deleteSelectedFood(e) {
     const index = e.currentTarget.dataset.index;
     const selectedFoodsList = [...this.data.babyInfo.selectedFoodsList];
-    selectedFoodsList.splice(index, 1);
-    
+    const deletedFood = selectedFoodsList.splice(index, 1)[0];
+
     this.setData({
       'babyInfo.selectedFoodsList': selectedFoodsList,
       'babyInfo.selectedFoods': selectedFoodsList.map(food => food.foodName).join(',')
     });
+
+    // 联动删除该食物的排敏记录（云端+本地），否则 loadBabyInfo 的"从排敏记录同步"会把它加回来
+    if (deletedFood && deletedFood.foodName) {
+      const sensitivityService = require('../../../services/sensitivityService');
+      const app = getApp();
+      const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+      const userId = userInfo.openId || userInfo._id;
+      const babyId = this.data.babyInfo._id || 'local-baby-id';
+      const familyId = this.data.currentTabId !== 'my_family' ? this.data.currentTabId : null;
+      sensitivityService.deleteRecordsForFood(userId, babyId, deletedFood.foodName, familyId);
+      wx.showToast({ title: `已删除${deletedFood.foodName}`, icon: 'none' });
+    }
   },
 
   /**
