@@ -5,7 +5,6 @@ App({
    */
   onLaunch: function() {
     console.log('小程序启动');
-
     // 隐私授权交由微信原生弹窗处理（app.json 已开启 __usePrivacyCheck__）
     // 不再自定义 wx.onNeedPrivacyAuthorization，避免 resolve 回调与 wx.showModal 冲突
 
@@ -32,7 +31,19 @@ App({
       this.showCloudError('云开发初始化失败，请检查网络或重新登录开发者工具');
     }
   },
-  
+
+  /**
+   * 全局未处理异常捕获（定位线上/调试期的隐藏报错来源）
+   */
+  onUnhandledRejection: function(res) {
+    const reason = res && res.reason;
+    console.error('[全局] 未处理的 Promise 拒绝:', reason && (reason.stack || reason.errMsg || reason.message || JSON.stringify(reason)));
+  },
+
+  onError: function(err) {
+    console.error('[全局] 页面错误:', err);
+  },
+
   /**
    * 检查云开发状态
    */
