@@ -404,7 +404,7 @@ exports.main = async (event, context) => {
       messages,
       stream: false,
       max_tokens: 4096,
-      reasoning_effort: 'low', // hy3 是推理模型，限制思考深度避免长时间无输出
+      reasoning_effort: 'none', // hy3 是推理模型，关闭思考把响应从 60s+ 压到 ~5s（实测）
       temperature: 0.7
     });
     console.log('aiChat TokenHub response received');

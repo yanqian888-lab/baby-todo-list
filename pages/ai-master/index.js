@@ -3,11 +3,6 @@
 
 const familyService = require('../../services/familyService');
 
-// aiChatStream HTTP 云函数的公网访问地址（含 /chat 路径）
-// 从控制台「云函数 → aiChatStream → 接入指引/访问地址」复制，例如：
-// 'https://cloud1-d6gvk59pc73976058-xxxxxxxx.ap-shanghai.app.tcloudbase.com/chat'
-const AI_STREAM_URL = 'https://cloud1-d6gvk59pc73976058-125WX待填入.app.tcloudbase.com/chat'; // TODO: 待填入真实地址
-
 function generateId() {
   return 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
 }
@@ -229,178 +224,20 @@ Page({
   },
 
   /**
-   * 调用 AI
-   * 优先使用 aiChatStream HTTP 云函数走 SSE 真流式（基础库 3.15.1+）；
-   * 不支持或调用失败时回退到 aiChat 普通云函数（非流式 + 打字机效果）
+   * 调用 AI（通过 aiChat 云函数，非流式 + 打字机效果）
    */
   callAI: async function ({ msg, history = [], babyInfo = null }) {
     console.log('[ai-master] callAI msg:', msg, 'babyInfo:', JSON.stringify(babyInfo));
     const botMsgId = generateId();
 
-    // 流式走 aiChatStream 的公网地址（wx.request enableChunked），地址未配置时直接走兜底
-    const supportStream = AI_STREAM_URL.indexOf('待填入') === -1;
-
     // 添加 AI 占位消息（加载中）
-    // 流式路径先显示「正在思考...」占位：模型会先输出思考过程（服务端已丢弃），正文到达后替换占位
     const messages = this.data.messages.concat([
-      { id: botMsgId, role: 'bot', type: 'text', content: supportStream ? '正在思考...' : '', typing: true }
+      { id: botMsgId, role: 'bot', type: 'text', content: '', typing: true }
     ]);
     this.setData({ messages, loading: true });
     this.scrollToBottom();
 
-    if (supportStream) {
-      const ok = await this.callAIStream(botMsgId, { msg, history, babyInfo });
-      if (ok) return;
-      // 流式调用失败（如函数未部署、网络异常），回退到非流式路径
-      console.warn('[ai-master] 流式调用失败，回退到 aiChat 云函数');
-    }
-
     await this.callAINonStream(botMsgId, { msg, history, babyInfo });
-  },
-
-  /**
-   * 流式调用 AI（SSE，通过 aiChatStream HTTP 云函数）
-   * @returns {Promise<boolean>} true=流式路径已处理完毕；false=需要回退到非流式
-   */
-  callAIStream: function (botMsgId, { msg, history, babyInfo }) {
-    return new Promise((resolve) => {
-      let sseBuffer = '';          // SSE 帧文本缓冲（chunk 可能截断在半行）
-      let byteRemainder = new Uint8Array(0); // UTF-8 多字节字符可能跨 chunk 截断，保留未解码字节
-      let botContent = '';         // 已收到的正文内容
-      let done = false;            // 是否已收到 [DONE]
-      let finished = false;        // 是否已走完整束流程（防重复 resolve）
-
-      // 把 chunk 的 ArrayBuffer 解码成字符串（官方文档的 decodeURIComponent(escape(...)) 方式，
-      // 额外处理多字节 UTF-8 字符跨 chunk 截断的情况，避免丢字/乱码）
-      const decodeChunk = (arrayBuffer) => {
-        const cur = new Uint8Array(arrayBuffer);
-        const bytes = new Uint8Array(byteRemainder.length + cur.length);
-        bytes.set(byteRemainder);
-        bytes.set(cur, byteRemainder.length);
-        // 最多回退 3 个字节（一个 UTF-8 中文字符 3 字节），尝试完整解码
-        for (let end = bytes.length; end >= Math.max(bytes.length - 3, 0); end--) {
-          try {
-            let binary = '';
-            const STEP = 0x8000; // 分段拼接，避免 apply 参数过多导致栈溢出
-            for (let i = 0; i < end; i += STEP) {
-              binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + STEP, end)));
-            }
-            const text = decodeURIComponent(escape(binary));
-            byteRemainder = bytes.subarray(end);
-            return text;
-          } catch (e) { /* 末尾是半截多字节字符，回退一字节重试 */ }
-        }
-        // 极端异常：丢弃本次字节，避免死循环
-        byteRemainder = new Uint8Array(0);
-        return '';
-      };
-
-      // 流结束（收到 [DONE] 或连接正常关闭）：定稿消息并持久化
-      const finish = () => {
-        if (finished) return;
-        finished = true;
-        if (this._unloaded) { resolve(true); return; }
-        if (!botContent) {
-          this.updateBotMessage(botMsgId, '未获取到回复，请稍后重试~', false);
-        } else {
-          this.updateBotMessage(botMsgId, botContent, false);
-        }
-        this.setData({ loading: false });
-        this.scrollToBottom();
-        resolve(true);
-      };
-
-      // 服务端错误帧：显示兜底文案，不再回退（服务端已给出明确错误）
-      const handleErrorFrame = (errText) => {
-        if (finished) return;
-        finished = true;
-        if (this._unloaded) { resolve(true); return; }
-        this.updateBotMessage(botMsgId, errText || '抱歉，我暂时无法回答，请稍后再试~', false);
-        this.setData({ loading: false });
-        this.scrollToBottom();
-        resolve(true);
-      };
-
-      // 解析缓冲区中完整的 SSE 帧（以 \n\n 分隔），半截帧留在缓冲区
-      const parseFrames = () => {
-        const frames = sseBuffer.split('\n\n');
-        sseBuffer = frames.pop(); // 最后一段可能不完整，留到下个 chunk
-        for (const frame of frames) {
-          const lines = frame.split('\n');
-          for (const line of lines) {
-            if (!line.startsWith('data:')) continue;
-            const payload = line.slice(5).trim();
-            if (!payload) continue;
-            if (payload === '[DONE]') {
-              finish();
-              return true;
-            }
-            let obj;
-            try {
-              obj = JSON.parse(payload);
-            } catch (e) {
-              console.warn('[ai-master] SSE 帧 JSON 解析失败，跳过:', payload.slice(0, 50));
-              continue;
-            }
-            if (obj.error) {
-              handleErrorFrame(obj.error);
-              return true;
-            }
-            // 逐块正文 {"delta":"..."}；快速回复路径一次性 {"content":"..."}
-            const piece = obj.delta !== undefined ? obj.delta : (obj.content || '');
-            if (!piece) continue;
-            botContent += piece;
-            this.appendBotMessage(botMsgId, botContent);
-          }
-        }
-        return false;
-      };
-
-      // 直连 aiChatStream 的公网地址（callHTTPFunction 的权限层在这个环境上一直 400，绕开它）
-      // wx.request 的流式回调叫 onChunkReceived（和 callHTTPFunction 的 onChunkedReceived 不同，注意区分）
-      const userInfo = wx.getStorageSync('userInfo') || {};
-      const requestTask = wx.request({
-        url: AI_STREAM_URL,
-        method: 'POST',
-        data: { msg, history, babyInfo },
-        header: {
-          'Content-Type': 'application/json',
-          // wx.request 不会自动带微信身份头，手动带上用于服务端限流/鉴权
-          'x-user-openid': userInfo.openId || userInfo.openid || ''
-        },
-        enableChunked: true,
-        timeout: 60000, // 推理模型思考阶段长，显式拉长超时，避免连接被提前掐断
-        onChunkReceived: (res) => {
-          if (finished) return;
-          try {
-            sseBuffer += decodeChunk(res.data);
-            parseFrames();
-          } catch (e) {
-            console.error('[ai-master] SSE 解析异常:', e);
-          }
-        },
-        success: (res) => {
-          // HTTP 连接正常结束：处理缓冲区残余（理论上 [DONE] 已先到）
-          if (!finished) {
-            if (res.statusCode !== 200) {
-              console.warn('[ai-master] 流式接口返回非 200:', res.statusCode);
-              resolve(false);
-              return;
-            }
-            try { parseFrames(); } catch (e) { /* 忽略残余解析失败 */ }
-            finish();
-          }
-        },
-        fail: (err) => {
-          console.warn('[ai-master] 流式请求失败:', err);
-          resolve(false); // 交回 callAI 回退到非流式路径
-        }
-      });
-      // 失败时返回的 Promise 也会 reject，吞掉避免控制台刷红色未处理异常
-      if (requestTask && typeof requestTask.catch === 'function') {
-        requestTask.catch(() => {});
-      }
-    });
   },
 
   /**
@@ -443,18 +280,6 @@ Page({
       this.setData({ loading: false });
       this.scrollToBottom();
     }
-  },
-
-  /**
-   * 流式场景下增量更新 AI 消息内容（只更新单条消息的 content，避免整组 setData 开销）
-   */
-  appendBotMessage: function (msgId, content) {
-    if (this._unloaded) return;
-    const idx = this.data.messages.findIndex(m => m.id === msgId);
-    if (idx === -1) return;
-    const update = {};
-    update[`messages[${idx}].content`] = content;
-    this.setData(update);
   },
 
   /**
