@@ -402,7 +402,7 @@ exports.main = async (event, context) => {
       model: MODEL_NAME,
       messages,
       stream: false,
-      max_tokens: 1024,
+      max_tokens: 4096,
       temperature: 0.7
     });
     console.log('aiChat TokenHub response received');
