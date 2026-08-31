@@ -351,12 +351,13 @@ Page({
         return false;
       };
 
-      wx.cloud.callHTTPFunction({
+      const requestTask = wx.cloud.callHTTPFunction({
         name: 'aiChatStream',
         path: '/chat',
         method: 'POST',
         data: { msg, history, babyInfo },
         enableChunked: true,
+        timeout: 60000, // 推理模型思考阶段长，显式拉长超时，避免连接被提前掐断
         onChunkedReceived: (res) => {
           if (finished) return;
           try {
@@ -378,6 +379,10 @@ Page({
           resolve(false); // 交回 callAI 回退到非流式路径
         }
       });
+      // callHTTPFunction 失败时除了走 fail 回调，返回的 Promise 也会 reject，吞掉避免控制台刷红色未处理异常
+      if (requestTask && typeof requestTask.catch === 'function') {
+        requestTask.catch(() => {});
+      }
     });
   },
 
