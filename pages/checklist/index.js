@@ -14,6 +14,58 @@ const PRESET_OPTIONS = [
   { presetId: 'weaning', name: '辅食必备工具' }
 ];
 
+// 默认清单数据（未登录或新用户首次进入时展示）
+const DEFAULT_LISTS = [
+  {
+    _id: 'default-shopping',
+    name: '家庭购物清单',
+    items: [
+      { id: 'd1', text: '纸尿裤（NB/S码）', checked: false },
+      { id: 'd2', text: '婴儿湿巾', checked: false },
+      { id: 'd3', text: '配方奶粉', checked: false },
+      { id: 'd4', text: '宝宝护臀膏', checked: false },
+      { id: 'd5', text: '婴儿洗衣液', checked: true }
+    ]
+  },
+  {
+    _id: 'default-outing',
+    name: '日常出门随身包',
+    items: [
+      { id: 'd6', text: '纸尿裤 ×3', checked: false },
+      { id: 'd7', text: '便携湿巾', checked: false },
+      { id: 'd8', text: '奶瓶+奶粉盒', checked: false },
+      { id: 'd9', text: '换洗衣物一套', checked: false },
+      { id: 'd10', text: '安抚奶嘴/玩具', checked: false }
+    ]
+  },
+  {
+    _id: 'default-weaning',
+    name: '辅食必备工具',
+    items: [
+      { id: 'd11', text: '硅胶软勺', checked: false },
+      { id: 'd12', text: '辅食研磨碗', checked: false },
+      { id: 'd13', text: '防水围嘴', checked: false },
+      { id: 'd14', text: '辅食储存盒', checked: true }
+    ]
+  }
+];
+
+/**
+ * 获取装饰后的默认清单（补充 totalCount / checkedCount 字段）
+ * @returns {Array} 装饰后的默认清单数组
+ */
+function getDefaultLists() {
+  return DEFAULT_LISTS.map(list => {
+    const items = list.items || [];
+    const checkedCount = items.filter(item => item.checked).length;
+    return {
+      ...list,
+      totalCount: items.length,
+      checkedCount
+    };
+  });
+}
+
 Page({
   /**
    * 页面的初始数据
@@ -22,6 +74,7 @@ Page({
     families: [],
     currentFamilyId: null,
     switchingTab: false,
+    isLoggedIn: false,
     lists: [],
     isCreator: false,
     loading: true,
@@ -41,7 +94,18 @@ Page({
     editingListId: '',
     editingItem: null,
     editingText: '',
-    saving: false
+    saving: false,
+    // 宝宝信息表单（未创建/加入家庭时展示）
+    showBabyInfoForm: false,
+    babyInfoForm: {
+      nickname: '',
+      birthday: '',
+      gender: 'boy'
+    },
+    showJoinFamilyModal: false,
+    inviteCode: '',
+    startDate: '2020-01-01',
+    pickerEndDate: new Date().toISOString().split('T')[0]
   },
 
   /**
@@ -50,16 +114,16 @@ Page({
   onLoad: function () {
     const userService = require('../../services/userService');
     if (!userService.checkLoginStatus()) {
-      wx.redirectTo({ url: '/pages/login/login' });
+      this.setData({ isLoggedIn: false, loading: false, lists: getDefaultLists() });
       return;
     }
-    this.setData({ hasLoaded: true });
-    // 初始化进行中标志，onShow 在此期间跳过，避免 onLoad/onShow 重复初始化
+    this.setData({ hasLoaded: true, isLoggedIn: true });
     this._initializing = true;
     this.loadFamilyInfo()
-      .then(() => this.loadLists())
+      .then(() => this.checkBabyInfoComplete())
       .finally(() => {
         this._initializing = false;
+        this._lastLoadTime = Date.now();
       });
   },
 
@@ -68,17 +132,37 @@ Page({
    */
   onShow: function () {
     const userService = require('../../services/userService');
-    if (!userService.checkLoginStatus()) {
-      wx.redirectTo({ url: '/pages/login/login' });
+    const wasLoggedIn = this.data.isLoggedIn;
+    const isLoggedIn = userService.checkLoginStatus();
+    this.setData({ isLoggedIn });
+    if (!isLoggedIn) {
+      this.setData({ loading: false, lists: getDefaultLists() });
+      return;
+    }
+    // 如果之前未登录，现在已登录（刚从登录页返回），执行完整初始化
+    if (!wasLoggedIn) {
+      this.setData({ hasLoaded: true });
+      this._initializing = true;
+      this.loadFamilyInfo()
+        .then(() => this.checkBabyInfoComplete())
+        .finally(() => {
+          this._initializing = false;
+          this._lastLoadTime = Date.now();
+        });
       return;
     }
     if (this._initializing) {
-      // onLoad 初始化尚未完成，跳过本次刷新，避免重复请求
       return;
     }
     if (this.data.hasLoaded) {
+      // 数据新鲜度检查：30 秒内不重复加载
+      const now = Date.now();
+      if (this._lastLoadTime && now - this._lastLoadTime < 30000) {
+        return;
+      }
+      this._lastLoadTime = now;
       this.loadFamilyInfo().then(() => {
-        this.loadLists();
+        this.checkBabyInfoComplete();
       });
     } else {
       this.setData({ hasLoaded: true });
@@ -153,6 +237,202 @@ Page({
   },
 
   /**
+   * 检查宝宝信息是否完整：无家庭时显示宝宝信息表单，有家庭时加载清单
+   */
+  checkBabyInfoComplete: function() {
+    const families = this.data.families || [];
+
+    if (families.length > 0) {
+      this.setData({ showBabyInfoForm: false, loading: false });
+      this.loadLists();
+      return;
+    }
+
+    const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+    const babyInfo = userInfo.babyInfo || wx.getStorageSync('babyInfo') || {};
+    const isComplete = babyInfo.nickname && babyInfo.birthday;
+
+    if (!isComplete) {
+      this.setData({
+        showBabyInfoForm: true,
+        loading: false,
+        lists: [],
+        babyInfoForm: {
+          nickname: babyInfo.nickname || '',
+          birthday: babyInfo.birthday || '',
+          gender: babyInfo.gender || 'boy'
+        }
+      });
+    } else {
+      this.setData({ showBabyInfoForm: false, loading: false });
+      this.loadLists();
+    }
+  },
+
+  /**
+   * 宝宝昵称输入
+   */
+  onNicknameInput: function(e) {
+    this.setData({ 'babyInfoForm.nickname': e.detail.value });
+  },
+
+  /**
+   * 宝宝生日选择
+   */
+  onBirthdayChange: function(e) {
+    this.setData({ 'babyInfoForm.birthday': e.detail.value });
+  },
+
+  /**
+   * 宝宝性别选择
+   */
+  onGenderChange: function(e) {
+    this.setData({ 'babyInfoForm.gender': e.currentTarget.dataset.gender });
+  },
+
+  /**
+   * 保存宝宝信息并自动创建家庭
+   */
+  saveBabyInfo: async function() {
+    const { babyInfoForm } = this.data;
+    if (!babyInfoForm.nickname || !babyInfoForm.nickname.trim()) {
+      wx.showToast({ title: '请输入宝宝昵称', icon: 'none' });
+      return;
+    }
+    if (!babyInfoForm.birthday) {
+      wx.showToast({ title: '请选择宝宝生日', icon: 'none' });
+      return;
+    }
+
+    try {
+      wx.showLoading({ title: '保存中...' });
+      const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+      const userId = userInfo.openId || userInfo.openid || userInfo.openID || '';
+      if (!userId) {
+        wx.hideLoading();
+        wx.showToast({ title: '请先登录', icon: 'none' });
+        return;
+      }
+
+      const babyData = {
+        userId,
+        nickname: babyInfoForm.nickname.trim(),
+        birthday: babyInfoForm.birthday,
+        gender: babyInfoForm.gender,
+        safeFoodsList: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // 保存到 babyManager
+      try {
+        const saveRes = await wx.cloud.callFunction({
+          name: 'babyManager',
+          data: { action: 'saveBabyInfo', babyInfo: babyData }
+        });
+        if (saveRes.result && saveRes.result.success && saveRes.result.babyId) {
+          babyData._id = saveRes.result.babyId;
+        }
+      } catch (bmErr) {
+        console.warn('babyManager 保存失败，回退本地:', bmErr);
+      }
+
+      wx.setStorageSync('babyInfo', babyData);
+      app.globalData.userInfo = app.globalData.userInfo || {};
+      app.globalData.userInfo.babyInfo = babyData;
+      app.globalData.userInfo.babyName = babyData.nickname;
+      const storedUserInfo = wx.getStorageSync('userInfo') || {};
+      storedUserInfo.babyInfo = babyData;
+      storedUserInfo.babyName = babyData.nickname;
+      wx.setStorageSync('userInfo', storedUserInfo);
+
+      // 自动创建家庭
+      const familyResult = await familyService.getMyFamilies();
+      const hasFamily = familyResult.hasFamily || (familyResult.families && familyResult.families.length > 0);
+      if (!hasFamily) {
+        await familyService.createFamily(
+          `${babyData.nickname}的家`,
+          { nickname: babyData.nickname, gender: babyData.gender, birthday: babyData.birthday }
+        );
+      }
+
+      // 刷新家庭信息并加载清单
+      await this.loadFamilyInfo();
+      this.setData({ showBabyInfoForm: false });
+      this.loadLists();
+      wx.hideLoading();
+      wx.showToast({ title: '保存成功', icon: 'success' });
+    } catch (error) {
+      wx.hideLoading();
+      console.error('保存宝宝信息失败:', error);
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' });
+    }
+  },
+
+  /**
+   * 显示加入家庭弹窗
+   */
+  showJoinFamilyModal: function() {
+    this.setData({ showJoinFamilyModal: true, inviteCode: '' });
+  },
+
+  /**
+   * 隐藏加入家庭弹窗
+   */
+  hideJoinFamilyModal: function() {
+    this.setData({ showJoinFamilyModal: false, inviteCode: '' });
+  },
+
+  /**
+   * 邀请码输入
+   */
+  onInviteCodeChange: function(e) {
+    this.setData({ inviteCode: e.detail.value.trim().toUpperCase() });
+  },
+
+  /**
+   * 通过邀请码加入家庭
+   */
+  joinFamilyByInviteCode: async function() {
+    const code = this.data.inviteCode;
+    if (!code || code.length !== 6 || !/^[A-Z0-9]{6}$/i.test(code)) {
+      wx.showToast({ title: '请输入6位邀请码', icon: 'none' });
+      return;
+    }
+
+    try {
+      wx.showLoading({ title: '加入中...' });
+      const result = await wx.cloud.callFunction({
+        name: 'familyManager',
+        data: { action: 'joinFamily', inviteCode: code }
+      });
+
+      if (result.result && result.result.success) {
+        wx.showToast({ title: '加入成功', icon: 'success' });
+        this.hideJoinFamilyModal();
+        const familyId = result.result.familyId;
+        if (familyId) {
+          wx.setStorageSync('currentFamilyId', familyId);
+          if (app && app.globalData) {
+            app.globalData.currentFamilyId = familyId;
+          }
+        }
+        familyService.clearCache();
+        await this.loadFamilyInfo();
+        this.setData({ showBabyInfoForm: false });
+        this.loadLists();
+      } else {
+        wx.showToast({ title: result.result?.error || '加入失败', icon: 'none' });
+      }
+    } catch (error) {
+      console.error('加入家庭失败:', error);
+      wx.showToast({ title: '加入失败，请重试', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+
+  /**
    * 切换家庭 tab
    */
   switchFamilyTab: async function (e) {
@@ -202,7 +482,10 @@ Page({
         throw new Error(result.error || '获取清单失败');
       }
 
-      const lists = (result.data.lists || []).map(list => this._decorateList(list));
+      const cloudLists = (result.data.lists || []).map(list => this._decorateList(list));
+
+      // 云端无清单时展示空状态
+      const lists = cloudLists;
 
       // 展开的清单可能已被删除，兜底收起
       let expandedListId = this.data.expandedListId;
@@ -237,6 +520,39 @@ Page({
   },
 
   /**
+   * 判断是否为默认清单（非云端真实数据）
+   * @param {string} listId - 清单ID
+   * @returns {boolean} 是否为默认清单
+   */
+  _isDefaultList: function (listId) {
+    return listId && typeof listId === 'string' && listId.indexOf('default-') === 0;
+  },
+
+  /**
+   * 将默认清单持久化为云端真实清单，返回新清单列表
+   * @returns {Promise<Array>} 创建后的清单列表
+   */
+  _persistDefaultLists: async function () {
+    const familyId = this.data.currentFamilyId;
+    if (!familyId) return null;
+
+    for (const preset of DEFAULT_LISTS) {
+      const presetId = preset._id.replace('default-', '');
+      try {
+        await wx.cloud.callFunction({
+          name: 'checklistManager',
+          data: { action: 'createList', familyId, name: preset.name, presetId }
+        });
+      } catch (e) {
+        console.error('创建默认清单失败:', preset.name, e);
+      }
+    }
+    // 重新加载云端清单
+    await this.loadLists();
+    return this.data.lists;
+  },
+
+  /**
    * 调用云函数的通用封装
    */
   _call: async function (data) {
@@ -267,7 +583,16 @@ Page({
    * 勾选/取消勾选条目（乐观更新，失败回滚）
    */
   toggleItem: async function (e) {
+    if (!require('../../services/userService').requireLogin()) return;
     const { listId, itemId } = e.currentTarget.dataset;
+    // 默认清单需先持久化到云端再操作
+    if (this._isDefaultList(listId)) {
+      wx.showLoading({ title: '创建中...' });
+      await this._persistDefaultLists();
+      wx.hideLoading();
+      wx.showToast({ title: '已创建你的清单', icon: 'success' });
+      return;
+    }
     const lists = this.data.lists;
     const listIndex = lists.findIndex(l => l._id === listId);
     if (listIndex < 0) return;
@@ -302,7 +627,12 @@ Page({
    * 打开条目编辑弹窗（点击条目文字）
    */
   openEditModal: function (e) {
+    if (!require('../../services/userService').requireLogin()) return;
     const { listId, itemId } = e.currentTarget.dataset;
+    if (this._isDefaultList(listId)) {
+      wx.showToast({ title: '请先创建自己的清单', icon: 'none' });
+      return;
+    }
     const list = this.data.lists.find(l => l._id === listId);
     if (!list) return;
     const item = (list.items || []).find(it => it.id === itemId);
@@ -369,8 +699,13 @@ Page({
    * 删除条目（行内 × 与编辑弹窗内共用）
    */
   deleteItem: async function (e) {
+    if (!require('../../services/userService').requireLogin()) return;
     const dataset = (e && e.currentTarget && e.currentTarget.dataset) || {};
     const listId = dataset.listId || this.data.editingListId;
+    if (this._isDefaultList(listId)) {
+      wx.showToast({ title: '请先创建自己的清单', icon: 'none' });
+      return;
+    }
     const itemId = dataset.itemId || (this.data.editingItem && this.data.editingItem.id);
     if (!listId || !itemId) return;
 
@@ -401,9 +736,18 @@ Page({
    * 添加条目（即点即存）
    */
   addItem: async function (e) {
+    if (!require('../../services/userService').requireLogin()) return;
     if (this.data.adding) return;
 
     const listId = e.currentTarget.dataset.listId || this.data.expandedListId;
+    // 默认清单需先持久化到云端再操作
+    if (this._isDefaultList(listId)) {
+      wx.showLoading({ title: '创建中...' });
+      await this._persistDefaultLists();
+      wx.hideLoading();
+      wx.showToast({ title: '已创建你的清单', icon: 'success' });
+      return;
+    }
     const text = (this.data.newItemText || '').trim();
     if (!listId) return;
     if (!text) {
@@ -427,7 +771,12 @@ Page({
    * 开启下一轮（清空已勾选条目）
    */
   startNextRound: function (e) {
+    if (!require('../../services/userService').requireLogin()) return;
     const listId = e.currentTarget.dataset.listId;
+    if (this._isDefaultList(listId)) {
+      wx.showToast({ title: '请先创建自己的清单', icon: 'none' });
+      return;
+    }
     if (!listId) return;
 
     wx.showModal({
@@ -455,6 +804,7 @@ Page({
    * 删除清单（仅家庭创建者可见入口）
    */
   deleteList: function (e) {
+    if (!require('../../services/userService').requireLogin()) return;
     const listId = e.currentTarget.dataset.listId;
     if (!listId) return;
 
@@ -483,6 +833,7 @@ Page({
    * 打开新建清单弹窗
    */
   openCreateModal: function () {
+    if (!require('../../services/userService').requireLogin()) return;
     this.setData({
       showCreateModal: true,
       newListName: '',
@@ -517,6 +868,7 @@ Page({
    * 创建清单（创建成功后自动展开该清单卡片）
    */
   submitCreate: async function () {
+    if (!require('../../services/userService').requireLogin()) return;
     if (this.data.creating) return;
 
     const name = (this.data.newListName || '').trim();
@@ -587,5 +939,12 @@ Page({
     this.loadLists().finally(() => {
       wx.stopPullDownRefresh();
     });
+  },
+
+  /**
+   * 跳转登录页
+   */
+  goToLogin: function() {
+    require('../../services/userService').requireLogin();
   }
 });

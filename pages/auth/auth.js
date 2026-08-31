@@ -105,22 +105,15 @@ Page({
   },
 
   /**
-   * 跳转到目标页面
+   * 跳转到目标页面（返回来源页）
    */
   navigateToTargetPage: function() {
-    const from = this.data.from;
-    
-    if (from) {
-      // 如果有来源页面，跳转到来源页面
-      wx.navigateTo({
-        url: from
-      });
-    } else {
-      // 默认跳转到首页
-      wx.switchTab({
-        url: '/pages/index/index'
-      });
-    }
+    wx.navigateBack({
+      fail: () => {
+        // navigateBack 失败（无上一页），跳转首页
+        wx.switchTab({ url: '/pages/index/index' });
+      }
+    });
   },
 
   /**

@@ -86,6 +86,39 @@ const userService = {
   },
 
   /**
+   * 登录拦截：未登录则跳转登录页，已登录则执行回调
+   * 带导航防抖，防止快速点击导致多次 navigateTo 冲突
+   * @param {function} callback - 已登录时的回调
+   * @returns {boolean} 是否已登录
+   */
+  _navigatingToLogin: false,
+  requireLogin: function(callback) {
+    if (this.checkLoginStatus()) {
+      callback && callback();
+      return true;
+    }
+    // 防抖：正在跳转登录页时忽略后续调用
+    if (this._navigatingToLogin) return false;
+    this._navigatingToLogin = true;
+    wx.navigateTo({
+      url: '/pages/login/login',
+      fail: (err) => {
+        console.error('跳转登录页失败:', err);
+        // 页面栈满时改用 redirectTo
+        const pages = getCurrentPages();
+        if (pages.length >= 10) {
+          wx.redirectTo({ url: '/pages/login/login' });
+        }
+      },
+      complete: () => {
+        // 延迟重置标志，确保导航动画完成
+        setTimeout(() => { this._navigatingToLogin = false; }, 500);
+      }
+    });
+    return false;
+  },
+
+  /**
    * 保存用户信息到本地
    * @param {Object} userInfo - 用户信息
    * @param {string} token - 登录凭证

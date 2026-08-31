@@ -1,13 +1,15 @@
 // pages/profile/index.js
 const userService = require('../../services/userService');
+const familyService = require('../../services/familyService');
 Page({
   /**
    * 页面的初始数据
    */
   data: {
+    isLoggedIn: false,
     userInfo: {
       avatarUrl: '/images/logo.png',
-      nickName: '未登录',
+      nickName: '请登录',
       babyName: '',
       babyAge: ''
     },
@@ -63,14 +65,15 @@ Page({
   onLoad: function () {
     const userService = require('../../services/userService');
     if (!userService.checkLoginStatus()) {
-      wx.redirectTo({ url: '/pages/login/login' });
+      this.setData({ isLoggedIn: false });
       return;
     }
-    this.setData({ hasLoaded: true });
+    this.setData({ hasLoaded: true, isLoggedIn: true });
     // 页面加载时初始化数据（置初始化标志，onShow 在此期间跳过，避免 onLoad/onShow 重复请求）
     this._initializing = true;
     Promise.resolve(this.initData()).finally(() => {
       this._initializing = false;
+      this._lastLoadTime = Date.now();
     });
   },
 
@@ -79,19 +82,34 @@ Page({
    */
   onShow: function () {
     const userService = require('../../services/userService');
-    if (!userService.checkLoginStatus()) {
-      wx.redirectTo({ url: '/pages/login/login' });
+    const wasLoggedIn = this.data.isLoggedIn;
+    const isLoggedIn = userService.checkLoginStatus();
+    // 未登录时也要重置导航锁，否则从协议页返回后所有菜单点击会被拦截
+    this.setData({ isLoggedIn, isNavigating: false });
+    if (!isLoggedIn) return;
+    // 如果之前未登录，现在已登录（刚从登录页返回），执行完整初始化
+    if (!wasLoggedIn) {
+      this.setData({ hasLoaded: true });
+      this._initializing = true;
+      Promise.resolve(this.initData()).finally(() => {
+        this._initializing = false;
+        this._lastLoadTime = Date.now();
+      });
       return;
     }
     if (!this._initializing) {
       if (this.data.hasLoaded) {
-        // 从其他页面返回时刷新数据
+        // 数据新鲜度检查：30 秒内不重复加载
+        const now = Date.now();
+        if (this._lastLoadTime && now - this._lastLoadTime < 30000) {
+          return;
+        }
+        this._lastLoadTime = now;
         this.initData();
       } else {
         this.setData({ hasLoaded: true });
       }
     }
-    // 重置导航状态
     this.setData({ isNavigating: false });
   },
 
@@ -114,7 +132,7 @@ Page({
       this.setData({
         userInfo: {
           avatarUrl: '/images/logo.png',
-          nickName: '未登录',
+          nickName: '请登录',
           babyName: '',
           babyAge: ''
         },
@@ -185,6 +203,10 @@ Page({
    * 选择头像（头像昵称填写能力，wx.getUserProfile/wx.getUserInfo 已废弃）
    */
   onChooseAvatar: function (e) {
+    if (!userService.checkLoginStatus()) {
+      userService.requireLogin();
+      return;
+    }
     const { avatarUrl } = e.detail;
     if (!avatarUrl) return;
 
@@ -199,6 +221,10 @@ Page({
    * 修改昵称（头像昵称填写能力）
    */
   onNicknameChange: function (e) {
+    if (!userService.checkLoginStatus()) {
+      userService.requireLogin();
+      return;
+    }
     const nickName = (e.detail.value || '').trim();
     if (!nickName || nickName === this.data.userInfo.nickName) return;
 
@@ -319,6 +345,10 @@ Page({
    * 跳转到任务列表
    */
   goToTaskList: function (e) {
+    if (!userService.checkLoginStatus()) {
+      userService.requireLogin();
+      return;
+    }
     const type = e.currentTarget.dataset.type;
     let url = '/pages/task/index';
     
@@ -342,23 +372,33 @@ Page({
   },
 
   /**
-   * 菜单项点击处理
+   * 跳转登录页（带防抖保护）
    */
   navigateToLogin: function () {
-    wx.navigateTo({
-      url: '/pages/login/login'
-    });
+    userService.requireLogin();
   },
 
   onMenuItemTap: function (e) {
     if (this.data.isNavigating) return;
-    this.setData({ isNavigating: true });
 
     const id = e.currentTarget.dataset.id;
+
+    // 需要家庭维度的菜单项：登录 + 家庭检查
+    const familyRequiredItems = ['family', 'baby-info', 'sensitivity-records'];
+    if (familyRequiredItems.indexOf(id) !== -1) {
+      // 先检查登录
+      if (!userService.checkLoginStatus()) {
+        userService.requireLogin();
+        return;
+      }
+      // 异步检查是否有家庭
+      this.checkFamilyAndNavigate(id);
+      return;
+    }
+
+    this.setData({ isNavigating: true });
+
     const urlMap = {
-      'family': '/pages/family/index',
-      'baby-info': '/subpackages/profile/pages/baby-info',
-      'sensitivity-records': '/subpackages/sensitivity/pages/records',
       'privacy-policy': '/pages/privacy-policy/index',
       'user-agreement': '/pages/user-agreement/index',
       'settings': '/pages/settings/index',
@@ -369,6 +409,9 @@ Page({
     if (urlMap[id]) {
       wx.navigateTo({
         url: urlMap[id],
+        success: () => {
+          // 导航成功后保持 isNavigating=true，等 onShow 重置
+        },
         fail: () => {
           this.setData({ isNavigating: false });
         }
@@ -382,9 +425,56 @@ Page({
   },
 
   /**
+   * 检查家庭状态后决定跳转或提示
+   */
+  checkFamilyAndNavigate: async function (menuId) {
+    try {
+      const familyResult = await familyService.getMyFamilies();
+      const hasFamily = familyResult.hasFamily || (familyResult.families && familyResult.families.length > 0);
+
+      if (!hasFamily) {
+        wx.showToast({ title: '请完善宝宝信息或加入家庭后使用', icon: 'none', duration: 2000 });
+        setTimeout(() => {
+          wx.switchTab({ url: '/pages/index/index' });
+        }, 1500);
+        return;
+      }
+
+      // 有家庭，正常跳转
+      const urlMap = {
+        'family': '/pages/family/index',
+        'baby-info': '/subpackages/profile/pages/baby-info',
+        'sensitivity-records': '/subpackages/sensitivity/pages/records'
+      };
+      const url = urlMap[menuId];
+      if (url) {
+        this.setData({ isNavigating: true });
+        wx.navigateTo({
+          url: url,
+          success: () => {},
+          fail: () => {
+            this.setData({ isNavigating: false });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('检查家庭状态失败:', error);
+      this.setData({ isNavigating: false });
+      wx.showToast({ title: '请完善宝宝信息或加入家庭后使用', icon: 'none', duration: 2000 });
+      setTimeout(() => {
+        wx.switchTab({ url: '/pages/index/index' });
+      }, 1500);
+    }
+  },
+
+  /**
    * 查看统计详情
    */
   viewStatsDetail: function () {
+    if (!userService.checkLoginStatus()) {
+      userService.requireLogin();
+      return;
+    }
     wx.navigateTo({
       url: '/pages/statistics/index'
     });
@@ -405,7 +495,7 @@ Page({
           this.setData({
             userInfo: {
               avatarUrl: '/images/logo.png',
-              nickName: '未登录',
+              nickName: '请登录',
               babyName: '',
               babyAge: ''
             },
@@ -422,7 +512,7 @@ Page({
             icon: 'success'
           });
           
-          wx.reLaunch({ url: '/pages/login/login' });
+          wx.reLaunch({ url: '/pages/index/index' });
         }
       }
     });
@@ -542,7 +632,7 @@ Page({
       this.setData({
         userInfo: {
           avatarUrl: '/images/logo.png',
-          nickName: '未登录',
+          nickName: '请登录',
           babyName: '',
           babyAge: ''
         },
@@ -580,5 +670,12 @@ Page({
         icon: 'none'
       });
     }
+  },
+
+  /**
+   * 跳转登录页
+   */
+  goToLogin: function() {
+    userService.requireLogin();
   }
 });

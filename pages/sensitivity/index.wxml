@@ -83,8 +83,13 @@ module.exports = { joinRecipes: joinRecipes };
     </view>
   </view>
 
-  <!-- 排敏主内容 -->
-  <block wx:elif="{{babyInfo && babyInfo.nickname}}">
+  <!-- 排敏主内容（已登录有宝宝信息 或 未登录空状态） -->
+  <block wx:elif="{{babyInfo}}">
+    <!-- 未登录提示横幅 -->
+    <view wx:if="{{!isLoggedIn}}" class="login-prompt-banner" bindtap="goToLogin">
+      <text class="login-prompt-text">请登录后查看完整排敏功能</text>
+      <text class="login-prompt-arrow">›</text>
+    </view>
     <!-- 家庭切换 tabs -->
     <view class="family-tabs" wx:if="{{families.length > 0}}">
       <view

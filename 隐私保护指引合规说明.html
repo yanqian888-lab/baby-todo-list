@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>朵叽排敏生活全家记 · 用户隐私保护指引合规说明</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    background: #F5F2EE;
+    color: #3A3128;
+    line-height: 1.8;
+    padding: 0 0 60px;
+  }
+  .header {
+    background: linear-gradient(135deg, #8B7355 0%, #A08060 50%, #6B5635 100%);
+    color: #fff;
+    padding: 48px 24px 40px;
+    text-align: center;
+  }
+  .header h1 { font-size: 24px; margin-bottom: 8px; }
+  .header .subtitle { font-size: 14px; opacity: 0.85; }
+  .container { max-width: 860px; margin: -20px auto 0; padding: 0 24px; }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #6B5635;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid #E8DFD3;
+    padding-bottom: 10px;
+  }
+  .card-title .num {
+    background: #8B7355;
+    color: #fff;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  th {
+    background: #F8F5F0;
+    padding: 10px 14px;
+    text-align: left;
+    color: #6B5635;
+    font-weight: 700;
+    border-bottom: 2px solid #E8DFD3;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #EEE8E0;
+    vertical-align: top;
+  }
+  tr:hover td { background: #FCFAF6; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-required { background: #FFE0E0; color: #C0392B; }
+  .badge-optional { background: #E0F0E0; color: #27AE60; }
+  .badge-api { background: #E8E0F0; color: #7D3C98; }
+  .code-block {
+    background: #2D2A26;
+    color: #E0D8CC;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 12px 0;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .comment { color: #8C8073; }
+  .tip-box {
+    background: #FFF8E7;
+    border-left: 4px solid #F0C040;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .tip-box strong { color: #8B7355; }
+  .step-list {
+    list-style: none;
+    padding: 0;
+  }
+  .step-list li {
+    padding: 10px 0 10px 36px;
+    position: relative;
+    border-bottom: 1px solid #F0EBE3;
+    font-size: 14px;
+  }
+  .step-list li:last-child { border-bottom: none; }
+  .step-list li::before {
+    content: counter(step);
+    counter-increment: step;
+    position: absolute;
+    left: 0; top: 8px;
+    width: 24px; height: 24px;
+    background: #8B7355;
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .step-list { counter-reset: step; }
+  .highlight {
+    background: #FFF3CD;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 13px;
+    color: #A09080;
+  }
+  .check-list {
+    list-style: none;
+    padding: 0;
+  }
+  .check-list li {
+    padding: 8px 0 8px 28px;
+    position: relative;
+    font-size: 14px;
+  }
+  .check-list li::before {
+    content: "✅";
+    position: absolute;
+    left: 0; top: 8px;
+    font-size: 14px;
+  }
+  .check-list li.warn::before {
+    content: "⚠️";
+  }
+  .divider {
+    height: 1px;
+    background: #E8DFD3;
+    margin: 20px 0;
+  }
+  h4 {
+    font-size: 15px;
+    color: #6B5635;
+    margin: 16px 0 8px;
+  }
+  p { margin: 8px 0; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>朵叽排敏生活全家记</h1>
+  <div class="subtitle">用户隐私保护指引 · 合规说明文档</div>
+</div>
+
+<div class="container">
+
+  <!-- 1. 数据采集清单 -->
+  <div class="card">
+    <div class="card-title"><span class="num">1</span> 数据采集清单（代码审查结果）</div>
+    <p>以下是对小程序全部代码进行审查后，梳理出的所有涉及用户个人信息采集的接口及用途。</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>信息类型</th>
+          <th>调用接口 / API</th>
+          <th>采集用途</th>
+          <th>是否必填</th>
+          <th>存储位置</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>微信头像</strong></td>
+          <td><span class="badge badge-api">button<br>open-type="chooseAvatar"</span></td>
+          <td>用户身份标识、个人主页展示、家庭成员列表头像展示</td>
+          <td><span class="badge badge-optional">选填</span></td>
+          <td>云数据库 users 集合<br>avatarUrl 字段</td>
+        </tr>
+        <tr>
+          <td><strong>微信昵称</strong></td>
+          <td><span class="badge badge-api">input<br>type="nickname"</span></td>
+          <td>用户身份标识、家庭成员名称展示、个人主页展示</td>
+          <td><span class="badge badge-optional">选填</span></td>
+          <td>云数据库 users 集合<br>nickName 字段</td>
+        </tr>
+        <tr>
+          <td><strong>微信OpenID</strong></td>
+          <td><span class="badge badge-api">wx.login()<br>→ 云函数 getWXContext</span></td>
+          <td>用户身份验证、数据归属关联、家庭成员身份识别</td>
+          <td><span class="badge badge-required">必需</span></td>
+          <td>云数据库 users 集合<br>openid 字段</td>
+        </tr>
+        <tr>
+          <td>网络类型</td>
+          <td><span class="badge badge-api">wx.getNetworkType()</span></td>
+          <td>登录前检查网络连接状态（仅UI提示，不存储）</td>
+          <td><span class="badge badge-optional">非存储</span></td>
+          <td>不持久化存储</td>
+        </tr>
+        <tr>
+          <td>宝宝信息<br>（昵称/生日/性别）</td>
+          <td>用户手动输入</td>
+          <td>排敏记录、辅食推荐、任务打卡、家庭共享</td>
+          <td><span class="badge badge-optional">选填</span></td>
+          <td>云数据库 babies 集合</td>
+        </tr>
+        <tr>
+          <td>排敏/打卡<br>记录数据</td>
+          <td>用户操作产生</td>
+          <td>食物排敏跟踪、任务管理、统计图表</td>
+          <td><span class="badge badge-optional">选填</span></td>
+          <td>云数据库 sensitivities /<br>clockIns 集合</td>
+        </tr>
+        <tr>
+          <td>AI对话内容</td>
+          <td>用户主动输入</td>
+          <td>AI育儿大师实时问答（不用于其他商业用途）</td>
+          <td><span class="badge badge-optional">选填</span></td>
+          <td>对话记录（实时处理）</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="tip-box">
+      <strong>审查结论：</strong>本小程序 <strong>不采集</strong> 用户手机号、位置信息、通讯录、相册权限、摄像头权限、麦克风权限、剪贴板读取等敏感权限。仅采集头像和昵称（均选填），以及登录所需的 OpenID。符合"最小必要"原则。
+    </div>
+  </div>
+
+  <!-- 2. 微信后台提交内容 -->
+  <div class="card">
+    <div class="card-title"><span class="num">2</span> 微信管理后台「用户隐私保护指引」提交内容</div>
+    <p>登录 <strong>mp.weixin.qq.com</strong> → 设置 → 服务内容声明 → 用户隐私保护指引，按以下内容填写：</p>
+
+    <h4>📌 需声明的信息类型（共3项）</h4>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%">信息类型</th>
+          <th style="width:20%">调用接口/API</th>
+          <th>业务功能/用途</th>
+          <th style="width:12%">是否涉及第三方</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>微信昵称</strong></td>
+          <td>input type="nickname"</td>
+          <td>用于用户身份标识、家庭成员名称展示、个人主页展示。用户在登录授权页面或个人中心填写，支持选填，未填写时系统自动生成默认昵称。</td>
+          <td>否</td>
+        </tr>
+        <tr>
+          <td><strong>微信头像</strong></td>
+          <td>button open-type="chooseAvatar"</td>
+          <td>用于用户身份标识、个人主页展示、家庭成员列表头像展示。用户在登录授权页面或个人中心选择，支持选填，未选择时使用默认头像。</td>
+          <td>否</td>
+        </tr>
+        <tr>
+          <td><strong>微信开放账号<br>（OpenID）</strong></td>
+          <td>wx.login()</td>
+          <td>用于用户身份验证、数据归属关联、家庭成员身份识别。通过微信登录获取，不涉及用户微信号、手机号等敏感信息。</td>
+          <td>否</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="divider"></div>
+
+    <h4>📌 小程序基本信息</h4>
+    <table>
+      <tbody>
+        <tr><th style="width:30%">小程序名称</th><td>朵叽排敏生活全家记</td></tr>
+        <tr><th>AppID</th><td>wxd75feff71d1575ec</td></tr>
+        <tr><th>主体名称</th><td>北京绵言科技发展中心（个体工商户）</td></tr>
+        <tr><th>服务类目</th><td>育儿 / 工具</td></tr>
+        <tr><th>隐私政策页面</th><td>小程序内 /pages/privacy-policy/index</td></tr>
+        <tr><th>用户协议页面</th><td>小程序内 /pages/user-agreement/index</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 3. 提交步骤 -->
+  <div class="card">
+    <div class="card-title"><span class="num">3</span> 提交操作步骤</div>
+    <ol class="step-list">
+      <li>登录 <strong>mp.weixin.qq.com</strong> 微信公众平台</li>
+      <li>进入 <strong>设置 → 服务内容声明 → 用户隐私保护指引</strong></li>
+      <li>点击「更新」或「配置」，在信息类型列表中勾选以下3项：
+        <br>☑ <span class="highlight">微信昵称</span>（选择后填写用途和接口）
+        <br>☑ <span class="highlight">微信头像</span>（选择后填写用途和接口）
+        <br>☑ <span class="highlight">微信开放账号（OpenID）</span>（选择后填写用途和接口）
+      </li>
+      <li>每项填写对应的「业务功能」和「调用接口」信息（参考第2节的表格内容）</li>
+      <li>确认「是否涉及第三方」均选择 <strong>「否」</strong></li>
+      <li>填写隐私政策链接：指向小程序内的隐私政策页面（/pages/privacy-policy/index）</li>
+      <li>提交审核，等待微信平台审核通过（通常1-3个工作日）</li>
+    </ol>
+
+    <div class="tip-box">
+      <strong>注意：</strong>用户隐私保护指引审核通过后，小程序才能正常使用 <code>chooseAvatar</code> 和 <code>type="nickname"</code> 等接口。未提交或审核未通过时，这些接口将无法调用。
+    </div>
+  </div>
+
+  <!-- 4. 代码配置 -->
+  <div class="card">
+    <div class="card-title"><span class="num">4</span> 代码配置说明</div>
+
+    <h4>app.json 已配置项</h4>
+    <div class="code-block">{
+  <span class="comment">// 启用隐私合规检查（用户调用隐私接口时弹出授权弹窗）</span>
+  "__usePrivacyCheck__": true,
+
+  <span class="comment">// 启用隐私保护配置</span>
+  "privacy": {
+    "enable": true
+  }
+}</div>
+
+    <h4>授权页面（auth.js）实现方式</h4>
+    <div class="code-block"><span class="comment">// 头像选择：使用 chooseAvatar 能力，非已废弃的 getUserProfile</span>
+&lt;button open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar"&gt;
+  &lt;image src="{{avatarUrl || '/images/touxiang_moren.png'}}" /&gt;
+&lt;/button&gt;
+
+<span class="comment">// 昵称输入：使用 type="nickname" 能力，非直接获取微信昵称</span>
+&lt;input type="nickname" placeholder="点击输入昵称（选填）" /&gt;
+
+<span class="comment">// 处理逻辑：未填昵称 → 云函数生成随机昵称兜底</span>
+<span class="comment">// 未选头像 → 使用默认头像兜底</span>
+const userInfo = {
+  nickName: that.data.nickName || undefined,
+  avatarUrl: that.data.avatarUrl || '/images/touxiang_moren.png',
+};</div>
+
+    <div class="tip-box">
+      <strong>合规要点：</strong>本小程序使用的是微信推荐的 <strong>「头像昵称填写能力」</strong>（chooseAvatar + type="nickname"），而非已废弃的 <code>wx.getUserProfile</code> 或 <code>wx.getUserInfo</code>。这种方式下，用户自主选择是否提供头像和昵称，更符合隐私保护要求。
+    </div>
+  </div>
+
+  <!-- 5. 现有隐私政策 -->
+  <div class="card">
+    <div class="card-title"><span class="num">5</span> 现有隐私政策页面</div>
+    <p>小程序内已包含完整的隐私政策页面（<code>/pages/privacy-policy/index</code>），涵盖以下内容：</p>
+    <ul class="check-list">
+      <li>信息收集清单（登录信息 + 用户主动提交信息）</li>
+      <li>信息使用目的（核心服务 / 优化服务 / 安全保障 / 沟通反馈）</li>
+      <li>信息存储与保护措施（加密存储 / 最小期限 / 技术+管理+合规保障）</li>
+      <li>信息共享/转让/公开披露规则（均不共享/转让/公开，除非用户同意或法律规定）</li>
+      <li>用户权利（查阅权 / 编辑删除权 / 撤回授权权 / 账号注销权 / 异议投诉权）</li>
+      <li>未成年人信息保护条款</li>
+      <li>隐私政策变更与更新机制</li>
+    </ul>
+
+    <div class="tip-box">
+      <strong>建议补充：</strong>隐私政策页面中已提到"微信头像、昵称"，但建议在"（一）登录相关信息"部分补充说明 <strong>采集方式为"头像昵称填写能力（chooseAvatar）"</strong>，而非一键获取，以更准确描述采集方式。
+    </div>
+  </div>
+
+  <!-- 6. 合规自查表 -->
+  <div class="card">
+    <div class="card-title"><span class="num">6</span> 合规自查清单</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50%">检查项</th>
+          <th style="width:15%">状态</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>app.json 已配置 __usePrivacyCheck__: true</td>
+          <td>✅ 已配置</td>
+          <td>启用隐私合规检查</td>
+        </tr>
+        <tr>
+          <td>app.json 已配置 privacy.enable: true</td>
+          <td>✅ 已配置</td>
+          <td>启用隐私保护配置</td>
+        </tr>
+        <tr>
+          <td>使用 chooseAvatar 能力采集头像（非 getUserProfile）</td>
+          <td>✅ 已合规</td>
+          <td>auth.js + profile/index.js 均使用</td>
+        </tr>
+        <tr>
+          <td>使用 type="nickname" 采集昵称（非 getUserProfile）</td>
+          <td>✅ 已合规</td>
+          <td>auth.wxml + profile/index.wxml 均使用</td>
+        </tr>
+        <tr>
+          <td>头像和昵称均为选填（不强制授权）</td>
+          <td>✅ 已合规</td>
+          <td>未填时兜底处理</td>
+        </tr>
+        <tr>
+          <td>不采集手机号、位置、通讯录等敏感权限</td>
+          <td>✅ 已合规</td>
+          <td>代码审查未发现</td>
+        </tr>
+        <tr>
+          <td>不读取用户剪贴板</td>
+          <td>✅ 已合规</td>
+          <td>仅有 setClipboardData 写入邀请码</td>
+        </tr>
+        <tr>
+          <td>小程序内已包含隐私政策页面</td>
+          <td>✅ 已包含</td>
+          <td>/pages/privacy-policy/index</td>
+        </tr>
+        <tr>
+          <td>小程序内已包含用户协议页面</td>
+          <td>✅ 已包含</td>
+          <td>/pages/user-agreement/index</td>
+        </tr>
+        <tr>
+          <td>登录页有隐私政策勾选确认</td>
+          <td>✅ 已实现</td>
+          <td>login.js isAgreed 逻辑</td>
+        </tr>
+        <tr>
+          <td>微信后台提交「用户隐私保护指引」</td>
+          <td>⚠️ 待提交</td>
+          <td>需在 mp.weixin.qq.com 后台填写提交</td>
+        </tr>
+        <tr>
+          <td>隐私政策中补充采集方式说明</td>
+          <td>⚠️ 建议优化</td>
+          <td>补充"chooseAvatar能力"描述</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 7. 隐私政策补充建议 -->
+  <div class="card">
+    <div class="card-title"><span class="num">7</span> 隐私政策页面补充建议</div>
+    <p>现有隐私政策中"（一）登录相关信息"部分，建议修改为以下表述以更准确描述采集方式：</p>
+
+    <div class="code-block"><span class="comment">// 建议修改后的表述：</span>
+您通过微信账号登录本小程序时，我们将通过微信提供的
+「头像昵称填写能力」（chooseAvatar）引导您自主选择
+是否提供微信头像和昵称，该信息仅用于小程序内用户身份
+标识、个人主页展示及家庭成员列表显示，帮助您快速完
+成登录。您可自主选择是否提供，未提供时系统将自动生
+成默认头像和昵称。我们不会通过 wx.getUserProfile
+等已废弃接口直接获取您的微信资料，也不会收集您的微
+信账号密码、手机号、好友列表等未授权信息。</div>
+
+    <p>此修改确保隐私政策与实际代码实现一致，均明确使用 <strong>chooseAvatar + type="nickname"</strong> 方式，而非已废弃的 getUserProfile。</p>
+  </div>
+
+</div>
+
+<div class="footer">
+  朵叽排敏生活全家记 · 隐私保护指引合规说明<br>
+  生成日期：2026-08-25 · AppID: wxd75feff71d1575ec
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>朵叽排敏生活全家记 · 爆款宣发内容手册</title>
+<style>
+:root {
+  --bg-primary: #FAFAF8;
+  --bg-secondary: #F5F3F0;
+  --bg-card: #FFFFFF;
+  --primary: #8B7355;
+  --primary-light: #A08060;
+  --primary-dark: #6B5635;
+  --text-primary: #2D2A26;
+  --text-secondary: #5A554D;
+  --text-tertiary: #8A847A;
+  --text-muted: #B8B2A8;
+  --success: #7A9E7E;
+  --warning: #D4A574;
+  --error: #C47D7D;
+  --border: #E8E4DE;
+  --tag-xhs: #FF2442;
+  --tag-dy: #000000;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.8;
+  padding: 0 0 80px 0;
+}
+
+/* ===== 顶部封面 ===== */
+.cover {
+  background: linear-gradient(135deg, #8B7355 0%, #A08060 50%, #6B5635 100%);
+  color: #fff;
+  padding: 80px 40px 60px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cover::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.cover-content { position: relative; z-index: 1; }
+.cover h1 { font-size: 36px; font-weight: 800; margin-bottom: 12px; letter-spacing: 2px; }
+.cover .subtitle { font-size: 16px; opacity: 0.85; margin-bottom: 24px; }
+.cover .meta { display: flex; justify-content: center; gap: 24px; font-size: 13px; opacity: 0.75; }
+.cover .meta span { display: flex; align-items: center; gap: 6px; }
+
+/* ===== 容器 ===== */
+.container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+/* ===== 章节标题 ===== */
+.section { margin-top: 56px; }
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+.section-title .icon { font-size: 28px; }
+.section-desc { font-size: 14px; color: var(--text-tertiary); margin-bottom: 24px; }
+
+/* ===== 卡片 ===== */
+.card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  border: 1px solid var(--border);
+}
+
+/* ===== 卖点卡片 ===== */
+.selling-points { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.sp-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+}
+.sp-card .sp-icon { font-size: 28px; margin-bottom: 8px; }
+.sp-card h4 { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.sp-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.sp-card .highlight { color: var(--primary); font-weight: 600; }
+
+/* ===== 痛点表格 ===== */
+.pain-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.pain-table th {
+  background: var(--bg-secondary);
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
+}
+.pain-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  vertical-align: top;
+}
+.pain-table tr:last-child td { border-bottom: none; }
+.pain-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ===== 内容笔记卡片 ===== */
+.note-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.note-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.note-platform {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.note-platform.xhs { background: #FFF0F2; color: var(--tag-xhs); }
+.note-platform.dy { background: #F0F0F0; color: var(--tag-dy); }
+.note-type {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+  margin-left: 8px;
+}
+.note-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+.note-title .hook { color: var(--tag-xhs); }
+.note-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 16px; flex-wrap: wrap; }
+.note-body { padding: 20px 24px; }
+.note-body h5 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 16px 0 8px;
+  padding-left: 12px;
+  border-left: 3px solid var(--primary);
+}
+.note-body h5:first-child { margin-top: 0; }
+.note-body p { font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 8px; }
+.note-body .script-line {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.note-body .script-line:last-child { border-bottom: none; }
+.note-body .script-time {
+  flex-shrink: 0;
+  width: 50px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  padding-top: 2px;
+}
+.note-body .script-content { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+.note-body .script-direction {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+.note-body ul { padding-left: 20px; }
+.note-body ul li { font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 4px; }
+.note-body .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.note-body .tag {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+}
+.note-body .copy-block {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+.note-footer {
+  padding: 12px 24px;
+  background: var(--bg-secondary);
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ===== 发布节奏 ===== */
+.schedule-timeline { position: relative; padding-left: 32px; }
+.schedule-timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.schedule-item {
+  position: relative;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.schedule-item::before {
+  content: '';
+  position: absolute;
+  left: -28px;
+  top: 20px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 3px solid var(--bg-primary);
+}
+.schedule-item .sch-week { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+.schedule-item .sch-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.schedule-item .sch-desc { font-size: 13px; color: var(--text-tertiary); }
+
+/* ===== 提示框 ===== */
+.tip-box {
+  background: #FDF8F0;
+  border: 1px solid #F0E0C0;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.tip-box strong { color: var(--warning); }
+
+/* ===== 封面图片 ===== */
+.note-cover-img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.note-body .dev-intro {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+  font-style: italic;
+}
+.note-body .alt-titles {
+  background: #F8F6F2;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0 12px;
+  font-size: 13px;
+}
+.note-body .alt-titles .alt-label {
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+.note-body .alt-titles .alt-item {
+  color: var(--text-secondary);
+  padding: 3px 0;
+  padding-left: 8px;
+}
+
+/* ===== 底部 ===== */
+.footer {
+  text-align: center;
+  padding: 40px 24px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 封面 ===== -->
+<div class="cover">
+  <div class="cover-content">
+    <h1>📱 朵叽排敏生活全家记</h1>
+    <div class="subtitle">小红书 & 抖音 · 爆款宣发内容手册 · 用户视角 + 开发者视角</div>
+    <div class="meta">
+      <span>📅 2026年8月</span>
+      <span>📝 14篇完整内容</span>
+      <span>🎯 5大卖点 · 4类人群</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ===== 第一章：卖点提炼 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">🎯</span> 项目核心卖点提炼</div>
+  <div class="section-desc">从产品功能中提炼出5个可宣发的核心卖点，按差异化程度排序</div>
+
+  <div class="selling-points">
+    <div class="sp-card">
+      <div class="sp-icon">🥦</div>
+      <h4>① 食物排敏管理系统 <span class="highlight">（核心差异化）</span></h4>
+      <p>市面上90%的育儿App只做任务打卡，<strong>没人系统解决辅食排敏</strong>。朵叽按低敏(1-3天)/中敏(3天)/高敏(5天)分级，自动推荐下一个该试的食物，告别手写Excel和备忘录。</p>
+    </div>
+    <div class="sp-card">
+      <div class="sp-icon">👨‍👩‍👧</div>
+      <h4>② 家庭共享 · 隔代育儿同步</h4>
+      <p>妈妈添加排敏食物，<strong>爸爸、爷爷奶奶手机同步看到</strong>。邀请码加入家庭，数据按家庭隔离。解决"妈妈不在家，老人不知道喂了什么"的千古难题。</p>
+    </div>
+    <div class="sp-card">
+      <div class="sp-icon">🤖</div>
+      <h4>③ AI 育儿大师 · 随时问答</h4>
+      <p>两个模式：<strong>树洞倾诉</strong>（妈妈焦虑时的情绪出口）+ <strong>育儿求助</strong>（科学步骤指导）。深夜宝宝哭闹不知道怎么办？问AI大师。</p>
+    </div>
+    <div class="sp-card">
+      <div class="sp-icon">📋</div>
+      <h4>④ 循环任务打卡 · 不再忘事</h4>
+      <p>喂药、按摩、晒太阳——设成每日/每周循环任务，<strong>打卡后自动统计连续天数和完成率</strong>。新手爸妈的"第二个大脑"。</p>
+    </div>
+    <div class="sp-card">
+      <div class="sp-icon">🎨</div>
+      <h4>⑤ MUJI风设计 · 妈妈圈颜值担当</h4>
+      <p>莫兰迪色系 + 无印良品美学，<strong>不像工具，更像生活伴侣</strong>。小红书用户很看重颜值，截图就是现成的高级感配图。</p>
+    </div>
+    <div class="sp-card">
+      <div class="sp-icon">☁️</div>
+      <h4>⑥ 云端安全 · 免费使用</h4>
+      <p>微信小程序，<strong>不用下载、不占内存、完全免费</strong>。云端存储不怕换手机丢数据，隐私合规已过审。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 第二章：人群痛点 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">💔</span> 目标人群 & 痛点分析</div>
+  <div class="section-desc">精准锁定4类核心人群，每类对应不同的内容切入点</div>
+
+  <div class="card">
+    <table class="pain-table">
+      <thead>
+        <tr>
+          <th style="width:15%">人群</th>
+          <th style="width:15%">核心痛点</th>
+          <th style="width:35%">痛点场景</th>
+          <th style="width:35%">内容切入点</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="pain-tag" style="background:#FFF0F2;color:#C47D7D">辅食期妈妈</span></td>
+          <td>排敏概念模糊，不知道怎么操作</td>
+          <td>宝宝4-6个月开始加辅食，医生说"每种新食物试3天观察"，但到底怎么记录？试了哪些？哪天开始的？全忘了。</td>
+          <td>科普型干货 → 建立专业信任 → 自然种草工具</td>
+        </tr>
+        <tr>
+          <td><span class="pain-tag" style="background:#FFF8E8;color:#D4A574">过敏宝宝家长</span></td>
+          <td>排敏过程焦虑，记录混乱</td>
+          <td>宝宝确诊食物过敏，需要系统排敏多种食物。用Excel记、用备忘录取、用脑子记——每次复诊医生问"试了什么？"一脸懵。</td>
+          <td>情绪共鸣 → 引发共情 → 解决方案 = 工具</td>
+        </tr>
+        <tr>
+          <td><span class="pain-tag" style="background:#F0F5ED;color:#7A9E7E">隔代育儿家庭</span></td>
+          <td>信息不同步，喂养分歧</td>
+          <td>妈妈上班，奶奶带娃。妈妈说"今天不能试新食物"，奶奶觉得"我当年养你也没这么多事"。排敏记录全家看不到，隔代喂养冲突不断。</td>
+          <td>家庭场景演示 → 痛点共鸣 → 共享功能种草</td>
+        </tr>
+        <tr>
+          <td><span class="pain-tag" style="background:#F0EDF5;color:#8B7355">新手爸妈</span></td>
+          <td>手忙脚乱，频繁忘事</td>
+          <td>第一次当爸妈，喂药忘了、按摩忘了、晒太阳忘了。每天像打仗，没有系统化管理工具，全靠脑子记。</td>
+          <td>痛点放大 → 工具推荐 → 打卡统计功能展示</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tip-box">
+    <strong>💡 核心策略：</strong>以<strong>「食物排敏」</strong>为核心宣发点（差异化明显），以<strong>「家庭共享」</strong>为第二宣发点（场景感强），辅以<strong>「AI育儿」</strong>和<strong>「任务打卡」</strong>作为补充内容线。不追求面面俱到，集中火力打透排敏这个认知。
+  </div>
+</div>
+
+
+<!-- ===== 第三章：小红书内容 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">📕</span> 小红书爆款图文笔记 · 用户视角（5篇）</div>
+  <div class="section-desc">以用户/妈妈视角撰写，重干货+重颜值+重情绪。以下5篇覆盖科普种草/工具种草/情绪共鸣/家庭场景/合集盘点5种类型</div>
+
+  <!-- 笔记1 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform xhs">📕 小红书</span>
+      <span class="note-type">干货科普型</span>
+      <div class="note-title">宝宝辅食排敏到底怎么做？一篇全讲清！（附排敏工具推荐）</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">辅食排敏搞不清？一篇讲透，低中高敏天数全列了</div><div class="alt-item">医生说试3天就够？高敏食物至少5天！附排敏工具</div></div>
+      <div class="note-meta"><span>🎯 目标人群：辅食期妈妈</span><span>🖼️ 建议配图：6-9张</span><span>⏱️ 阅读时长：3分钟</span></div>
+    </div>
+    <div class="note-body">
+      <h5>📝 正文（可直接复制发布）</h5>
+      <div class="copy-block">姐妹们！！辅食排敏怎么试、怎么记、试了哪些全忘了——今天一篇讲清楚👇
+
+🟢 什么是食物排敏？
+就是每次只给宝宝试一种新食物，连续观察几天，确认不过敏再加下一种。这是辅食排敏的科学方法。
+
+🟡 排敏天数到底怎么分？
+不是所有食物都试3天！
+🔹 低敏食物（大米、胡萝卜、苹果等）：观察1-3天
+🔹 中敏食物（蛋黄、鸡肉、鳕鱼等）：观察3天
+🔹 高敏食物（蛋白、虾、芒果、花生等）：观察5天
+
+很多妈妈一刀切试3天，高敏食物根本观察不够！
+
+🔴 排敏怎么记录才不乱？
+试过的方案：
+❌ 手写本子——忘带、找不到
+❌ 手机备忘录——格式乱、不好回顾
+❌ Excel表格——手机编辑太痛苦
+✅ 后来用了「朵叽排敏」小程序，直接按食物分类记录，过敏/喜欢状态一目了然，还能自动推荐下一个该试的食物！
+
+🟢 排敏的3个关键提醒
+1️⃣ 一次只试一种新食物，不要混着加
+2️⃣ 高敏食物建议放在上午试，方便白天观察
+3️⃣ 试过不过敏的食物可以常吃，不用再排敏
+
+我已经把排敏记录全搬到小程序了，全家都能看到，奶奶在家带娃也不会重复试或漏试，真的很省心！
+
+有排敏问题的姐妹评论区交流～</div>
+
+      <h5>🖼️ 配图建议（6-9张）</h5>
+      <ul>
+        <li>封面：宝宝吃辅食的可爱照片 + 大字标题"辅食排敏全攻略"</li>
+        <li>图2：排敏概念图解（一次只加一种食物的示意）</li>
+        <li>图3：低/中/高敏食物分类表（截图小程序内的分类）</li>
+        <li>图4-5：排敏记录工具界面截图（展示小程序的排敏记录列表）</li>
+        <li>图6：小程序推荐下一个食物的界面截图</li>
+        <li>图7：家庭共享界面截图（体现全家可看）</li>
+        <li>图8-9：排敏3个关键提醒的文字卡片</li>
+      </ul>
+
+      <h5>🏷️ 话题标签</h5>
+      <div class="tags">
+        <span class="tag">#宝宝辅食</span>
+        <span class="tag">#辅食排敏</span>
+        <span class="tag">#食物过敏</span>
+        <span class="tag">#新手妈妈</span>
+        <span class="tag">#6个月辅食</span>
+        <span class="tag">#育儿好物分享</span>
+        <span class="tag">#宝宝辅食日记</span>
+        <span class="tag">#敏宝妈妈</span>
+      </div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：500-2000赞</span>
+      <span>🎯 内容目标：建立专业信任 → 种草小程序</span>
+    </div>
+  </div>
+
+  <!-- 笔记2 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform xhs">📕 小红书</span>
+      <span class="note-type">工具种草型</span>
+      <div class="note-title">被问爆的宝宝排敏记录工具！终于不用手写Excel了 😭</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">排敏记录从Excel搬到小程序，我后悔没早点用</div><div class="alt-item">这个排敏小程序，我把用了半年的Excel删了</div></div>
+      <div class="note-meta"><span>🎯 目标人群：正在用笨办法记录的妈妈</span><span>🖼️ 建议配图：5-7张</span><span>⏱️ 阅读时长：2分钟</span></div>
+    </div>
+    <div class="note-body">
+      <h5>📝 正文（可直接复制发布）</h5>
+      <div class="copy-block">姐妹们我哭！！终于找到一个能好好记录宝宝排敏的工具了！！
+
+之前排敏全靠Excel，手机上编辑表格是什么酷刑你们知道吗……字小到眯眼，列宽永远不对，每次想看"上周试了什么"要翻半天。
+
+然后被群里的妈妈安利了「朵叽排敏」小程序，不用下载直接搜，我直接把Excel删了👇
+
+✅ 特别戳我的3个点：
+
+1️⃣ 食材分类超清晰
+低敏/中敏/高敏直接分好类，不用自己查"这个算什么敏度"。选好食物直接开始排敏记录，日期、天数自动算好。
+
+2️⃣ 过敏/喜欢一目了然
+每种食物记录后会标记状态——过敏❌ 喜欢✅ 还在观察⏳。试过的食物全在列表里，复诊时给医生一看就懂。
+
+3️⃣ 全家都能看！！
+这个真的太香了。我加完排敏食物，老公和婆婆手机上同步能看到。以前婆婆带娃总问"今天能吃什么"，现在她自己打开就知道了。
+
+还有个AI育儿大师功能，我半夜焦虑宝宝是不是过敏，直接问它，比网上查靠谱多了。
+
+界面也很好看，MUJI风莫兰迪色，截图发朋友圈都有人问是什么App 😂
+
+搜「朵叽排敏」就能找到，完全免费不花钱，姐妹们冲！</div>
+
+      <h5>🖼️ 配图建议（5-7张）</h5>
+      <ul>
+        <li>封面：小程序排敏主页截图 + 大字"被问爆的排敏工具"</li>
+        <li>图2：Excel vs 小程序对比图（左右分屏，左边乱糟糟Excel，右边整洁小程序）</li>
+        <li>图3：食材分类界面截图（低/中/高敏分类展示）</li>
+        <li>图4：排敏记录列表截图（过敏/喜欢标记一目了然）</li>
+        <li>图5：家庭共享界面截图</li>
+        <li>图6：AI育儿大师对话截图</li>
+        <li>图7：整体界面美观展示（MUJI风截图）</li>
+      </ul>
+
+      <h5>🏷️ 话题标签</h5>
+      <div class="tags">
+        <span class="tag">#育儿好物</span>
+        <span class="tag">#宝宝辅食排敏</span>
+        <span class="tag">#敏宝日常</span>
+        <span class="tag">#辅食记录</span>
+        <span class="tag">#育儿工具推荐</span>
+        <span class="tag">#妈妈必备</span>
+        <span class="tag">#实用小程序</span>
+      </div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：300-1500赞</span>
+      <span>🎯 内容目标：直接种草 → 搜索转化</span>
+    </div>
+  </div>
+
+  <!-- 笔记3 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform xhs">📕 小红书</span>
+      <span class="note-type">情绪共鸣型</span>
+      <div class="note-title">宝宝第一次过敏那天，我在急诊室门口哭了…</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">蛋白只吃两口，宝宝起了满身荨麻疹…</div><div class="alt-item">过敏那晚在急诊门口哭，后来终于找到了排敏方法</div></div>
+      <div class="note-meta"><span>🎯 目标人群：过敏宝宝家长</span><span>🖼️ 建议配图：4-6张</span><span>⏱️ 阅读时长：3分钟</span></div>
+    </div>
+    <div class="note-body">
+      <h5>📝 正文（可直接复制发布）</h5>
+      <div class="copy-block">那天给宝宝试了蛋白，才吃了两口。
+
+二十分钟后，嘴角开始发红，然后是脖子，然后是一片一片的荨麻疹。
+
+我抱着宝宝冲到医院的时候手都在抖。
+
+医生说：蛋白是高敏食物，排敏应该观察5天，你们试几天了？
+
+我说：今天第一天。
+
+医生叹了口气：高敏食物怎么能随便试，至少要连续观察5天啊。
+
+那天晚上我在急诊室门口哭了好久。不是心疼蛋白——是心疼自己明明很努力在做妈妈，却连排敏天数都搞不清楚。
+
+回家后我翻自己的备忘录，记录乱七八糟的，试了什么、试了几天、有没有反应——全对不上。
+
+后来有个妈妈给我推荐了「朵叽排敏」小程序。
+
+它直接告诉我：
+🟢 低敏食物 → 观察1-3天
+🟡 中敏食物 → 观察3天  
+🔴 高敏食物 → 观察5天
+
+每种食物选好就开始记录，第几天、什么反应、过敏还是安全——清清楚楚。
+
+特别实用的是，它会在试完一种食物后，自动推荐下一个该试的。
+
+我不用再每天纠结"今天试什么"了。
+
+现在排敏记录成了我手机里常打开的页面。每安全通过一种食物，就像闯关成功了一样。
+
+如果也有妈妈在排敏路上手忙脚乱，我想告诉你：
+不是你不努力，是没人给你一个清晰的方法。
+
+我们都会熬过去的 💪</div>
+
+      <h5>🖼️ 配图建议（4-6张）</h5>
+      <ul>
+        <li>封面：暖色调氛围图 + 手写体标题"宝宝第一次过敏"</li>
+        <li>图2：过敏等级分类卡片（低/中/高敏天数对比）</li>
+        <li>图3-4：小程序排敏记录界面截图（体现记录清晰）</li>
+        <li>图5：推荐下一个食物的界面截图</li>
+        <li>图6：温暖收尾图（文字："我们都会熬过去的"）</li>
+      </ul>
+
+      <h5>🏷️ 话题标签</h5>
+      <div class="tags">
+        <span class="tag">#敏宝妈妈</span>
+        <span class="tag">#食物过敏</span>
+        <span class="tag">#宝宝过敏</span>
+        <span class="tag">#育儿焦虑</span>
+        <span class="tag">#辅食排敏</span>
+        <span class="tag">#妈妈的心事</span>
+        <span class="tag">#敏宝日记</span>
+      </div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：800-3000赞（情绪共鸣型容易爆）</span>
+      <span>🎯 内容目标：引发共情 → 评论区互动 → 种草工具</span>
+    </div>
+  </div>
+
+  <!-- 笔记4 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform xhs">📕 小红书</span>
+      <span class="note-type">家庭场景型</span>
+      <div class="note-title">让奶奶也能看到宝宝排敏记录，隔代育儿终于不撕了！</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">婆婆偷偷喂蛋白那天，宝宝起疹子全家吵翻了</div><div class="alt-item">隔代育儿不吵架的秘诀：全家人看同一份排敏记录</div></div>
+      <div class="note-meta"><span>🎯 目标人群：隔代育儿家庭</span><span>🖼️ 建议配图：5-6张</span><span>⏱️ 阅读时长：2分钟</span></div>
+    </div>
+    <div class="note-body">
+      <h5>📝 正文（可直接复制发布）</h5>
+      <div class="copy-block">有没有同款婆婆/妈妈的：
+
+你说"今天不能试新食物，在排敏期"
+她说"我养了三个孩子都没这么多事"
+然后偷偷给宝宝尝了一口蛋白……
+
+然后宝宝起疹子了。
+然后全家吵了一架。
+
+别问我怎么知道的，都是血泪教训。
+
+后来我发现，隔代育儿冲突的本质不是"谁对谁错"，而是<strong>信息不同步</strong>。
+
+婆婆不是不想科学喂养，是根本看不到排敏进度。你嘴上说"在排敏"，她只知道三个字，不知道试了什么、还要试几天、哪些不能碰。
+
+后来我找到了「朵叽排敏」小程序的家庭共享功能👇
+
+✅ 我创建一个家庭，生成邀请码
+✅ 婆婆扫码就加入了
+✅ 我添加排敏食物 → 婆婆手机上同步看到
+✅ "今天试了鳕鱼，中敏食物，观察3天"
+✅ 婆婆自己打开就知道今天该喂什么、不能喂什么
+
+从此再也没因为"今天喂什么"吵过架。
+
+婆婆甚至开始主动记录"宝宝今天吃了多少、有没有起疹子"，比我还认真 😂
+
+说真的，让老人参与进来最好的方式，不是说服，是给工具。
+
+搜「朵叽排敏」就能找到，免费的，全家人一起用 ❤️</div>
+
+      <h5>🖼️ 配图建议（5-6张）</h5>
+      <ul>
+        <li>封面：家庭温馨场景 + 大字标题"隔代育儿不撕了"</li>
+        <li>图2：家庭共享功能界面截图（创建家庭+邀请码）</li>
+        <li>图3：排敏记录同步展示（两个人的手机对比）</li>
+        <li>图4：排敏食物列表截图（标记状态清晰）</li>
+        <li>图5：功能亮点文字卡片（3个核心点）</li>
+        <li>图6：温暖收尾（全家一起用手机截图感）</li>
+      </ul>
+
+      <h5>🏷️ 话题标签</h5>
+      <div class="tags">
+        <span class="tag">#隔代育儿</span>
+        <span class="tag">#婆婆带娃</span>
+        <span class="tag">#家庭育儿</span>
+        <span class="tag">#辅食排敏</span>
+        <span class="tag">#育儿工具</span>
+        <span class="tag">#新手爸妈</span>
+        <span class="tag">#家庭共享</span>
+      </div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：400-1800赞</span>
+      <span>🎯 内容目标：场景痛点共鸣 → 家庭共享功能种草</span>
+    </div>
+  </div>
+
+  <!-- 笔记5 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform xhs">📕 小红书</span>
+      <span class="note-type">合集盘点型</span>
+      <div class="note-title">新手妈妈必看！辅食排敏5大误区，90%的人中招了</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">辅食排敏踩了5个坑，每个都后悔系列</div><div class="alt-item">这5个排敏误区，新手妈妈千万别踩</div></div>
+      <div class="note-meta"><span>🎯 目标人群：所有辅食期妈妈</span><span>🖼️ 建议配图：6张</span><span>⏱️ 阅读时长：2分钟</span></div>
+    </div>
+    <div class="note-body">
+      <h5>📝 正文（可直接复制发布）</h5>
+      <div class="copy-block">姐妹们！辅食排敏这5个坑，我全踩过，今天一次性帮你们避掉👇
+
+❌ 误区1：所有食物都试3天
+低敏食物试1-3天就够了，但高敏食物（蛋白、虾、芒果）至少要5天！一刀切试3天，高敏反应根本看不出来。
+
+❌ 误区2：一次试两种新食物
+"反正都是低敏的，一起试吧"——不行！万一过敏了，你根本不知道是哪种食物引起的。一次只加一种！
+
+❌ 误区3：晚上试新食物
+晚上试新食物，如果过敏反应出现在半夜，你根本看不到。建议上午试，白天方便观察。
+
+❌ 误区4：试过不过敏就再也不吃了
+排敏通过≠只能吃一次。安全通过的食物要常吃维持耐受。很多妈妈排敏完就不给了，反而更容易过敏。
+
+❌ 误区5：靠脑子记排敏进度
+"试了哪些来着？""胡萝卜是第几天了？"——一问三不知。排敏不记录，等于白排。
+
+✅ 正确做法：
+用「朵叽排敏」小程序记录，低/中/高敏天数自动提醒，全家共享同步，试完自动推荐下一个。
+
+不用下载，直接搜，免费！
+排敏路上少走弯路，省下的焦虑时间多陪宝宝 ❤️</div>
+
+      <h5>🖼️ 配图建议（6张）</h5>
+      <ul>
+        <li>封面：大字标题"辅食排敏5大误区" + 感叹号设计</li>
+        <li>图2-5：每个误区一张文字卡片（配图+文字说明）</li>
+        <li>图6：小程序排敏记录界面截图 + "正确做法"引导</li>
+      </ul>
+
+      <h5>🏷️ 话题标签</h5>
+      <div class="tags">
+        <span class="tag">#宝宝辅食</span>
+        <span class="tag">#辅食排敏</span>
+        <span class="tag">#新手妈妈必看</span>
+        <span class="tag">#育儿避坑</span>
+        <span class="tag">#食物过敏</span>
+        <span class="tag">#6个月宝宝</span>
+        <span class="tag">#辅食添加顺序</span>
+      </div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：600-2500赞（盘点型易收藏转发）</span>
+      <span>🎯 内容目标：高收藏率 → 算法推流 → 品牌曝光</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== 第三章B：小红书开发者视角 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">👩‍💻</span> 小红书爆款图文笔记 · 开发者视角（5篇）</div>
+  <div class="section-desc">以宝妈开发者第一人称撰写，展示"解决自己真实痛点"的真诚感。覆盖开发动机/家庭共记/任务打卡/清单功能/全功能总览5个角度。每篇配有AI生成封面图</div>
+
+  <!-- 开发者笔记1 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform xhs">📕 小红书</span>
+      <span class="note-type">开发者动机 · 情绪共鸣型</span>
+      <div class="note-title">我做了个排敏小程序，因为当初自己崩溃了</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">排敏排到崩溃那天，我决定自己做个工具</div><div class="alt-item">一个宝妈的深夜：从排敏崩溃到做出一个小程序</div></div>
+      <div class="note-meta"><span>🎯 目标人群：辅食期妈妈 + 宝妈群体</span><span>🖼️ 封面已生成</span><span>⏱️ 阅读时长：2分钟</span></div>
+    </div>
+    <div class="note-body">
+      <img class="note-cover-img" src="宣发images/dev-story.jpg" alt="宝妈开发者深夜工作台封面">
+      <h5>📝 正文（可直接复制发布）</h5>
+      <div class="copy-block">排敏排到崩溃那天晚上，我坐在客厅做了个决定。
+
+去年这个时候，我家宝宝刚满6个月，开始加辅食。儿保医生说"每种新食物试3天观察有没有过敏"，我当时觉得——就这？很简单啊。
+
+结果第二周就崩溃了。
+
+胡萝卜试了几天？忘了。鳕鱼是哪天开始的？不确定。昨天起的疹子是食物引起的还是蚊子咬的？不知道。
+
+我试过手机备忘录，试过Excel，试过拍照片记——全乱了。到复诊时医生问"最近试了什么食物"，我翻了5分钟备忘录，什么都没找到。
+
+那天晚上哄完娃睡觉，我坐在客厅发呆，突然想：我是个写代码的宝妈，为什么不给自己做个工具？
+
+就这么开始的。每天下班等娃睡了写代码，写到凌晨一两点。周末带娃间隙改bug。
+
+难的部分不是技术，是想清楚排敏到底需要什么功能。食物要按过敏等级分类，低敏1-3天、中敏3天、高敏5天。每种食物要记录开始日期和反应。试完一个要推荐下一个。全家都要能看到。
+
+做了三个月，靠前版上线。我家那位靠前个用，说"终于不用每天问我今天试什么了"。
+
+后来发现很多妈妈有同样的痛点，就持续优化。现在排敏记录、家庭共享、AI育儿问答、任务打卡都有了。
+
+做了半年一个很深的感受：真正有用的工具，是解决自己真实痛点的工具。
+
+搜索「朵叽排敏」就能找到，免费的。希望能帮到同样崩溃的你。</div>
+
+      <h5>🏷️ 话题标签</h5>
+      <div class="tags">
+        <span class="tag">#独立开发</span>
+        <span class="tag">#辅食排敏</span>
+        <span class="tag">#宝宝辅食</span>
+        <span class="tag">#新手爸妈</span>
+        <span class="tag">#敏宝妈妈</span>
+        <span class="tag">#育儿好物</span>
+        <span class="tag">#宝妈日常</span>
+      </div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：800-3000赞（开发者故事容易引发共鸣）</span>
+      <span>🎯 内容目标：建立开发者人设 → 品牌信任 → 搜索转化</span>
+    </div>
+  </div>
+
+  <!-- 开发者笔记2 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform xhs">📕 小红书</span>
+      <span class="note-type">家庭共记 · 场景种草型</span>
+      <div class="note-title">做了家庭共记排敏，终于不用吵架了</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">调研20个家庭后发现，隔代育儿吵架就因为信息不同步</div><div class="alt-item">做了家庭共记后，用户说终于不吵了</div></div>
+      <div class="note-meta"><span>🎯 目标人群：隔代育儿家庭</span><span>🖼️ 封面已生成</span><span>⏱️ 阅读时长：2分钟</span></div>
+    </div>
+    <div class="note-body">
+      <img class="note-cover-img" src="宣发images/family-share.jpg" alt="家庭共享封面">
+      <h5>📝 正文（可直接复制发布）</h5>
+      <div class="copy-block">做这个功能之前，我调研了20多个家庭。
+
+发现一个共同问题：妈妈上班，老人带娃。妈妈说"今天不能试新食物"，老人觉得"我当年养你也没这么多事"。
+
+然后偷偷给宝宝尝了蛋白。然后宝宝起疹子了。然后全家吵了一架。
+
+不是谁对谁错的问题，是信息不同步。
+
+老人不是不想科学喂养，是看不到排敏进度。你嘴上说"在排敏"，她只知道三个字，不知道试了什么、还要几天、哪些不能碰。
+
+所以我做了家庭共记功能。创建一个家庭，生成邀请码，奶奶扫码就加入了。我添加排敏食物，奶奶手机上同步看到——"今天是鳕鱼，中敏，观察3天，第2天"。
+
+不用打电话问，不用发消息确认，打开手机就知道。
+
+有个用户跟我说，她婆婆现在比她还认真，每天主动记录"宝宝吃了多少、有没有起疹子"。
+
+还有个爸爸反馈说，他出差也能看到家里的排敏进度，不再是"丧偶式育儿"了。
+
+做产品的人都知道，好的功能不是炫技，是解决一个真实场景里的矛盾。
+
+隔代育儿的矛盾，很多时候不是观念问题，是工具问题。给对了工具，所有人都能配合上。
+
+搜索「朵叽排敏」就能找到，家庭共记是免费功能。</div>
+
+      <h5>🏷️ 话题标签</h5>
+      <div class="tags">
+        <span class="tag">#隔代育儿</span>
+        <span class="tag">#家庭育儿</span>
+        <span class="tag">#辅食排敏</span>
+        <span class="tag">#育儿好物</span>
+        <span class="tag">#婆媳关系</span>
+        <span class="tag">#带娃日常</span>
+        <span class="tag">#新手妈妈</span>
+      </div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：500-2000赞</span>
+      <span>🎯 内容目标：场景痛点共鸣 → 家庭共记功能种草</span>
+    </div>
+  </div>
+
+  <!-- 开发者笔记3 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform xhs">📕 小红书</span>
+      <span class="note-type">任务打卡 · 干货工具型</span>
+      <div class="note-title">给宝宝做了个循环打卡，太省心了</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">新手爸妈忘事怎么办？我做了个循环打卡功能</div><div class="alt-item">喂药忘了按摩忘了…这个打卡功能解放了我的脑子</div></div>
+      <div class="note-meta"><span>🎯 目标人群：新手爸妈</span><span>🖼️ 封面已生成</span><span>⏱️ 阅读时长：2分钟</span></div>
+    </div>
+    <div class="note-body">
+      <img class="note-cover-img" src="宣发images/task-clockin.jpg" alt="任务打卡封面">
+      <h5>📝 正文（可直接复制发布）</h5>
+      <div class="copy-block">新手爸妈几乎天天遇到同一个问题：忘事。
+
+喂药忘了。按摩忘了。晒太阳忘了。AD滴剂忘了。抬头练习忘了。
+
+每天像打仗，全靠脑子记，到晚上回忆"今天药喂了吗"，不确定，又不敢补喂。
+
+所以我做了个任务管理功能，专门解决"忘记"这件事。
+
+核心逻辑很简单：把每天要做的育儿事项设成循环任务——喂药设成每天、洗澡设成每两天、体检设成每月。到了时间自动出现在今日清单里，做完打个卡就行。
+
+打卡后会自动统计连续打卡天数、总完成率、单个任务的打卡日历。
+
+比如喂药这个场景，医生说吃5天，设一个5天的每日任务，每天打卡。到第5天系统提示已完成，不用自己数天数。
+
+还有个细节：循环任务可以选星期几。比如"周二周四做抚触"，自动只在那天出现，不会天天提醒你烦。
+
+全家共享任务，爸爸出差也能看到今天该做什么，做完没做完。
+
+我自己的体会是，自从用了这个功能，脑子里少了一个"待办事项的焦虑感"。不用时刻想着"今天还有什么没做"，打开手机看一眼就行。
+
+新手爸妈的脑子本来就不够用了，能外包的都外包吧。
+
+搜索「朵叽排敏」就能找到，任务管理是免费功能。</div>
+
+      <h5>🏷️ 话题标签</h5>
+      <div class="tags">
+        <span class="tag">#新手爸妈</span>
+        <span class="tag">#育儿工具</span>
+        <span class="tag">#宝宝辅食</span>
+        <span class="tag">#任务打卡</span>
+        <span class="tag">#科学育儿</span>
+        <span class="tag">#带娃日常</span>
+        <span class="tag">#母婴好物</span>
+      </div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：400-1800赞</span>
+      <span>🎯 内容目标：忘事痛点 → 任务打卡功能种草</span>
+    </div>
+  </div>
+
+  <!-- 开发者笔记4 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform xhs">📕 小红书</span>
+      <span class="note-type">清单功能 · 好物种草型</span>
+      <div class="note-title">做了个育儿清单功能，脑子终于解放了</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">每天翻备忘录找辅食信息？做了个清单功能治好了</div><div class="alt-item">育儿清单怎么做？参考了3个App后我自己写了一个</div></div>
+      <div class="note-meta"><span>🎯 目标人群：新手妈妈</span><span>🖼️ 封面已生成</span><span>⏱️ 阅读时长：2分钟</span></div>
+    </div>
+    <div class="note-body">
+      <img class="note-cover-img" src="宣发images/checklist.jpg" alt="清单功能封面">
+      <h5>📝 正文（可直接复制发布）</h5>
+      <div class="copy-block">有段时间我每天早上醒来头一件事不是看宝宝，是翻备忘录——今天辅食吃什么？要加新食物吗？排敏进行到哪一步了？
+
+后来备忘录越记越长，翻到想找的信息要滚半天。
+
+我就想，为什么不把这些做成一个清单？按类别分好，一目了然。
+
+于是做了清单功能：
+
+辅食清单——今天要试的食物、已排敏的食物、过敏的食物，分门别类排列。不用翻备忘录，打开就看到进度。
+
+任务清单——今天的待办事项，喂药、按摩、晒太阳，做完一个划掉一个。
+
+排敏进度清单——当前正在排敏的食物、剩余观察天数、有没有反应，一条一条排好。
+
+让我老公特别满意的一个细节是：清单是分家庭隔离的。
+
+什么意思呢？如果家里有两个宝宝（比如双胞胎），或者爷爷奶奶家也带娃，每个家庭的清单是独立的，不会混在一起。
+
+做这个功能的时候我参考了很多清单类App——Things、TickTick、苹果提醒事项。但它们都是通用工具，不懂"育儿场景"。
+
+育儿清单不需要复杂的GTD逻辑，需要的是：简单，看一眼就懂。按育儿场景分类，不是按"工作/生活/学习"。全家能看。不用学就会用。
+
+现在每天早上我老公打开手机看一眼清单，就知道今天要做什么。不用问我，不用翻备忘录，不用焦虑"是不是忘了什么"。
+
+这就是工具的意义——把脑子的负担转移到手机上。
+
+搜索「朵叽排敏」就能找到，清单功能是免费的。</div>
+
+      <h5>🏷️ 话题标签</h5>
+      <div class="tags">
+        <span class="tag">#新手妈妈</span>
+        <span class="tag">#育儿清单</span>
+        <span class="tag">#宝宝辅食</span>
+        <span class="tag">#育儿好物</span>
+        <span class="tag">#带娃神器</span>
+        <span class="tag">#科学育儿</span>
+        <span class="tag">#母婴好物分享</span>
+      </div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：500-2000赞</span>
+      <span>🎯 内容目标：备忘录痛点 → 清单功能种草</span>
+    </div>
+  </div>
+
+  <!-- 开发者笔记5 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform xhs">📕 小红书</span>
+      <span class="note-type">全功能总览 · 合集盘点型</span>
+      <div class="note-title">独立开发半年，育儿小程序功能全览</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">半年做了6个功能，这个排敏小程序全部功能一览</div><div class="alt-item">一个宝妈独立开发的小程序，6大功能全梳理</div></div>
+      <div class="note-meta"><span>🎯 目标人群：所有目标人群</span><span>🖼️ 封面已生成</span><span>⏱️ 阅读时长：3分钟</span></div>
+    </div>
+    <div class="note-body">
+      <img class="note-cover-img" src="宣发images/all-features.jpg" alt="全功能总览封面">
+      <h5>📝 正文（可直接复制发布）</h5>
+      <div class="copy-block">半年前因为自己排敏崩溃了，做了个小程序。现在功能越来越完整了，做个总览。
+
+排敏管理这块是核心功能——食材按低敏/中敏/高敏分类，天数自动提醒。每种食物记录过敏反应和喜好状态。试完一种自动推荐下一个该试的。本地加云端双写，不怕丢数据。
+
+家庭共记——创建家庭，邀请码扫码加入。排敏记录、宝宝信息全家同步。奶奶在家也能看到今天该吃什么。数据按家庭隔离，多宝宝不混淆。
+
+任务管理——每日、每周、每月循环任务。打卡后自动统计连续天数和完成率。喂药设5天任务，到时间自动提醒。全家共享任务进度。
+
+清单功能——辅食清单：今天吃什么、排敏到哪了。任务清单：今天待办一目了然。按家庭隔离，双胞胎也不混。
+
+AI育儿大师——树洞模式：焦虑了可以倾诉。求助模式：科学步骤指导。深夜宝宝哭闹不知道怎么办？直接问。
+
+打卡统计——连续打卡天数、打卡日历视图、完成率和趋势图。
+
+设计上走了MUJI无印良品风格，莫兰迪色系，界面干净不花哨。小程序免下载免安装。
+
+全部功能免费。搜索「朵叽排敏」就能找到。
+
+做这个小程序的初衷很简单：解决自己带娃的真实痛点。没想到上线后很多妈妈说有用，就一直优化到现在。
+
+如果你也在经历辅食排敏的崩溃、隔代育儿的争吵、忘东忘西的焦虑——可以试试看。
+
+不是什么了不起的产品，但每一个功能都是自己踩过坑之后做的。</div>
+
+      <h5>🏷️ 话题标签</h5>
+      <div class="tags">
+        <span class="tag">#独立开发</span>
+        <span class="tag">#育儿好物</span>
+        <span class="tag">#宝宝辅食</span>
+        <span class="tag">#辅食排敏</span>
+        <span class="tag">#新手爸妈</span>
+        <span class="tag">#科学育儿</span>
+        <span class="tag">#小程序推荐</span>
+        <span class="tag">#母婴好物</span>
+      </div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：600-2500赞（合集型高收藏率）</span>
+      <span>🎯 内容目标：全功能展示 → 品牌认知 → 搜索转化</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== 第四章：抖音视频脚本 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">🎬</span> 抖音爆款视频脚本（4个）</div>
+  <div class="section-desc">抖音节奏快、前3秒定生死。以下4个脚本覆盖口播痛点/场景演示/情绪共鸣/干货盘点</div>
+
+  <!-- 视频1 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform dy">🎬 抖音</span>
+      <span class="note-type">口播痛点型</span>
+      <div class="note-title">你家宝宝辅食排敏做对了吗？90%的妈妈都搞错了</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">辅食排敏别一刀切试3天！高敏食物要5天</div><div class="alt-item">90%的妈妈排敏方法都错了，你中招了吗</div></div>
+      <div class="note-meta"><span>⏱️ 时长：35-40秒</span><span>👤 形式：真人口播</span><span>🎵 BGM：轻快节奏感</span></div>
+    </div>
+    <div class="note-body">
+      <h5>🎬 分镜脚本</h5>
+
+      <div class="script-line">
+        <div class="script-time">0-3秒</div>
+        <div>
+          <div class="script-content">"你家宝宝辅食排敏，是不是所有食物都试3天？"</div>
+          <div class="script-direction">【画面】特写人脸，表情严肃，字幕大字弹出。背景可加红色"✖"动画</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">3-8秒</div>
+        <div>
+          <div class="script-content">"错了！高敏食物至少要观察5天，你试3天根本看不出过敏反应！"</div>
+          <div class="script-direction">【画面】画面切到食物分类图：低敏1-3天 / 中敏3天 / 高敏5天，用动画弹出来</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">8-15秒</div>
+        <div>
+          <div class="script-content">"90%的妈妈排敏全靠脑子记——试了什么？试了几天？有没有反应？一问三不知。等于白排！"</div>
+          <div class="script-direction">【画面】手机备忘录乱糟糟的画面，打个大叉。可加手机拍备忘录的实景</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">15-28秒</div>
+        <div>
+          <div class="script-content">"后来我用了朵叽排敏小程序，低中高敏天数自动提醒，试完一个自动推荐下一个，全家都能看到排敏进度。不用下载，直接搜。"</div>
+          <div class="script-direction">【画面】录屏展示小程序操作：选食物→开始排敏→天数自动计算→推荐下一个食物。节奏要快</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">28-35秒</div>
+        <div>
+          <div class="script-content">"排敏这件事，方法对了其实很简单。搜索「朵叽排敏」，免费用的。"</div>
+          <div class="script-direction">【画面】小程序搜索界面截图 + 微笑+指引手势。底部固定引导文字</div>
+        </div>
+      </div>
+
+      <h5>🏷️ 话题标签 & 文案</h5>
+      <div class="copy-block">文案：你家宝宝辅食排敏做对了吗？90%的妈妈都搞错了！低中高敏天数不一样，别再一刀切试3天了 #宝宝辅食 #辅食排敏 #新手妈妈 #食物过敏 #育儿好物</div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：1万-10万播放</span>
+      <span>🎯 内容目标：痛点引入 → 工具种草 → 搜索转化</span>
+    </div>
+  </div>
+
+  <!-- 视频2 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform dy">🎬 抖音</span>
+      <span class="note-type">场景演示型</span>
+      <div class="note-title">一家三口共享宝宝排敏记录是什么体验</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">让奶奶也能看到排敏记录，隔代育儿不吵了</div><div class="alt-item">全家共享排敏进度后，婆婆不偷偷喂了</div></div>
+      <div class="note-meta"><span>⏱️ 时长：40-50秒</span><span>👤 形式：情景演绎</span><span>🎵 BGM：温馨日常感</span></div>
+    </div>
+    <div class="note-body">
+      <h5>🎬 分镜脚本</h5>
+
+      <div class="script-line">
+        <div class="script-time">0-5秒</div>
+        <div>
+          <div class="script-content">妈妈（对镜头）："隔代育儿矛盾根源是什么？就是奶奶不知道今天该给宝宝喂什么。"</div>
+          <div class="script-direction">【画面】妈妈坐在沙发上，表情无奈。字幕弹出</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">5-12秒</div>
+        <div>
+          <div class="script-content">奶奶（画外音）："我今天给宝宝试了蛋黄啊。" 妈妈（惊）："蛋黄是中敏食物！上次试的还没过观察期呢！"</div>
+          <div class="script-direction">【画面】切到奶奶喂宝宝吃饭的画面，再切妈妈吃惊表情。字幕标记冲突感</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">12-20秒</div>
+        <div>
+          <div class="script-content">妈妈（旁白）："后来我发现了朵叽排敏小程序的家庭共享功能——"</div>
+          <div class="script-direction">【画面】手机录屏：创建家庭→生成邀请码→奶奶扫码加入。动画箭头标注关键步骤</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">20-35秒</div>
+        <div>
+          <div class="script-content">妈妈："我添加排敏食物，奶奶手机上同步就看到了。今天是鳕鱼，中敏，观察3天，第2天。奶奶再也不用问我了。"</div>
+          <div class="script-direction">【画面】分屏展示——左边妈妈手机添加食物，右边奶奶手机同步显示。底部标注"实时同步"</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">35-45秒</div>
+        <div>
+          <div class="script-content">奶奶（笑着）："我自己就能看到，不用总问你了。" 妈妈："隔代育儿不吵架的秘密，就是让所有人看到同一份记录。"</div>
+          <div class="script-direction">【画面】奶奶和妈妈一起看手机笑的画面。温馨感拉满。底部文字"搜索「朵叽排敏」"</div>
+        </div>
+      </div>
+
+      <h5>🏷️ 话题标签 & 文案</h5>
+      <div class="copy-block">文案：让奶奶也能看到宝宝排敏记录，隔代育儿终于不撕了！全家共享排敏进度的体验 #隔代育儿 #婆婆带娃 #辅食排敏 #育儿好物 #家庭育儿</div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：2万-15万播放（场景型容易共鸣）</span>
+      <span>🎯 内容目标：场景痛点 → 全家共享功能种草</span>
+    </div>
+  </div>
+
+  <!-- 视频3 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform dy">🎬 抖音</span>
+      <span class="note-type">情绪共鸣型</span>
+      <div class="note-title">过敏宝宝妈妈的一天</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">过敏宝宝妈妈的一天，每天都在数日子</div><div class="alt-item">排敏第30天，终于不用纠结今天试什么了</div></div>
+      <div class="note-meta"><span>⏱️ 时长：30-40秒</span><span>👤 形式：第一人称口播+空镜</span><span>🎵 BGM：温柔钢琴+情感渲染</span></div>
+    </div>
+    <div class="note-body">
+      <h5>🎬 分镜脚本</h5>
+
+      <div class="script-line">
+        <div class="script-time">0-5秒</div>
+        <div>
+          <div class="script-content">（旁白，声音轻柔）："过敏宝宝的妈妈，每天都在数日子。"</div>
+          <div class="script-direction">【画面】清晨阳光洒在婴儿床上，宝宝睡觉的空镜。字幕缓缓出现</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">5-12秒</div>
+        <div>
+          <div class="script-content">"胡萝卜试了第2天，没有反应，松了口气。但又开始焦虑——下一个该试什么？"</div>
+          <div class="script-direction">【画面】妈妈翻手机备忘录的画面，表情焦虑。画面色调偏冷</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">12-20秒</div>
+        <div>
+          <div class="script-content">"以前排敏全靠脑子记，试了什么、第几天、有没有反应，全混在一起。每次复诊医生一问，我一脸懵。"</div>
+          <div class="script-direction">【画面】手机备忘录凌乱画面的特写，切到医院候诊的画面</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">20-30秒</div>
+        <div>
+          <div class="script-content">"后来用了朵叽排敏，每一种食物的进度清清楚楚，试完一个自动推荐下一个。我终于不用每天纠结'今天试什么'了。"</div>
+          <div class="script-direction">【画面】小程序录屏：排敏记录列表整齐排列，推荐下一个食物的界面。画面色调转暖</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">30-35秒</div>
+        <div>
+          <div class="script-content">"每安全通过一种食物，就像闯关成功。我们都会熬过去的。"</div>
+          <div class="script-direction">【画面】妈妈抱着宝宝笑的画面，暖色调。底部文字"搜索「朵叽排敏」"</div>
+        </div>
+      </div>
+
+      <h5>🏷️ 话题标签 & 文案</h5>
+      <div class="copy-block">文案：过敏宝宝妈妈的一天。每天都在数日子，每种食物都在闯关。排敏路上，你不是一个人 #敏宝妈妈 #食物过敏 #宝宝过敏 #辅食排敏 #育儿焦虑</div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：5万-30万播放（情绪共鸣型容易爆）</span>
+      <span>🎯 内容目标：引发共情 → 评论区互动 → 工具种草</span>
+    </div>
+  </div>
+
+  <!-- 视频4 -->
+  <div class="note-card">
+    <div class="note-header">
+      <span class="note-platform dy">🎬 抖音</span>
+      <span class="note-type">干货盘点型</span>
+      <div class="note-title">宝宝排敏3天法则 vs 5天法则，你用对了吗？</div>
+      <div class="alt-titles"><div class="alt-label">📌 备选标题</div><div class="alt-item">低中高敏天数不一样，别再一刀切了</div><div class="alt-item">一张图搞懂排敏天数，3天还是5天</div></div>
+      <div class="note-meta"><span>⏱️ 时长：25-30秒</span><span>👤 形式：快节奏口播+画面切换</span><span>🎵 BGM：快节奏卡点</span></div>
+    </div>
+    <div class="note-body">
+      <h5>🎬 分镜脚本</h5>
+
+      <div class="script-line">
+        <div class="script-time">0-3秒</div>
+        <div>
+          <div class="script-content">"宝宝排敏，3天还是5天？一张图说清楚！"</div>
+          <div class="script-direction">【画面】手持道具或手势吸引注意。字幕大字弹出，3天vs5天的对比预览</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">3-8秒</div>
+        <div>
+          <div class="script-content">"低敏食物（大米、胡萝卜、苹果）→ 试1-3天就够了。"</div>
+          <div class="script-direction">【画面】绿色色块+食物图片弹出。低敏食物列表动画展示</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">8-13秒</div>
+        <div>
+          <div class="script-content">"中敏食物（蛋黄、鸡肉、鳕鱼）→ 至少观察3天。"</div>
+          <div class="script-direction">【画面】黄色色块+食物图片弹出。中敏食物列表</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">13-18秒</div>
+        <div>
+          <div class="script-content">"高敏食物（蛋白、虾、芒果、花生）→ 必须观察5天！别偷懒！"</div>
+          <div class="script-direction">【画面】红色色块+食物图片弹出。加感叹号动画</div>
+        </div>
+      </div>
+
+      <div class="script-line">
+        <div class="script-time">18-25秒</div>
+        <div>
+          <div class="script-content">"记不住？用朵叽排敏小程序，天数自动算好，试完推荐下一个，全家共享。搜索「朵叽排敏」免费领。"</div>
+          <div class="script-direction">【画面】小程序录屏快切：选食物→天数自动算→推荐下一个。底部搜索引导</div>
+        </div>
+      </div>
+
+      <h5>🏷️ 话题标签 & 文案</h5>
+      <div class="copy-block">文案：低中高敏天数不一样！别再一刀切试3天了。一张图搞懂宝宝排敏 #宝宝辅食 #辅食排敏 #育儿干货 #新手妈妈 #食物过敏</div>
+    </div>
+    <div class="note-footer">
+      <span>📊 预估数据：2万-12万播放（干货盘点型高完播率）</span>
+      <span>🎯 内容目标：干货科普 → 工具种草 → 搜索转化</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== 第五章：发布节奏 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">📅</span> 发布节奏建议</div>
+  <div class="section-desc">先打透小红书建立认知，再用抖音放大流量。4周为一个完整宣发周期</div>
+
+  <div class="card">
+    <div class="schedule-timeline">
+
+      <div class="schedule-item">
+        <div class="sch-week">第1周 · 认知建立期</div>
+        <div class="sch-title">📕 小红书：干货科普 + 情绪共鸣</div>
+        <div class="sch-desc">发布笔记1（辅食排敏全攻略）+ 笔记3（过敏妈妈的故事）。目标是建立专业信任和情感连接，让目标人群第一次接触品牌。建议周二/周四发布。</div>
+      </div>
+
+      <div class="schedule-item">
+        <div class="sch-week">第2周 · 种草转化期</div>
+        <div class="sch-title">📕 小红书：工具种草 + 家庭场景 + 合集盘点</div>
+        <div class="sch-desc">发布笔记2（排敏工具推荐）+ 笔记4（隔代育儿）+ 笔记5（5大误区）。集中展示产品功能，引导搜索转化。本周是种草高峰期，3篇隔天发布。</div>
+      </div>
+
+      <div class="schedule-item">
+        <div class="sch-week">第3周 · 流量放大期</div>
+        <div class="sch-title">🎬 抖音：口播痛点 + 场景演示</div>
+        <div class="sch-desc">发布视频1（排敏做对了吗）+ 视频2（家庭共享体验）。小红书已有认知沉淀，抖音负责放大流量漏斗。建议周三/周五黄金时段（20:00-22:00）发布。</div>
+      </div>
+
+      <div class="schedule-item">
+        <div class="sch-week">第4周 · 情感破圈期</div>
+        <div class="sch-title">🎬 抖音：情绪共鸣 + 干货盘点</div>
+        <div class="sch-desc">发布视频3（过敏宝宝妈妈的一天）+ 视频4（3天vs5天法则）。情绪共鸣型容易破圈，是冲爆款的最佳选择。同时在小红书评论区维护互动，引导到小程序。</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <strong>💡 运营小贴士：</strong>
+    <br>1. <strong>小红书发布时间</strong>：工作日 12:00-13:00 或 20:00-22:00，周末 10:00-12:00
+    <br>2. <strong>抖音发布时间</strong>：工作日 18:00-20:00 或 21:00-23:00，周末全天可发
+    <br>3. <strong>评论区话术</strong>：有人问"在哪里搜"，回复"搜索「朵叽排敏」就能找到～"并置顶
+    <br>4. <strong>互动引导</strong>：每篇笔记/视频结尾都抛出一个问题引导评论，如"你家宝宝排敏到第几种食物了？"
+    <br>5. <strong>数据复盘</strong>：发布48小时后看数据，小红书重点看「收藏率」，抖音重点看「完播率」，数据好的内容追加投放
+    <br>6. <strong>双账号矩阵</strong>：用户视角5篇用产品号发布（种草转化导向），开发者视角5篇用个人号发布（品牌人设导向），形成"用户种草 + 开发者幕后"的双视角矩阵
+    <br>7. <strong>开发者内容节奏</strong>：开发者5篇建议在第2-4周穿插发布，与用户视角内容错开1-2天，避免同质化。开发者笔记1（动机故事）建议首发，建立人设后逐步展开功能介绍
+  </div>
+</div>
+
+
+<!-- ===== 底部 ===== -->
+<div class="footer">
+  <p>📱 朵叽排敏生活全家记 · 爆款宣发内容手册</p>
+  <p>共14篇完整内容 · 10篇小红书图文（5篇用户视角 + 5篇开发者视角）+ 4篇抖音视频脚本</p>
+  <p>所有正文内容均可直接复制使用，配图建议按实际情况拍摄或截图</p>
+</div>
+
+</div>
+</body>
+</html>

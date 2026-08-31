@@ -48,7 +48,8 @@ Page({
     startDate: '2014-01-01',
     pickerEndDate: dateUtils.formatDate(new Date()),
     showJoinFamilyModal: false,
-    inviteCode: ''
+    inviteCode: '',
+    isLoggedIn: false
   },
 
   /**
@@ -405,26 +406,25 @@ Page({
 
   async onLoad(options) {
     console.log('页面加载，初始化数据...');
-    // 优先检查登录状态
-    if (!require('../../services/userService').checkLoginStatus()) {
-      wx.redirectTo({ url: '/pages/login/login' });
+    const userService = require('../../services/userService');
+    if (!userService.checkLoginStatus()) {
+      this.setData({ isLoggedIn: false, loading: false });
       return;
     }
+    this.setData({ isLoggedIn: true });
     // 初始化进行中标志，onShow 在此期间跳过，避免重复初始化
     this._loading = true;
     try {
-      // 更新当前日期
       this.updateCurrentDate();
-      // 获取用户信息
       this.getUserInfo();
-      // 加载家庭信息并设置当前家庭
-      await this.loadFamilyInfo();
-      // 调用初始化数据函数
-      await this.initData();
+      await Promise.all([
+        this.loadFamilyInfo(),
+        this.initData()
+      ]);
     } finally {
       this._loading = false;
+      this._lastLoadTime = Date.now();
       this.setData({ hasLoaded: true });
-      // 首个 onShow 被 _loading 守卫跳过，这里补一次宝宝信息完善检查（方法幂等，可安全多调）
       this.checkBabyInfoComplete();
     }
   },
@@ -433,30 +433,61 @@ Page({
    * 生命周期函数--监听页面显示
    */
   async onShow() {
-    // 优先检查登录状态，未登录直接跳转
-    if (!require('../../services/userService').checkLoginStatus()) {
-      wx.redirectTo({ url: '/pages/login/login' });
+    const userService = require('../../services/userService');
+    const wasLoggedIn = this.data.isLoggedIn;
+    const isLoggedIn = userService.checkLoginStatus();
+    this.setData({ isLoggedIn });
+    if (!isLoggedIn) {
+      this.setData({ loading: false });
+      return;
+    }
+    // 如果之前未登录，现在已登录（刚从登录页返回），执行完整初始化
+    if (!wasLoggedIn) {
+      this._loading = true;
+      try {
+        this.updateCurrentDate();
+        this.getUserInfo();
+        await Promise.all([
+          this.loadFamilyInfo(),
+          this.initData()
+        ]);
+      } finally {
+        this._loading = false;
+        this.setData({ hasLoaded: true });
+        this.checkBabyInfoComplete();
+      }
       return;
     }
     // onLoad 初始化尚未完成，跳过本次刷新
     if (this._loading) {
       return;
     }
-    // 避免 onLoad 和 onShow 首次重复初始化
     if (!this.data.hasLoaded) {
       this.setData({ hasLoaded: true });
-    } else {
-      // 更新当前日期
+      return; // 首次由 onLoad 负责，onShow 跳过
+    }
+    // 数据新鲜度检查：30 秒内不重复加载，仅更新日期
+    const now = Date.now();
+    if (this._lastLoadTime && now - this._lastLoadTime < 30000) {
       this.updateCurrentDate();
-      // 获取用户信息
       this.getUserInfo();
-      // 加载家庭信息并设置当前家庭
-      await this.loadFamilyInfo();
-      // 每次显示页面时刷新数据并处理可能的错误
-      await this.initData().catch(error => {
-        console.error('页面显示时初始化数据失败:', error);
-      });
-      // 检查宝宝信息是否完善
+      return;
+    }
+    this._lastLoadTime = now;
+    // 更新日期
+    this.updateCurrentDate();
+    this.getUserInfo();
+    // 并行加载家庭信息 + 任务数据（不再串行等待）
+    this._loading = true;
+    try {
+      await Promise.all([
+        this.loadFamilyInfo(),
+        this.initData(true) // skipLoading=true，静默刷新不显示 loading 遮罩
+      ]);
+    } catch (error) {
+      console.error('页面显示时刷新数据失败:', error);
+    } finally {
+      this._loading = false;
       this.checkBabyInfoComplete();
     }
   },
@@ -1164,6 +1195,10 @@ Page({
   },
 
   onPullDownRefresh: async function() {
+    if (!this.data.isLoggedIn) {
+      wx.stopPullDownRefresh();
+      return;
+    }
     await this.refreshTasks();
     wx.stopPullDownRefresh();
   },
@@ -1835,16 +1870,18 @@ Page({
    * 打开事项建议页面
    */
   openSuggestPage() {
+    if (!require('../../services/userService').requireLogin()) return;
     const familyIdParam = this.data.currentFamilyId ? `&familyId=${this.data.currentFamilyId}` : '';
     wx.navigateTo({
       url: `/pages/task/create?showTemplates=true${familyIdParam}`
     });
   },
-  
+
   /**
    * 打开创建任务页面
    */
   openCreateTask() {
+    if (!require('../../services/userService').requireLogin()) return;
     const familyIdParam = this.data.currentFamilyId ? `&familyId=${this.data.currentFamilyId}` : '';
     wx.navigateTo({
       url: `/pages/task/create?mode=create${familyIdParam}`
@@ -1855,8 +1892,16 @@ Page({
    * 打开 AI 育儿大师页面
    */
   goAiMaster() {
+    if (!require('../../services/userService').requireLogin()) return;
     wx.navigateTo({
       url: '/pages/ai-master/index'
     });
+  },
+
+  /**
+   * 跳转登录页
+   */
+  goToLogin: function() {
+    require('../../services/userService').requireLogin();
   },
 });

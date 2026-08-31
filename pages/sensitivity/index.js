@@ -11,6 +11,7 @@ Page({
    * 页面的初始数据
    */
   data: {
+    isLoggedIn: false,
     userInfo: null,
     babyInfo: null,
     recommendedFoods: [],
@@ -55,10 +56,10 @@ Page({
   onLoad: function (options) {
     const userService = require('../../services/userService');
     if (!userService.checkLoginStatus()) {
-      wx.redirectTo({ url: '/pages/login/login' });
+      this.setData({ isLoggedIn: false, babyInfo: { _id: 'local-baby-id', nickname: '', safeFoodsList: [] }, recommendedFoods: [], sensitivityProgress: 0 });
       return;
     }
-    this.setData({ hasLoaded: true });
+    this.setData({ hasLoaded: true, isLoggedIn: true });
 
     // 确保userInfo存在
     if (app.globalData.userInfo) {
@@ -77,6 +78,7 @@ Page({
       .then(() => this.checkBabyInfo())
       .finally(() => {
         this._initializing = false;
+        this._lastLoadTime = Date.now();
       });
   },
 
@@ -85,8 +87,28 @@ Page({
    */
   onShow: function () {
     const userService = require('../../services/userService');
-    if (!userService.checkLoginStatus()) {
-      wx.redirectTo({ url: '/pages/login/login' });
+    const wasLoggedIn = this.data.isLoggedIn;
+    const isLoggedIn = userService.checkLoginStatus();
+    this.setData({ isLoggedIn });
+    if (!isLoggedIn) {
+      this.setData({ babyInfo: { _id: 'local-baby-id', nickname: '', safeFoodsList: [] }, recommendedFoods: [], sensitivityProgress: 0, todaySensitivityRecord: null, likeStatusText: '', allergyStatusText: '' });
+      return;
+    }
+    // 如果之前未登录，现在已登录（刚从登录页返回），执行完整初始化
+    if (!wasLoggedIn) {
+      this.setData({ hasLoaded: true });
+      if (app.globalData.userInfo) {
+        this.setData({ userInfo: app.globalData.userInfo });
+      } else {
+        this.setData({ userInfo: null });
+      }
+      this._initializing = true;
+      this.loadFamilyInfo()
+        .then(() => this.checkBabyInfo())
+        .finally(() => {
+          this._initializing = false;
+          this._lastLoadTime = Date.now();
+        });
       return;
     }
 
@@ -95,6 +117,12 @@ Page({
       return;
     }
     if (this.data.hasLoaded) {
+      // 数据新鲜度检查：30 秒内不重复加载
+      const now = Date.now();
+      if (this._lastLoadTime && now - this._lastLoadTime < 30000) {
+        return;
+      }
+      this._lastLoadTime = now;
       this.loadFamilyInfo().then(() => {
         this.checkBabyInfo();
       });
@@ -520,6 +548,7 @@ Page({
    * 跳转到排敏食物选择页面
    */
   navigateToFoodSelect: function () {
+    if (!require('../../services/userService').requireLogin()) return;
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     
@@ -539,6 +568,7 @@ Page({
    * 修改今日排敏记录
    */
   modifyTodayRecord: function () {
+    if (!require('../../services/userService').requireLogin()) return;
     // 获取今日排敏记录
     const todayRecord = this.data.todaySensitivityRecord;
     
@@ -559,6 +589,7 @@ Page({
    * 删除今日排敏记录
    */
   deleteTodayRecord: function () {
+    if (!require('../../services/userService').requireLogin()) return;
     const todayRecord = this.data.todaySensitivityRecord;
     if (!todayRecord) return;
 
@@ -654,6 +685,7 @@ Page({
    * 打开宝宝信息填写页
    */
   openBabyInfoPage: function () {
+    if (!require('../../services/userService').requireLogin()) return;
     wx.navigateTo({
       url: '/subpackages/profile/pages/baby-info'
     });
@@ -691,6 +723,7 @@ Page({
    * 保存宝宝信息
    */
   saveBabyInfo: async function() {
+    if (!require('../../services/userService').requireLogin()) return;
     const { babyInfoForm } = this.data;
     
     // 表单验证
@@ -949,7 +982,9 @@ Page({
     }, 3000);
   },
 
-  selectFood: function(e) {    // 今日已有排敏记录时，不再弹出记录弹窗（同一天不建议排敏多种食物）
+  selectFood: function(e) {
+    if (!require('../../services/userService').requireLogin()) return;
+    // 今日已有排敏记录时，不再弹出记录弹窗（同一天不建议排敏多种食物）
     if (this.data.todaySensitivityRecord) {
       this._showWideToast('今天已经记录过了，明天再来吧！未排敏完成的食物不建议同一天内食用多种，给宝宝一些适应时间吧！');
       return;
@@ -993,6 +1028,7 @@ Page({
    * 保存推荐食物排敏记录
    */
   saveFoodRecord: async function() {
+    if (!require('../../services/userService').requireLogin()) return;
     if (this.data.recordSaving) return;
     const food = this.data.recordFood;
     if (!food) return;
@@ -1057,6 +1093,7 @@ Page({
    * 显示加入家庭弹窗
    */
   showJoinFamilyModal: function() {
+    if (!require('../../services/userService').requireLogin()) return;
     this.setData({ showJoinFamilyModal: true });
   },
 
@@ -1078,6 +1115,7 @@ Page({
    * 通过邀请码加入家庭
    */
   joinFamilyByInviteCode: async function() {
+    if (!require('../../services/userService').requireLogin()) return;
     const inviteCode = this.data.inviteCode && this.data.inviteCode.trim();
     if (!inviteCode || inviteCode.length !== 6 || !/^[A-Z0-9]{6}$/i.test(inviteCode)) {
       wx.showToast({ title: '请输入6位字母数字邀请码', icon: 'none' });
@@ -1110,5 +1148,12 @@ Page({
       title: '宝宝辅食排敏记录',
       path: '/pages/sensitivity/index'
     };
+  },
+
+  /**
+   * 跳转登录页
+   */
+  goToLogin: function() {
+    require('../../services/userService').requireLogin();
   }
 })

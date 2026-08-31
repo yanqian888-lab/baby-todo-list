@@ -684,3 +684,25 @@
   text-align: center;
   display: block;
 }
+
+/* 未登录提示横幅 */
+.login-prompt-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 32rpx;
+  margin: 16rpx 24rpx;
+  background: #FFF8F0;
+  border: 1rpx solid #E8D5C4;
+  border-radius: 16rpx;
+}
+
+.login-prompt-text {
+  font-size: 28rpx;
+  color: #8B7355;
+}
+
+.login-prompt-arrow {
+  font-size: 32rpx;
+  color: #8B7355;
+}

@@ -288,12 +288,15 @@ Page({
     }
   },
 
-  // 复制邀请码
+  // 复制邀请码（隐私授权由微信原生弹窗处理）
   copyInviteCode: function() {
     wx.setClipboardData({
       data: this.data.inviteCode,
       success: () => {
-        wx.showToast({ title: '已复制', icon: 'success' });
+        wx.showToast({ title: '复制成功，快去分享给家人吧！', icon: 'none' });
+      },
+      fail: () => {
+        wx.showToast({ title: '复制失败，请重试', icon: 'none' });
       }
     });
   },

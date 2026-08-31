@@ -59,10 +59,17 @@ Page({
   checkLoginStatus: function () {
     const isLoggedIn = userService.checkLoginStatus();
     if (isLoggedIn) {
-      // 已登录则跳转到首页
-      wx.switchTab({
-        url: '/pages/index/index'
-      });
+      // 已登录则返回来源页
+      const pages = getCurrentPages();
+      if (pages.length > 1) {
+        wx.navigateBack({
+          fail: () => {
+            wx.switchTab({ url: '/pages/index/index' });
+          }
+        });
+      } else {
+        wx.switchTab({ url: '/pages/index/index' });
+      }
     }
   },
 
@@ -141,49 +148,44 @@ Page({
       if (loginResult.success) {
         // 登录成功，重置尝试次数
         this.setData({ loginAttempts: 0 });
-        
+
         console.log('准备保存用户信息:', loginResult.data);
-        
+
         // 保存用户信息到本地存储
         if (loginResult.data && loginResult.data.userInfo && loginResult.data.token) {
           userService.saveUserInfo(loginResult.data.userInfo, loginResult.data.token);
         } else {
           console.warn('登录结果数据不完整:', loginResult);
         }
-        
+
         // 更新全局用户信息
         if (loginResult.data && loginResult.data.userInfo) {
           app.updateUserInfo(loginResult.data.userInfo);
         }
-        
-        // 立即跳转到首页，不显示 toast 避免延迟
-        console.log('登录成功，立即跳转到首页...');
-        
-        // 使用 reLaunch 跳转到首页（可以关闭所有页面，包括非 tabBar 页面）
-        // 注意：路径必须以 / 开头表示绝对路径
-        wx.reLaunch({
-          url: '/pages/index/index',
-          success: () => {
-            console.log('reLaunch 到首页成功');
-          },
-          fail: (err) => {
-            console.error('reLaunch 失败:', err);
-            // 备用方案：尝试 switchTab
-            wx.switchTab({
-              url: '/pages/index/index',
-              success: () => {
-                console.log('switchTab 成功');
-              },
-              fail: (err2) => {
-                console.error('switchTab 也失败:', err2);
-                wx.showToast({
-                  title: '跳转失败，请手动返回',
-                  icon: 'none'
-                });
+
+        // 登录成功后主动触发隐私授权，避免后续使用隐私API时反复弹窗
+        const navigateBack = () => {
+          console.log('登录成功，返回来源页面...');
+          const pages = getCurrentPages();
+          if (pages.length > 1) {
+            wx.navigateBack({
+              fail: () => {
+                wx.switchTab({ url: '/pages/index/index' });
               }
             });
+          } else {
+            wx.switchTab({ url: '/pages/index/index' });
           }
-        });
+        };
+
+        if (wx.requirePrivacyAuthorize) {
+          wx.requirePrivacyAuthorize({
+            success: () => { navigateBack(); },
+            fail: () => { navigateBack(); }
+          });
+        } else {
+          navigateBack();
+        }
       } else {
         throw new Error(loginResult.error || '登录失败');
       }

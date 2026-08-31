@@ -75,8 +75,8 @@
     <text class="delete-account-link" bindtap="deleteAccount">注销账号</text>
   </view>
 
-  <!-- 版本 -->
+  <!-- 备案号 -->
   <view class="version-info">
-    <text>版本 1.0.0</text>
+    <text>京ICP备2026053100号-2X</text>
   </view>
 </view>

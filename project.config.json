@@ -72,11 +72,43 @@
         "type": "regexp"
       },
       {
+        "value": "^.*\\.html$",
+        "type": "regexp"
+      },
+      {
         "value": "^.*ssh-keygen.*$",
         "type": "regexp"
       },
       {
         "value": "^Sheet1\\.json$",
+        "type": "regexp"
+      },
+      {
+        "value": "^package-lock\\.json$",
+        "type": "regexp"
+      },
+      {
+        "value": "^package\\.json$",
+        "type": "regexp"
+      },
+      {
+        "value": "^cloudbaserc\\.json$",
+        "type": "regexp"
+      },
+      {
+        "value": "^\\.DS_Store$",
+        "type": "regexp"
+      },
+      {
+        "value": "^宣发images/",
+        "type": "regexp"
+      },
+      {
+        "value": "^project\\.private\\.config\\.json$",
+        "type": "regexp"
+      },
+      {
+        "value": "^\\.trae-html-share-packages/",
         "type": "regexp"
       }
     ],

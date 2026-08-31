@@ -1,5 +1,83 @@
 <!-- pages/checklist/index.wxml - 宝贝清单列表（卡片手风琴展开） -->
 <view class="container">
+  <!-- 宝宝信息填写表单（未创建/加入家庭时展示） -->
+  <view wx:if="{{showBabyInfoForm}}" class="baby-info-form-section">
+    <view class="form-header">
+      <text class="form-title">完善宝宝信息</text>
+      <text class="form-subtitle">首次使用清单功能，请填写宝宝的基本信息</text>
+    </view>
+
+    <view class="form-content">
+      <view class="form-item">
+        <text class="form-label">宝宝昵称 <text class="required">*</text></text>
+        <input
+          class="form-input"
+          type="text"
+          placeholder="请输入宝宝昵称"
+          value="{{babyInfoForm.nickname}}"
+          bindinput="onNicknameInput"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">出生日期 <text class="required">*</text></text>
+        <picker
+          mode="date"
+          start="{{startDate}}"
+          end="{{pickerEndDate}}"
+          value="{{babyInfoForm.birthday}}"
+          bindchange="onBirthdayChange"
+        >
+          <view class="form-picker {{babyInfoForm.birthday ? 'has-value' : ''}}">
+            {{babyInfoForm.birthday || '请选择出生日期'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">性别</text>
+        <view class="gender-selector">
+          <view class="gender-option {{babyInfoForm.gender === 'boy' ? 'active' : ''}}"
+                bindtap="onGenderChange" data-gender="boy">
+            <text class="gender-icon">👦</text>
+            <text class="gender-text">男宝</text>
+          </view>
+          <view class="gender-option {{babyInfoForm.gender === 'girl' ? 'active' : ''}}"
+                bindtap="onGenderChange" data-gender="girl">
+            <text class="gender-icon">👧</text>
+            <text class="gender-text">女宝</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <button class="save-btn" bindtap="saveBabyInfo">保存并开始使用</button>
+    <view class="join-family-hint">
+      <text class="hint-text">已有宝宝家庭？</text>
+      <text class="hint-link" bindtap="showJoinFamilyModal">点击加入</text>
+    </view>
+
+    <!-- 加入家庭弹窗 -->
+    <view class="modal {{showJoinFamilyModal ? 'show' : ''}}">
+      <view class="modal-mask" bindtap="hideJoinFamilyModal"></view>
+      <view class="modal-content">
+        <view class="modal-header">
+          <text class="modal-title">加入家庭</text>
+          <text class="modal-close" bindtap="hideJoinFamilyModal">×</text>
+        </view>
+        <view class="modal-body">
+          <input class="modal-input" type="text" placeholder="请输入邀请码" value="{{inviteCode}}" bindinput="onInviteCodeChange" />
+        </view>
+        <view class="modal-footer">
+          <button class="btn-secondary" bindtap="hideJoinFamilyModal">取消</button>
+          <button class="btn-primary" bindtap="joinFamilyByInviteCode">确认加入</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 正常内容区域（已登录且有家庭） -->
+  <block wx:else>
   <!-- 家庭切换 tabs -->
   <view class="family-tabs" wx:if="{{families.length > 0}}">
     <view
@@ -88,10 +166,11 @@
     </view>
   </view>
 
-  <!-- 空态 -->
+  <!-- 空态（仅在默认清单也加载失败时兜底显示） -->
   <view class="empty-lists" wx:if="{{!loading && lists.length === 0}}">
     <view class="empty-icon">📝</view>
-    <text class="empty-text">还没有清单，点击右下角按钮新建一个吧</text>
+    <text wx:if="{{!isLoggedIn}}" class="empty-text" bindtap="goToLogin">请登录后查看清单</text>
+    <text wx:else class="empty-text">还没有清单，点击右下角按钮新建一个吧</text>
   </view>
 
   <!-- 右下角新建清单 FAB -->
@@ -160,4 +239,5 @@
       </view>
     </view>
   </view>
+  </block>
 </view>
