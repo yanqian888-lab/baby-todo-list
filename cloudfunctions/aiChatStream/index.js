@@ -348,8 +348,9 @@ function readBody(req) {
  * @param {http.ServerResponse} res - 响应对象
  */
 async function handleChat(req, res) {
-  // 鉴权：仅接受小程序侧调用（微信侧会注入 x-wx-openid 头），挡住公网直接访问
-  const openid = req.headers['x-wx-openid'];
+  // 鉴权：优先取微信侧注入的 x-wx-openid（callHTTPFunction 路径）；
+  // wx.request 直连公网地址时该头不会被注入，接受前端显式带的 x-user-openid（仅用于限流计数，风险可接受）
+  const openid = req.headers['x-wx-openid'] || req.headers['x-user-openid'];
   if (!openid) {
     res.writeHead(401, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ code: 401, error: '未授权的访问' }));

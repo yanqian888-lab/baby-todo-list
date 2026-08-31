@@ -3,6 +3,11 @@
 
 const familyService = require('../../services/familyService');
 
+// aiChatStream HTTP 云函数的公网访问地址（含 /chat 路径）
+// 从控制台「云函数 → aiChatStream → 接入指引/访问地址」复制，例如：
+// 'https://cloud1-d6gvk59pc73976058-xxxxxxxx.ap-shanghai.app.tcloudbase.com/chat'
+const AI_STREAM_URL = 'https://cloud1-d6gvk59pc73976058-125WX待填入.app.tcloudbase.com/chat'; // TODO: 待填入真实地址
+
 function generateId() {
   return 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
 }
@@ -232,8 +237,8 @@ Page({
     console.log('[ai-master] callAI msg:', msg, 'babyInfo:', JSON.stringify(babyInfo));
     const botMsgId = generateId();
 
-    // 基础库 3.15.1+ 才支持 wx.cloud.callHTTPFunction
-    const supportStream = !!(wx.cloud && typeof wx.cloud.callHTTPFunction === 'function');
+    // 流式走 aiChatStream 的公网地址（wx.request enableChunked），地址未配置时直接走兜底
+    const supportStream = AI_STREAM_URL.indexOf('待填入') === -1;
 
     // 添加 AI 占位消息（加载中）
     // 流式路径先显示「正在思考...」占位：模型会先输出思考过程（服务端已丢弃），正文到达后替换占位
@@ -351,14 +356,21 @@ Page({
         return false;
       };
 
-      const requestTask = wx.cloud.callHTTPFunction({
-        name: 'aiChatStream',
-        path: '/chat',
+      // 直连 aiChatStream 的公网地址（callHTTPFunction 的权限层在这个环境上一直 400，绕开它）
+      // wx.request 的流式回调叫 onChunkReceived（和 callHTTPFunction 的 onChunkedReceived 不同，注意区分）
+      const userInfo = wx.getStorageSync('userInfo') || {};
+      const requestTask = wx.request({
+        url: AI_STREAM_URL,
         method: 'POST',
         data: { msg, history, babyInfo },
+        header: {
+          'Content-Type': 'application/json',
+          // wx.request 不会自动带微信身份头，手动带上用于服务端限流/鉴权
+          'x-user-openid': userInfo.openId || userInfo.openid || ''
+        },
         enableChunked: true,
         timeout: 60000, // 推理模型思考阶段长，显式拉长超时，避免连接被提前掐断
-        onChunkedReceived: (res) => {
+        onChunkReceived: (res) => {
           if (finished) return;
           try {
             sseBuffer += decodeChunk(res.data);
@@ -367,19 +379,24 @@ Page({
             console.error('[ai-master] SSE 解析异常:', e);
           }
         },
-        success: () => {
+        success: (res) => {
           // HTTP 连接正常结束：处理缓冲区残余（理论上 [DONE] 已先到）
           if (!finished) {
+            if (res.statusCode !== 200) {
+              console.warn('[ai-master] 流式接口返回非 200:', res.statusCode);
+              resolve(false);
+              return;
+            }
             try { parseFrames(); } catch (e) { /* 忽略残余解析失败 */ }
             finish();
           }
         },
         fail: (err) => {
-          console.warn('[ai-master] callHTTPFunction 调用失败:', err);
+          console.warn('[ai-master] 流式请求失败:', err);
           resolve(false); // 交回 callAI 回退到非流式路径
         }
       });
-      // callHTTPFunction 失败时除了走 fail 回调，返回的 Promise 也会 reject，吞掉避免控制台刷红色未处理异常
+      // 失败时返回的 Promise 也会 reject，吞掉避免控制台刷红色未处理异常
       if (requestTask && typeof requestTask.catch === 'function') {
         requestTask.catch(() => {});
       }
