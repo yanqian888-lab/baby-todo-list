@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>朵叽排敏 · 宣发内容优化 · 两篇精修版</title>
+<style>
+:root {
+  --bg-primary: #FAFAF8;
+  --bg-secondary: #F5F3F0;
+  --bg-card: #FFFFFF;
+  --primary: #8B7355;
+  --primary-light: #A08060;
+  --primary-dark: #6B5635;
+  --text-primary: #2D2A26;
+  --text-secondary: #5A554D;
+  --text-tertiary: #8A847A;
+  --text-muted: #B8B2A8;
+  --success: #7A9E7E;
+  --warning: #D4A574;
+  --error: #C47D7D;
+  --border: #E8E4DE;
+  --tag-xhs: #FF2442;
+  --tag-dev: #6B5635;
+  --improved: #7A9E7E;
+  --improved-bg: #F0F5ED;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.8;
+  padding: 0 0 80px 0;
+}
+
+/* ===== 顶部封面 ===== */
+.cover {
+  background: linear-gradient(135deg, #8B7355 0%, #A08060 50%, #6B5635 100%);
+  color: #fff;
+  padding: 70px 40px 50px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cover::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.cover-content { position: relative; z-index: 1; }
+.cover h1 { font-size: 34px; font-weight: 800; margin-bottom: 10px; letter-spacing: 2px; }
+.cover .subtitle { font-size: 15px; opacity: 0.85; margin-bottom: 20px; }
+.cover .meta { display: flex; justify-content: center; gap: 24px; font-size: 13px; opacity: 0.75; }
+.cover .meta span { display: flex; align-items: center; gap: 6px; }
+
+/* ===== 容器 ===== */
+.container { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+/* ===== 章节标题 ===== */
+.section { margin-top: 48px; }
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 23px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+.section-title .icon { font-size: 26px; }
+.section-desc { font-size: 14px; color: var(--text-tertiary); margin-bottom: 24px; }
+
+/* ===== 优化说明条 ===== */
+.optimization-banner {
+  background: var(--improved-bg);
+  border: 1px solid #C3D8BB;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 0 0 32px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+.optimization-banner strong { color: var(--success); }
+.optimization-banner .opt-list { margin-top: 8px; }
+.optimization-banner .opt-list li { margin-bottom: 4px; }
+
+/* ===== 文章卡片 ===== */
+.article-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  margin-bottom: 32px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.article-header {
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.article-platform {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.article-platform.user { background: #FFF0F2; color: var(--tag-xhs); }
+.article-platform.dev { background: #F0EDF5; color: var(--tag-dev); }
+.article-type {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+  margin-left: 8px;
+}
+.article-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.article-meta { font-size: 12px; color: var(--text-muted); display: flex; gap: 16px; flex-wrap: wrap; }
+
+.alt-titles {
+  background: #F8F6F2;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+.alt-titles .alt-label {
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+.alt-titles .alt-item {
+  color: var(--text-secondary);
+  padding: 3px 0;
+  padding-left: 8px;
+}
+
+.article-body { padding: 24px 28px; }
+.article-body h5 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 20px 0 10px;
+  padding-left: 12px;
+  border-left: 3px solid var(--primary);
+}
+.article-body h5:first-child { margin-top: 0; }
+.article-body p { font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 8px; }
+.article-body ul { padding-left: 20px; }
+.article-body ul li { font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 4px; }
+
+/* ===== 可复制正文块 ===== */
+.copy-block {
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin: 12px 0;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 2;
+  white-space: pre-wrap;
+}
+
+/* ===== 标签 ===== */
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.tag {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+}
+.tag.new {
+  background: var(--improved-bg);
+  color: var(--success);
+  font-weight: 600;
+}
+
+/* ===== 图片建议卡片 ===== */
+.image-suggestion {
+  background: #FDF8F0;
+  border: 1px solid #F0E0C0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 16px 0;
+}
+.image-suggestion h6 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--warning);
+  margin-bottom: 12px;
+}
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.image-item {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid #F0E0C0;
+}
+.image-item .img-num {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  border-radius: 50%;
+  background: var(--warning);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.image-item .img-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.image-item .img-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.image-item .img-prompt {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: #F8F5F0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-top: 6px;
+  line-height: 1.5;
+  font-style: italic;
+}
+.image-item .img-type {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+.img-type.screenshot { background: #E8F0E8; color: var(--success); }
+.img-type.photo { background: #F0E8E8; color: var(--error); }
+.img-type.design { background: #E8E8F0; color: #7B6BA0; }
+
+/* ===== 对比框 ===== */
+.compare-box {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 16px 0;
+  border: 1px solid var(--border);
+}
+.compare-box h6 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+.compare-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.compare-col {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.compare-col.before {
+  background: #FFF5F5;
+  border: 1px solid #F0D0D0;
+}
+.compare-col.after {
+  background: #F0F5ED;
+  border: 1px solid #C3D8BB;
+}
+.compare-col .compare-label {
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.compare-col.before .compare-label { color: var(--error); }
+.compare-col.after .compare-label { color: var(--success); }
+.compare-col .compare-content { color: var(--text-secondary); }
+
+/* ===== 页脚 ===== */
+.article-footer {
+  padding: 14px 28px;
+  background: var(--bg-secondary);
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ===== 底部 ===== */
+.footer {
+  text-align: center;
+  padding: 40px 24px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 640px) {
+  .image-grid { grid-template-columns: 1fr; }
+  .compare-row { grid-template-columns: 1fr; }
+  .cover { padding: 50px 20px 40px; }
+  .cover h1 { font-size: 26px; }
+  .container { padding: 0 16px; }
+  .article-body { padding: 18px; }
+  .article-header { padding: 20px 18px 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 封面 ===== -->
+<div class="cover">
+  <div class="cover-content">
+    <h1>📱 朵叽排敏 · 宣发内容优化</h1>
+    <div class="subtitle">使用者视角 + 开发者视角 · 两篇精修版 · 附详细图片建议</div>
+    <div class="meta">
+      <span>📅 2026年9月优化版</span>
+      <span>📝 2篇精修内容</span>
+      <span>🎨 12条配图建议</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ===== 优化总览 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">📋</span> 优化总览</div>
+  <div class="section-desc">本次从宣发内容手册14篇中精选2篇进行深度优化</div>
+
+  <div class="optimization-banner">
+    <strong>✨ 优化原则：</strong>
+    <ul class="opt-list">
+      <li><strong>去广告感</strong> — 减少"姐妹们冲""太香了"等套路化表达，改用更真实、更具体的个人体验</li>
+      <li><strong>增细节密度</strong> — 补充产品实际功能细节（排敏推荐算法、家庭隔离机制等），让内容更有信服力</li>
+      <li><strong>优化开头3行</strong> — 小红书前3行决定点击率，用"悬念+冲突+共鸣"三步法重构</li>
+      <li><strong>图片建议具体化</strong> — 每张图给出拍摄方式、构图、色调、内容要点和AI生成提示词</li>
+      <li><strong>CTA自然化</strong> — 从"快去搜！"变为"如果你也在经历…"的共情式引导，降低广告反感</li>
+    </ul>
+  </div>
+
+  <div class="compare-box">
+    <h6>📌 本次优化选篇</h6>
+    <table style="width:100%; font-size:13px; border-collapse:collapse;">
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px; font-weight:700; width:20%;">使用者视角</td>
+        <td style="padding:8px 12px;">原第2篇「工具种草型」→ 优化重点：去套路化、增细节、强化转化路径</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px; font-weight:700;">开发者视角</td>
+        <td style="padding:8px 12px;">原第1篇「开发者动机·情绪共鸣型」→ 优化重点：强化故事弧线、增技术真实感、提升品牌人设</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+
+<!-- ===== 第一篇：使用者视角 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">📕</span> 第一篇 · 使用者视角（工具种草型）</div>
+  <div class="section-desc">面向正在用笨办法记录排敏的妈妈，从真实体验切入自然种草</div>
+
+  <div class="article-card">
+    <div class="article-header">
+      <span class="article-platform user">📕 小红书</span>
+      <span class="article-type">工具种草型 · 优化版</span>
+      <div class="article-title">排敏记录从Excel搬到小程序，我后悔没早用半年</div>
+      <div class="alt-titles">
+        <div class="alt-label">📌 备选标题（A/B测试建议）</div>
+        <div class="alt-item">A：把排敏Excel删了！这个小程序全家都能看，太省心了</div>
+        <div class="alt-item">B：用了半年的排敏小程序，比Excel好100倍（附对比）</div>
+        <div class="alt-item">C：排敏还在用备忘录？这个小程序让我把Excel删了</div>
+      </div>
+      <div class="article-meta" style="margin-top:10px;">
+        <span>🎯 目标人群：正在用Excel/备忘录记录排敏的妈妈</span>
+        <span>🖼️ 建议配图：7张</span>
+        <span>⏱️ 阅读时长：2分钟</span>
+        <span>📊 预估数据：500-2000赞</span>
+      </div>
+    </div>
+
+    <div class="article-body">
+      <h5>📝 优化后正文（可直接复制发布）</h5>
+      <div class="copy-block">昨晚复诊，医生问我"最近试了哪些食物"，我打开手机，10秒就翻完了所有排敏记录。
+
+半年前同样的场景，我翻了5分钟备忘录，什么都没找到。
+
+那时候排敏全靠Excel——手机上编辑表格是什么体验你们知道吗？列宽永远不对，字号小到眯眼，想看"上周试了什么"要往下滑半天。更崩溃的是，我记的根本不够清楚：哪种食物哪天开始的、观察了几天、有没有反应，全混在一列里。
+
+后来在妈妈群里被安利了「朵叽排敏」小程序，不用下载直接搜微信。用了一周，我把Excel删了。
+
+不是它有多炫，是它真的懂排敏这件事👇
+
+1️⃣ 食物按过敏等级自动分类
+低敏、中敏、高敏，不用自己查"这个算什么敏度"。选好食物直接开始记录，观察天数自动算好——低敏3天、高敏5天，第几天了清清楚楚。
+
+2️⃣ 试完一个自动推荐下一个
+这个功能我真的太喜欢了。以前每天纠结"今天试什么"，现在试完一种食物，系统直接推荐下一种该试的，不用自己查顺序。
+
+3️⃣ 过敏/喜欢状态一目了然
+每种食物记录后标记状态——过敏❌ 喜欢✅ 还在观察⏳。复诊时给医生看一眼就懂，不用再口头描述半天。
+
+4️⃣ 全家同步看到排敏进度
+这个是最戳我的。我加完排敏食物，老公和婆婆手机上同步能看到。以前婆婆总问"今天能吃什么"，现在她自己打开就知道——"鳕鱼，中敏，观察3天，今天是第2天"。
+
+还有个AI育儿大师，半夜焦虑宝宝是不是过敏，直接问它，比网上查靠谱。
+
+界面是MUJI莫兰迪风，截图发朋友圈都有人问是什么App 😂
+
+搜「朵叽排敏」就能找到，完全免费。如果你也在用Excel或备忘录记排敏，真的可以试试，省下来的时间多陪宝宝。</div>
+
+      <h5>🖼️ 配图建议（7张）· 含拍摄方式和AI生成提示</h5>
+
+      <div class="image-grid">
+        <div class="image-item">
+          <span class="img-num">1</span>
+          <span class="img-title">封面图：Excel vs 小程序对比<span class="img-type img-type design">设计图</span></span>
+          <span class="img-desc">左右分屏构图：左侧手机上密密麻麻的Excel表格截图（色调灰暗），右侧小程序排敏主页截图（色调温暖明亮）。中间加"VS"分割。大字标题"排敏记录，从Excel到小程序"。</span>
+          <span class="img-prompt">AI提示词：A split-screen comparison image, left side showing a messy Excel spreadsheet on a phone screen with small text and misaligned columns in grey tones, right side showing a clean mobile app interface with warm Morandi colors and clear food list, VS divider in center, minimal style, high quality</span>
+        </div>
+
+        <div class="image-item">
+          <span class="img-num">2</span>
+          <span class="img-title">食物分类界面截图<span class="img-type img-type screenshot">截图</span></span>
+          <span class="img-desc">直接截取小程序排敏页的食物分类界面，展示低敏/中敏/高敏三个分类和对应食物列表。确保界面完整、文字清晰。截图前先添加几条排敏记录让页面看起来"正在使用中"。</span>
+        </div>
+
+        <div class="image-item">
+          <span class="img-num">3</span>
+          <span class="img-title">排敏记录列表截图<span class="img-type img-type screenshot">截图</span></span>
+          <span class="img-desc">截取排敏记录列表页，展示多条食物记录的"过敏❌/喜欢✅/观察中⏳"标记状态。重点突出"第X天/共X天"的天数显示。建议截3-5条记录的页面。</span>
+        </div>
+
+        <div class="image-item">
+          <span class="img-num">4</span>
+          <span class="img-title">推荐下一个食物界面<span class="img-type img-type screenshot">截图</span></span>
+          <span class="img-desc">截取"明日推荐"或"今日推荐"食物的弹窗/卡片界面，突出展示"系统自动推荐"这个核心卖点。可以配合标注"自动推荐"的箭头或文字。</span>
+        </div>
+
+        <div class="image-item">
+          <span class="img-num">5</span>
+          <span class="img-title">家庭共享功能演示<span class="img-type img-type screenshot">截图</span></span>
+          <span class="img-desc">截取家庭页面（创建家庭+邀请码），或者分屏展示两个人手机上的同步记录。文字标注"妈妈添加→全家看到"的同步效果。</span>
+        </div>
+
+        <div class="image-item">
+          <span class="img-num">6</span>
+          <span class="img-title">AI育儿大师对话截图<span class="img-type img-type screenshot">截图</span></span>
+          <span class="img-desc">截取AI大师聊天界面，展示一段真实的问答对话（如"宝宝起疹子是过敏吗"）。保留打字机效果的最后一句回复，让画面有"正在回答"的动态感。</span>
+        </div>
+
+        <div class="image-item">
+          <span class="img-num">7</span>
+          <span class="img-title">整体界面美观展示<span class="img-type img-type photo">实拍</span></span>
+          <span class="img-desc">手持手机的角度拍摄小程序首页，背景为温暖的家居环境（木质桌面、绿植等），突出MUJI莫兰迪风格的高级感。手机屏幕显示首页任务列表。光线用自然侧光。</span>
+          <span class="img-prompt">AI提示词：A hand holding a smartphone showing a clean baby care app with Morandi color palette, sitting on a warm wooden table with soft natural side lighting and a small green plant in background, cozy home atmosphere, lifestyle photography style</span>
+        </div>
+      </div>
+
+      <h5>🏷️ 话题标签（优化后）</h5>
+      <div class="tags">
+        <span class="tag">#宝宝辅食排敏</span>
+        <span class="tag">#辅食排敏</span>
+        <span class="tag">#敏宝日常</span>
+        <span class="tag">#育儿工具推荐</span>
+        <span class="tag new">#排敏记录方法</span>
+        <span class="tag">#实用小程序</span>
+        <span class="tag">#妈妈必备</span>
+        <span class="tag new">#辅食添加顺序</span>
+        <span class="tag">#敏宝妈妈</span>
+      </div>
+    </div>
+
+    <div class="article-footer">
+      <span>📊 预估数据：500-2000赞</span>
+      <span>🎯 内容目标：真实体验 → 对比种草 → 搜索转化</span>
+    </div>
+  </div>
+
+  <!-- 优化对比 -->
+  <div class="compare-box">
+    <h6>📊 优化对比：改了什么？</h6>
+
+    <div class="compare-row">
+      <div class="compare-col before">
+        <div class="compare-label">原版开头</div>
+        <div class="compare-content">"姐妹们我哭！！终于找到一个能好好记录宝宝排敏的工具了！！"</div>
+      </div>
+      <div class="compare-col after">
+        <div class="compare-label">优化后开头</div>
+        <div class="compare-content">"昨晚复诊，医生问我'最近试了哪些食物'，我打开手机，10秒就翻完了所有排敏记录。半年前同样的场景，我翻了5分钟备忘录，什么都没找到。"</div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-col before">
+        <div class="compare-label">原版CTA</div>
+        <div class="compare-content">"搜「朵叽排敏」就能找到，完全免费不花钱，姐妹们冲！"</div>
+      </div>
+      <div class="compare-col after">
+        <div class="compare-label">优化后CTA</div>
+        <div class="compare-content">"搜「朵叽排敏」就能找到，完全免费。如果你也在用Excel或备忘录记排敏，真的可以试试，省下来的时间多陪宝宝。"</div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-col before">
+        <div class="compare-label">原版功能描述</div>
+        <div class="compare-content">"食材分类超清晰""过敏/喜欢一目了然""全家都能看"——仅描述功能，无使用场景</div>
+      </div>
+      <div class="compare-col after">
+        <div class="compare-label">优化后功能描述</div>
+        <div class="compare-content">每个功能点都嵌入具体使用场景：复诊给医生看、不再纠结"今天试什么"、婆婆不再问"能吃什么"——让读者看到自己的痛点被解决</div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px; font-size:13px; color:var(--text-tertiary); line-height:1.7;">
+      <strong style="color:var(--primary);">核心优化逻辑：</strong>
+      ① 用"复诊翻记录"这个高频痛点场景开头，替代"姐妹们我哭"的套路化表达；
+      ② 增加了"试完自动推荐下一个"这个独家功能描述（原版未提及）；
+      ③ 把"全家都能看"具体化为"婆婆自己打开就知道'鳕鱼中敏观察3天第2天'"；
+      ④ CTA从"冲！"变为"如果你也在…"的共情式引导。
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== 第二篇：开发者视角 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">👩‍💻</span> 第二篇 · 开发者视角（开发者动机·情绪共鸣型）</div>
+  <div class="section-desc">以宝妈开发者第一人称撰写，展示"解决自己真实痛点"的真诚感</div>
+
+  <div class="article-card">
+    <div class="article-header">
+      <span class="article-platform dev">👩‍💻 开发者视角</span>
+      <span class="article-type">开发者动机 · 情绪共鸣型 · 优化版</span>
+      <div class="article-title">深夜哄完娃开始写代码，因为排敏排到崩溃了</div>
+      <div class="alt-titles">
+        <div class="alt-label">📌 备选标题（A/B测试建议）</div>
+        <div class="alt-item">A：从排敏崩溃到做出一个小程序，一个宝妈的半年</div>
+        <div class="alt-item">B：凌晨一点改bug的宝妈：我做排敏工具的真正原因</div>
+        <div class="alt-item">C：宝宝6个月开始加辅食那天，我不知道自己会变成开发者</div>
+      </div>
+      <div class="article-meta" style="margin-top:10px;">
+        <span>🎯 目标人群：辅食期妈妈 + 宝妈群体 + 独立开发圈</span>
+        <span>🖼️ 建议配图：5张</span>
+        <span>⏱️ 阅读时长：2.5分钟</span>
+        <span>📊 预估数据：1000-3500赞</span>
+      </div>
+    </div>
+
+    <div class="article-body">
+      <h5>📝 优化后正文（可直接复制发布）</h5>
+      <div class="copy-block">去年这个时候，我家宝宝刚满6个月，开始加辅食。
+
+儿保医生说"每种新食物试3天观察有没有过敏"，我当时觉得——就这？很简单啊。
+
+结果第二周就崩溃了。
+
+胡萝卜试了几天？忘了。鳕鱼是哪天开始的？不确定。昨天起的疹子是食物引起的还是蚊子咬的？不知道。
+
+我试过手机备忘录——格式太乱，回头自己都看不懂。试过Excel——手机上编辑表格简直是酷刑。试过拍照片记——翻相册翻到崩溃。
+
+最丢人的是复诊那天。医生问"最近试了什么食物"，我翻了5分钟备忘录，什么都没找到。医生没说什么，但我脸烧得不行。
+
+那天晚上哄完娃睡觉，我坐在客厅发呆，突然想：我是个写代码的宝妈，为什么不给自己做个工具？
+
+就这么开始的。每天下班等娃睡了写代码，写到凌晨一两点。周末带娃间隙改bug。有一次调试到凌晨三点，第二天顶着黑眼圈上班，同事问我怎么了，我说"娃闹腾"——其实是改bug改嗨了。
+
+难的部分不是技术。微信小程序的云开发框架上手很快，页面搭起来不难。
+
+难的是想清楚排敏到底需要什么功能。
+
+比如食物分类——不能简单分成"能吃"和"不能吃"。得按过敏等级分：低敏食物观察3天，高敏食物要5天。这个差异很重要，一刀切试3天，高敏反应根本看不出来。
+
+比如推荐逻辑——试完一种食物后，下一个该试什么？不能随机，得按食物的过敏等级排序，优先推低敏的。而且同一天不能试两种，避免过敏源混淆。
+
+比如家庭共享——这个功能是调研了20多个家庭后加的。妈妈上班，老人带娃，老人看不到排敏进度就会偷偷喂。不是观念问题，是信息差。所以做了邀请码加入家庭，数据按家庭隔离，全家同步看到。
+
+从第一个功能上线到现在半年了。排敏记录、家庭共享、AI育儿问答、任务打卡、清单管理——每一个功能都是自己踩过坑之后做的。
+
+最让我开心的是收到用户反馈说"终于不用每天问我今天试什么了"。那种感觉，比写代码本身爽多了。
+
+真正有用的工具，是解决自己真实痛点的工具。
+
+搜索「朵叽排敏」就能找到，免费的。希望能帮到同样崩溃的你。</div>
+
+      <h5>🖼️ 配图建议（5张）· 含拍摄方式和AI生成提示</h5>
+
+      <div class="image-grid">
+        <div class="image-item">
+          <span class="img-num">1</span>
+          <span class="img-title">封面图：深夜工作台<span class="img-type img-type photo">实拍/AI生成</span></span>
+          <span class="img-desc">夜间场景：笔记本电脑打开着代码编辑器界面（模糊处理），旁边放着一个奶瓶和宝宝安抚玩具。台灯暖光，整体氛围安静孤独但有温度。画面传达"深夜+宝妈+写代码"的三个关键词。</span>
+          <span class="img-prompt">AI提示词：A late-night workspace scene, laptop with code editor open (blurred), a baby bottle and pacifier next to it, warm desk lamp light, dark room with cozy atmosphere, a mother's workspace at midnight, emotional and intimate mood, photographic style with shallow depth of field</span>
+        </div>
+
+        <div class="image-item">
+          <span class="img-num">2</span>
+          <span class="img-title">排敏崩溃场景<span class="img-type img-type photo">实拍/AI生成</span></span>
+          <span class="img-desc">手机备忘录里凌乱不堪的排敏记录截图，配合一个妈妈皱眉看手机的表情（侧拍或背影）。色调偏冷，传递"混乱+焦虑"的情绪。也可以用备忘录截图+Excel截图拼在一起做对比。</span>
+          <span class="img-prompt">AI提示词：A frustrated mother looking at her phone showing messy notes, cold blue-grey tones, phone screen showing disorganized text notes about baby food, worried expression, side angle shot, conveying anxiety and overwhelm, documentary photography style</span>
+        </div>
+
+        <div class="image-item">
+          <span class="img-num">3</span>
+          <span class="img-title">小程序排敏界面截图<span class="img-type img-type screenshot">截图</span></span>
+          <span class="img-desc">截取小程序排敏主页，展示食物分类（低敏/中敏/高敏）和排敏记录列表。这是"从混乱到有序"的视觉对比——和图2形成反差。建议截完整的排敏页，包含推荐食物卡片。</span>
+        </div>
+
+        <div class="image-item">
+          <span class="img-num">4</span>
+          <span class="img-title">家庭共享功能截图<span class="img-type img-type screenshot">截图</span></span>
+          <span class="img-desc">截取家庭管理页面，展示邀请码、家庭成员列表。或者截取排敏记录的家庭同步界面。配合文字标注"调研20个家庭后做的功能"。</span>
+        </div>
+
+        <div class="image-item">
+          <span class="img-num">5</span>
+          <span class="img-title">功能全览总图<span class="img-type img-type design">设计图</span></span>
+          <span class="img-desc">设计一张功能总览图：以手机框为中心，周围环绕6个功能图标（排敏管理、家庭共享、任务打卡、清单管理、AI大师、打卡统计），每个图标旁附一句话说明。莫兰迪色系，简洁信息图风格。</span>
+          <span class="img-prompt">AI提示词：An infographic-style feature overview, central smartphone mockup with 6 surrounding feature icons for baby care app, icons include food allergy management, family sharing, task tracking, checklist, AI assistant, statistics, Morandi color palette, clean minimal infographic design, white background</span>
+        </div>
+      </div>
+
+      <h5>🏷️ 话题标签（优化后）</h5>
+      <div class="tags">
+        <span class="tag">#独立开发</span>
+        <span class="tag">#辅食排敏</span>
+        <span class="tag">#宝宝辅食</span>
+        <span class="tag new">#宝妈开发者</span>
+        <span class="tag">#新手爸妈</span>
+        <span class="tag">#敏宝妈妈</span>
+        <span class="tag new">#从痛点到产品</span>
+        <span class="tag">#育儿好物</span>
+        <span class="tag">#小程序开发</span>
+      </div>
+    </div>
+
+    <div class="article-footer">
+      <span>📊 预估数据：1000-3500赞（开发者故事+情绪共鸣双buff）</span>
+      <span>🎯 内容目标：建立开发者人设 → 品牌信任 → 搜索转化</span>
+    </div>
+  </div>
+
+  <!-- 优化对比 -->
+  <div class="compare-box">
+    <h6>📊 优化对比：改了什么？</h6>
+
+    <div class="compare-row">
+      <div class="compare-col before">
+        <div class="compare-label">原版开头</div>
+        <div class="compare-content">"排敏排到崩溃那天晚上，我坐在客厅做了个决定。"</div>
+      </div>
+      <div class="compare-col after">
+        <div class="compare-label">优化后开头</div>
+        <div class="compare-content">"去年这个时候，我家宝宝刚满6个月，开始加辅食。儿保医生说'每种新食物试3天观察有没有过敏'，我当时觉得——就这？很简单啊。结果第二周就崩溃了。"</div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-col before">
+        <div class="compare-label">原版技术描述</div>
+        <div class="compare-content">"食物要按过敏等级分类，低敏1-3天、中敏3天、高敏5天。每种食物要记录开始日期和反应。试完一个要推荐下一个。全家都要能看到。"——平铺直叙</div>
+      </div>
+      <div class="compare-col after">
+        <div class="compare-label">优化后技术描述</div>
+        <div class="compare-content">每个功能都解释了"为什么这样设计"：低敏3天高敏5天是因为"一刀切看不出来"、推荐逻辑要按过敏等级排序、家庭共享是调研20个家庭后发现"不是观念问题是信息差"——让技术决策有温度</div>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-col before">
+        <div class="compare-label">原版故事弧线</div>
+        <div class="compare-content">崩溃→决定→写代码→上线→持续优化→感悟。线性叙事，缺少转折和细节</div>
+      </div>
+      <div class="compare-col after">
+        <div class="compare-label">优化后故事弧线</div>
+        <div class="compare-content">崩溃→复诊丢人→深夜决定→凌晨改bug的细节（同事问"娃闹腾"其实是改bug）→技术难点思考→用户反馈的成就感→感悟。每个转折都有具体画面感</div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px; font-size:13px; color:var(--text-tertiary); line-height:1.7;">
+      <strong style="color:var(--primary);">核心优化逻辑：</strong>
+      ① 开头从"崩溃那天晚上"改为"6个月加辅食→就这？很简单→第二周崩溃"，增加"轻视→反转"的故事弧线；
+      ② 增加"凌晨三点改bug，同事问怎么了说娃闹腾"这个有画面感的真实细节；
+      ③ 把技术描述从"做了什么"升级为"为什么这样做"——展示产品思考过程，增加信服力；
+      ④ 增加"用户反馈比写代码本身爽"的收尾，让开发者人设更立体（不是炫技，是被需要）。
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== 图片建议总结 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">🎨</span> 图片建议总结 & 拍摄指南</div>
+  <div class="section-desc">两篇内容共12张图的拍摄/制作方式汇总</div>
+
+  <div class="card" style="background:var(--bg-card); border-radius:12px; padding:24px; border:1px solid var(--border);">
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border);">
+          <th style="padding:10px 12px; text-align:left; font-weight:700; color:var(--text-secondary); width:8%;">篇</th>
+          <th style="padding:10px 12px; text-align:left; font-weight:700; color:var(--text-secondary); width:8%;">图号</th>
+          <th style="padding:10px 12px; text-align:left; font-weight:700; color:var(--text-secondary); width:20%;">图片内容</th>
+          <th style="padding:10px 12px; text-align:left; font-weight:700; color:var(--text-secondary); width:14%;">类型</th>
+          <th style="padding:10px 12px; text-align:left; font-weight:700; color:var(--text-secondary); width:25%;">关键要点</th>
+          <th style="padding:10px 12px; text-align:left; font-weight:700; color:var(--text-secondary); width:25%;">色调/氛围</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 使用者视角 -->
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;" rowspan="7">使用者</td>
+          <td style="padding:10px 12px;">1</td>
+          <td style="padding:10px 12px;">Excel vs 小程序对比</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type design" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">设计图</span></td>
+          <td style="padding:10px 12px;">左右分屏，左暗右亮，VS分割</td>
+          <td style="padding:10px 12px;">左灰暗右温暖，强对比</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;">2</td>
+          <td style="padding:10px 12px;">食物分类界面</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type screenshot" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">截图</span></td>
+          <td style="padding:10px 12px;">低/中/高敏分类完整展示</td>
+          <td style="padding:10px 12px;">莫兰迪原色</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;">3</td>
+          <td style="padding:10px 12px;">排敏记录列表</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type screenshot" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">截图</span></td>
+          <td style="padding:10px 12px;">展示❌✅⏳标记+天数</td>
+          <td style="padding:10px 12px;">莫兰迪原色</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;">4</td>
+          <td style="padding:10px 12px;">推荐下一个食物</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type screenshot" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">截图</span></td>
+          <td style="padding:10px 12px;">突出"自动推荐"卖点</td>
+          <td style="padding:10px 12px;">莫兰迪原色</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;">5</td>
+          <td style="padding:10px 12px;">家庭共享功能</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type screenshot" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">截图</span></td>
+          <td style="padding:10px 12px;">邀请码+同步效果</td>
+          <td style="padding:10px 12px;">莫兰迪原色</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;">6</td>
+          <td style="padding:10px 12px;">AI大师对话</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type screenshot" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">截图</span></td>
+          <td style="padding:10px 12px;">真实问答对话，保留动态感</td>
+          <td style="padding:10px 12px;">莫兰迪原色</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;">7</td>
+          <td style="padding:10px 12px;">整体界面美观展示</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type photo" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">实拍</span></td>
+          <td style="padding:10px 12px;">手持手机+家居环境，自然侧光</td>
+          <td style="padding:10px 12px;">温暖木质色调</td>
+        </tr>
+        <!-- 开发者视角 -->
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;" rowspan="5">开发者</td>
+          <td style="padding:10px 12px;">1</td>
+          <td style="padding:10px 12px;">深夜工作台封面</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type photo" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">实拍/AI</span></td>
+          <td style="padding:10px 12px;">笔记本+奶瓶+安抚玩具，暖台灯</td>
+          <td style="padding:10px 12px;">暖光深夜，孤独有温度</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;">2</td>
+          <td style="padding:10px 12px;">排敏崩溃场景</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type photo" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">实拍/AI</span></td>
+          <td style="padding:10px 12px;">凌乱备忘录+焦虑表情，与图3反差</td>
+          <td style="padding:10px 12px;">冷蓝灰色调</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;">3</td>
+          <td style="padding:10px 12px;">小程序排敏界面</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type screenshot" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">截图</span></td>
+          <td style="padding:10px 12px;">完整排敏页含推荐卡片</td>
+          <td style="padding:10px 12px;">莫兰迪原色（与图2冷色对比）</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:10px 12px;">4</td>
+          <td style="padding:10px 12px;">家庭共享功能</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type screenshot" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">截图</span></td>
+          <td style="padding:10px 12px;">邀请码+家庭成员列表</td>
+          <td style="padding:10px 12px;">莫兰迪原色</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 12px;">5</td>
+          <td style="padding:10px 12px;">功能全览总图</td>
+          <td style="padding:10px 12px;"><span class="img-type img-type design" style="display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px;">设计图</span></td>
+          <td style="padding:10px 12px;">手机框+6功能图标环绕，信息图风格</td>
+          <td style="padding:10px 12px;">莫兰迪色系，白底</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tip-box" style="background:#FDF8F0; border:1px solid #F0E0C0; border-radius:10px; padding:16px 20px; margin:20px 0; font-size:13px; color:var(--text-secondary); line-height:1.7;">
+    <strong style="color:var(--warning);">💡 图片制作建议：</strong>
+    <br>1. <strong>截图类图片</strong>：先在小程序中添加几条真实排敏记录（3-5条），让截图看起来"正在使用中"而不是空页面
+    <br>2. <strong>实拍类图片</strong>：用手机拍摄即可，重点是光线和氛围。深夜场景用台灯暖光，崩溃场景用手机冷屏光
+    <br>3. <strong>设计类图片</strong>：可用 Canva / Figma 制作，Excel vs 小程序对比图和信息图功能总览都是高频被点击的封面素材
+    <br>4. <strong>色调统一</strong>：所有截图保持小程序原生莫兰迪色调；实拍图分两种——温暖（希望感）和冷色（焦虑感）形成情绪对比
+    <br>5. <strong>封面图优先级</strong>：使用者篇封面用对比图（图1），开发者篇封面用深夜工作台（图1），这两张决定点击率
+  </div>
+</div>
+
+
+<!-- ===== 底部 ===== -->
+<div class="footer">
+  <p>📱 朵叽排敏生活全家记 · 宣发内容优化版</p>
+  <p>使用者视角1篇 + 开发者视角1篇 · 附12条配图建议</p>
+  <p>所有正文内容均可直接复制使用，配图建议按实际情况拍摄/截图/设计</p>
+</div>
+
+</div>
+</body>
+</html>

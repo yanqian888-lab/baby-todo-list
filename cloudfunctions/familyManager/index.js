@@ -166,12 +166,19 @@ async function updateBabyInfo(event, context) {
       return { success: false, error: '只有创建者可以更新宝宝信息' };
     }
     
+    const newNickname = babyInfo?.nickname || family.babyNickname || '';
+    const updateData = {
+      babyInfo: babyInfo,
+      babyNickname: newNickname,
+      updateTime: new Date()
+    };
+    // 家庭名是创建时按宝宝昵称自动生成的，宝宝改名时同步更新（当前没有单独修改家庭名的功能）
+    const autoFamilyName = `${family.babyNickname || '宝宝'}的家`;
+    if (newNickname && family.familyName === autoFamilyName) {
+      updateData.familyName = `${newNickname}的家`;
+    }
     await db.collection('families').doc(familyId).update({
-      data: {
-        babyInfo: babyInfo,
-        babyNickname: babyInfo?.nickname || family.babyNickname || '',
-        updateTime: new Date()
-      }
+      data: updateData
     });
     
     return { success: true, message: '宝宝信息更新成功' };
